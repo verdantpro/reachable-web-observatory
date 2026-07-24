@@ -47,7 +47,7 @@ type Browser struct {
 // hosts it visits — the "signal intent" scanning best practice, and a browser-side
 // substitute for reverse DNS (which isn't settable on most infrastructure). It
 // points to the opt-out / scan-info page. Override with VIBESCAN_USER_AGENT.
-const ScannerUserAgent = "Mozilla/5.0 (compatible; ReachableWebObservatory/1.0; +https://vibescan.verdantprotocol.com/scan-info)"
+const ScannerUserAgent = "Mozilla/5.0 (compatible; ReachableWebObservatory/1.0; +https://observatory.verdantprotocol.com/scan-info)"
 
 // NewBrowser launches Chromium and caps concurrent captures.
 func NewBrowser(concurrency int, delay time.Duration) *Browser {

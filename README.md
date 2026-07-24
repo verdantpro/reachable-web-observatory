@@ -6,11 +6,11 @@ An **open internet-measurement study** of the reachable public-IPv4 web, built w
 and **React**: random-sample scanning, HTTP capture, CVE/reputation enrichment, open data,
 a documented methodology, and an ethical opt-out/disclosure posture.
 
-**Live:** https://vibescan.verdantprotocol.com &nbsp;·&nbsp;
-**Methodology:** [/methodology](https://vibescan.verdantprotocol.com/methodology) &nbsp;·&nbsp;
-**Ethics:** [/ethics](https://vibescan.verdantprotocol.com/ethics) &nbsp;·&nbsp;
-**Data:** [/data](https://vibescan.verdantprotocol.com/data) &nbsp;·&nbsp;
-**Scanned? Opt out:** [/scan-info](https://vibescan.verdantprotocol.com/scan-info)
+**Live:** https://observatory.verdantprotocol.com &nbsp;·&nbsp;
+**Methodology:** [/methodology](https://observatory.verdantprotocol.com/methodology) &nbsp;·&nbsp;
+**Ethics:** [/ethics](https://observatory.verdantprotocol.com/ethics) &nbsp;·&nbsp;
+**Data:** [/data](https://observatory.verdantprotocol.com/data) &nbsp;·&nbsp;
+**Scanned? Opt out:** [/scan-info](https://observatory.verdantprotocol.com/scan-info)
 
 <!-- Add a hero screenshot at docs/screenshot.png, then uncomment:
 ![Observatory console](docs/screenshot.png)
@@ -80,7 +80,7 @@ submit credentials, exploit/fuzz, probe non-web services, or scan ports exhausti
 runs continuously at a deliberately slow rate, every agent honors a CIDR exclusion list, and the
 agent's own source IP is anonymized in each record. Third-party reputation/threat verdicts are
 the vendors' and may be wrong. A human monitors the abuse address for opt-out, takedown, and
-abuse reports. Full policy: [`/about`](https://vibescan.verdantprotocol.com/about).
+abuse reports. Full policy: [`/about`](https://observatory.verdantprotocol.com/about).
 
 ## Repository layout
 

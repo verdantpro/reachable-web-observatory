@@ -110,7 +110,7 @@ export default function About() {
           <p>Please cite the dataset (and note the snapshot date) when using it in published work:</p>
           <div className="about-cite mono">
             Walters, J. (2026). <em>Reachable Web Observatory: a continuous census of the public-IPv4
-            web.</em> Verdant Protocol. https://vibescan.verdantprotocol.com/
+            web.</em> Verdant Protocol. https://observatory.verdantprotocol.com/
           </div>
           <div className="about-actions">
             <Link className="btn" to="/data">↓ data &amp; access</Link>
