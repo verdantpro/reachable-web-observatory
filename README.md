@@ -56,8 +56,13 @@ object storage → concurrent threat-intel enrichment → embedded React UI.
   separate scanner host, isolated from the collector.
 - **Enrichment without leaking keys** — server-side fan-out across InternetDB/Shodan and
   threat feeds (VirusTotal, AbuseIPDB, GreyNoise, OTX, ThreatFox, …); API keys never reach
-  the browser, results are cached and throttled.
-- **Deploy without inbound SSH** — image → ECR → EC2 rolled via AWS SSM.
+  the browser, results are cached and throttled. Reputation/CVE data is surfaced with its
+  source and last-enrichment time so a third-party association never reads as a verdict.
+- **Cheap image delivery** — the collector generates ~480px JPEG thumbnails for the card grid;
+  full-resolution captures load only on the detail page.
+- **Deploy without inbound SSH or static keys** — image → ECR → EC2 rolled via AWS SSM,
+  authenticated with **GitHub OIDC** (assumed role), gated on tests, with automatic rollback
+  to the previous image when a post-deploy health check fails.
 
 ## Security & ethics
 
@@ -100,22 +105,27 @@ enrichment, and full v2 API reference.
 ## Test & deploy
 
 ```bash
-# Backend
-cd vibescan-go && go vet ./... && go test ./...
+# Backend  (-short skips browser/capture tests that need a real Chromium)
+cd vibescan-go && go vet ./... && go test -short ./...
 
 # Frontend
 cd vibescan-ui && npm run lint && npm run build
 ```
 
+**CI:** [`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs the above plus
+`govulncheck` and a Trivy dependency/secret scan on every PR and push to `main`.
+
 **Deploy:** push to `main` runs [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml)
-(build → ECR → **SSM** roll EC2, no open SSH). Full runbook:
-[`vibescan-go/deploy/DEPLOY.md`](vibescan-go/deploy/DEPLOY.md).
+(test gate → build → ECR → **SSM** roll EC2, no open SSH, OIDC auth, auto-rollback). Full
+runbook: [`vibescan-go/deploy/DEPLOY.md`](vibescan-go/deploy/DEPLOY.md).
 
 ## Known limitations
 
 - Stats are computed live per request (bounded `$facet` + 60s cache), not from rollups.
 - Search uses a MongoDB `$text` index, not Atlas Search.
 - Threat/reputation verdicts come from third-party feeds and can be inaccurate.
+- Thumbnails are generated going forward; captures made before the pipeline landed have none
+  and fall back to the full image (a one-off backfill pass is a clean follow-up).
 - Interactions (votes, tags, favorites, auth) and live SSE streaming are not yet in this layer.
 
 ## License

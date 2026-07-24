@@ -86,6 +86,7 @@ one at a time.
 | `GET  /api/v1/blacklist` | enabled CIDR blacklist (agents cache ~hourly) |
 | `GET  /api/health`, `GET /api/healthz` | health probes |
 | `GET  /api/v2/*` | read APIs (below) |
+| `/robots.txt`, `/sitemap.xml`, `/manifest.webmanifest` | served with correct content types (not the SPA shell) |
 | `/*` | embedded SPA (client-side routes fall back to `index.html`) |
 
 ### Wire & data compatibility
@@ -107,6 +108,9 @@ Verified byte-for-byte against the Python implementation via golden tests
 - Object-storage uploads for a submission are finalized in one bounded-concurrency
   pass before persistence (slightly higher orphaned-object risk on a mid-submission
   crash; functionally equivalent otherwise).
+- **Generates a ~480px JPEG thumbnail** per capture on R2 upload (`internal/media`
+  downscale → `thumb/<key>.jpg`), recorded as a `thumb` ref for the card grid.
+  Best-effort: any failure is swallowed and the UI uses the full image.
 - **`no_report` / `anon` redacts `submitted_by`** to `0.0.0.0` at ingest (and the
   public detail API re-redacts if `anon` is set). Python still stores the real
   client IP under `submitted_by` even when anonymized.
@@ -129,9 +133,15 @@ env names interchangeably.
 ### Test
 
 ```bash
-go test ./...
+go vet ./...
+go test -short ./...   # -short skips the browser/capture tests (need real Chromium)
 go build ./...
+govulncheck ./...      # optional: same check CI runs
 ```
+
+CI (`.github/workflows/ci.yml`) runs `go vet` / `go test -short` / `govulncheck`,
+the UI lint + build, and a Trivy dependency/secret scan on every PR and push to
+`main`; the Deploy workflow gates on a fast test job before it builds and ships.
 
 ## v2 read APIs
 
@@ -149,9 +159,13 @@ the collector). Keyed by `ip/port` rather than Mongo `_id`.
 | `GET /api/v2/image/{ip}/{port}` | Serves base64 captures; 302-redirects to object storage for `r2:` refs |
 
 A gallery/search **tile** carries `ip, port, banner, product, http_status,
-secured, whois, image_url, capture_hash/ext, has_fulltext, screenshot_phash,
-dom_hash, cert_cn, updated_at, geo`. `image_url` resolves to the object-storage
-public URL (S3/CloudFront or R2) when configured, otherwise `/api/v2/image/...`.
+secured, whois, image_url, thumb_url, capture_hash/ext, has_fulltext,
+screenshot_phash, dom_hash, cert_cn, updated_at, geo` plus the denormalized
+enrichment summary `vuln_count, tags, extra_ports, verdict, sources, enriched_at`.
+`image_url` resolves to the object-storage public URL (S3/CloudFront or R2) when
+configured, otherwise `/api/v2/image/...`; `thumb_url` is the R2 URL of a generated
+~480px JPEG thumbnail (empty for records captured before thumbnails, or when R2 is
+disabled, so the UI falls back to the full image).
 
 ### Deferred (intentionally) in the read layer
 
@@ -174,9 +188,10 @@ public URL (S3/CloudFront or R2) when configured, otherwise `/api/v2/image/...`.
   (org/ISP/ASN/product). Results are cached (in-memory + the `enrichment`
   collection, `VIBESCAN_ENRICH_TTL_HOURS`) and throttled by a shared outbound
   limiter. A background worker (`VIBESCAN_ENRICH_WORKER`) keeps recent hosts
-  enriched via InternetDB (free), denormalizing `vuln_count`/`shodan_tags` onto
-  results so tiles, `search?has_vulns=1&tag=`, and the Stats exposure facet work
-  census-wide. The API key never reaches the browser.
+  enriched via InternetDB (free), denormalizing `vuln_count`/`shodan_tags`/
+  `enrich_sources`/`enriched_at` onto results so tiles, `search?has_vulns=1&tag=`,
+  the Stats CVE-associated facet, and the card provenance line ("source · when ·
+  unverified") work census-wide. The API key never reaches the browser.
 - **Threat intelligence** (`internal/enrich/threat.go`, ported from
   [scope-recon](https://github.com/nethoundsh/scope-recon)): on the on-demand
   Signal view, each IP is cross-referenced against ip-api, RIPEstat, VirusTotal,
