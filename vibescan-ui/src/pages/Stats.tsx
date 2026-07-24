@@ -147,6 +147,32 @@ export default function StatsPage() {
             </div>
           </div>
 
+          <section className="panel panel-pad concentration">
+            <div className="eyebrow chart-head">◊ Concentration — where risk clusters</div>
+            <p className="concentration-note mono dim">
+              Among the {s.flagged_services.toLocaleString()} at-risk services in this window
+              (CVE-associated or reputation-flagged), where they concentrate:
+            </p>
+            <div className="concentration-grid">
+              <div className="concentration-cell">
+                <div className="concentration-h mono">By port</div>
+                <BarList data={s.flagged_by_port} color="var(--alert)" limit={8} />
+              </div>
+              <div className="concentration-cell">
+                <div className="concentration-h mono">By product</div>
+                <BarList data={s.flagged_by_product} color="var(--alert)" limit={8} />
+              </div>
+              <div className="concentration-cell">
+                <div className="concentration-h mono">By organization / network</div>
+                <BarList data={s.flagged_by_org} color="var(--amber)" limit={8} />
+              </div>
+              <div className="concentration-cell">
+                <div className="concentration-h mono">By country</div>
+                <BarList data={s.flagged_by_country} color="var(--amber)" limit={8} />
+              </div>
+            </div>
+          </section>
+
           <div className="stats-grid">
             <section className="panel panel-pad">
               <div className="eyebrow chart-head">◊ Services by port</div>

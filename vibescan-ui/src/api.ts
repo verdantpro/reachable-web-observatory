@@ -125,6 +125,11 @@ export interface Stats {
   exposed_services: number;
   top_tags: Record<string, number>;
   verdicts: Record<string, number>;
+  flagged_services: number;
+  flagged_by_port: Record<string, number>;
+  flagged_by_product: Record<string, number>;
+  flagged_by_org: Record<string, number>;
+  flagged_by_country: Record<string, number>;
 }
 
 export interface SearchParams {

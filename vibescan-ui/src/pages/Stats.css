@@ -1,3 +1,16 @@
+/* Concentration — where at-risk services cluster (the study's core question). */
+.concentration { margin-bottom: 16px; border-left: 2px solid var(--alert); }
+.concentration-note { font-size: 12px; margin: 0 0 18px; max-width: 70ch; line-height: 1.5; }
+.concentration-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px 32px; }
+.concentration-h {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+@media (max-width: 620px) { .concentration-grid { grid-template-columns: 1fr; } }
+
 .stats-head { align-items: flex-end; }
 .stats-range { align-self: flex-end; align-items: center; }
 .stats-range-label {

@@ -26,6 +26,13 @@ type Stats struct {
 	ExposedServices     int            `json:"exposed_services"` // services with >=1 known CVE
 	TopTags             map[string]int `json:"top_tags"`         // Shodan tags across enriched hosts
 	Verdicts            map[string]int `json:"verdicts"`         // reputation verdict distribution
+	// Concentration of at-risk services (CVE-associated OR reputation-flagged) —
+	// where exposure clusters, the study's core question.
+	FlaggedServices  int            `json:"flagged_services"`
+	FlaggedByPort    map[string]int `json:"flagged_by_port"`
+	FlaggedByProduct map[string]int `json:"flagged_by_product"`
+	FlaggedByOrg     map[string]int `json:"flagged_by_org"`
+	FlaggedByCountry map[string]int `json:"flagged_by_country"`
 }
 
 // StatsTotals holds the headline counts.
@@ -47,6 +54,12 @@ type facetResult struct {
 	Exposed  []countOnly  `bson:"exposed"`
 	Tags     []kv         `bson:"tags"`
 	Verdicts []kv         `bson:"verdicts"`
+	// Concentration of at-risk services.
+	FlaggedTotal     []countOnly `bson:"flagged_total"`
+	FlaggedPorts     []kv        `bson:"flagged_ports"`
+	FlaggedProducts  []kv        `bson:"flagged_products"`
+	FlaggedOrgs      []kvStr     `bson:"flagged_orgs"`
+	FlaggedCountries []kvStr     `bson:"flagged_countries"`
 }
 
 type kv struct {
@@ -142,6 +155,15 @@ func (m *Mongo) StatsAggregate(ctx context.Context, timeRangeHours, maxTimeMS in
 		{Key: "default", Value: "other"},
 	}}}
 
+	// "At-risk" = CVE-associated OR reputation-flagged. The concentration facets
+	// below break this subset down by port, product, organization, and country.
+	flaggedMatch := bson.D{{Key: "$or", Value: bson.A{
+		bson.D{{Key: "vuln_count", Value: bson.D{{Key: "$gt", Value: 0}}}},
+		bson.D{{Key: "verdict", Value: bson.D{{Key: "$in", Value: bson.A{"suspicious", "malicious"}}}}},
+	}}}
+	// Reuse the banner-cleaning sub-pipeline, but only over at-risk services.
+	flaggedProducts := append(bson.A{bson.D{{Key: "$match", Value: flaggedMatch}}}, bannerClean...)
+
 	facet := bson.D{
 		{Key: "ports", Value: bson.A{
 			bson.D{{Key: "$match", Value: bson.D{{Key: "port", Value: bson.D{{Key: "$exists", Value: true}}}}}},
@@ -197,6 +219,36 @@ func (m *Mongo) StatsAggregate(ctx context.Context, timeRangeHours, maxTimeMS in
 			bson.D{{Key: "$match", Value: bson.D{{Key: "verdict", Value: bson.D{{Key: "$in", Value: bson.A{"clean", "suspicious", "malicious"}}}}}}},
 			bson.D{{Key: "$group", Value: bson.D{{Key: "_id", Value: "$verdict"}, {Key: "count", Value: bson.D{{Key: "$sum", Value: 1}}}}}},
 		}},
+		// --- Concentration: where at-risk services cluster (the research question) ---
+		{Key: "flagged_total", Value: bson.A{
+			bson.D{{Key: "$match", Value: flaggedMatch}},
+			bson.D{{Key: "$count", Value: "count"}},
+		}},
+		{Key: "flagged_ports", Value: bson.A{
+			bson.D{{Key: "$match", Value: flaggedMatch}},
+			bson.D{{Key: "$group", Value: bson.D{{Key: "_id", Value: bson.D{{Key: "$toString", Value: "$port"}}}, {Key: "count", Value: bson.D{{Key: "$sum", Value: 1}}}}}},
+			bson.D{{Key: "$sort", Value: bson.D{{Key: "count", Value: -1}}}},
+			bson.D{{Key: "$limit", Value: 15}},
+		}},
+		{Key: "flagged_products", Value: flaggedProducts},
+		{Key: "flagged_orgs", Value: bson.A{
+			bson.D{{Key: "$match", Value: flaggedMatch}},
+			bson.D{{Key: "$match", Value: bson.D{{Key: "whois", Value: bson.D{{Key: "$type", Value: "string"}, {Key: "$nin", Value: bson.A{"", "unknown"}}}}}}},
+			// Match the tile's org label: the part before " - ".
+			bson.D{{Key: "$project", Value: bson.D{{Key: "org", Value: bson.D{{Key: "$trim", Value: bson.D{{Key: "input", Value: bson.D{{Key: "$arrayElemAt", Value: bson.A{
+				bson.D{{Key: "$split", Value: bson.A{"$whois", " - "}}}, 0,
+			}}}}}}}}}}},
+			bson.D{{Key: "$group", Value: bson.D{{Key: "_id", Value: "$org"}, {Key: "count", Value: bson.D{{Key: "$sum", Value: 1}}}}}},
+			bson.D{{Key: "$sort", Value: bson.D{{Key: "count", Value: -1}}}},
+			bson.D{{Key: "$limit", Value: 12}},
+		}},
+		{Key: "flagged_countries", Value: bson.A{
+			bson.D{{Key: "$match", Value: flaggedMatch}},
+			bson.D{{Key: "$match", Value: bson.D{{Key: "geoip.country_iso", Value: bson.D{{Key: "$type", Value: "string"}, {Key: "$ne", Value: ""}}}}}},
+			bson.D{{Key: "$group", Value: bson.D{{Key: "_id", Value: "$geoip.country_iso"}, {Key: "count", Value: bson.D{{Key: "$sum", Value: 1}}}}}},
+			bson.D{{Key: "$sort", Value: bson.D{{Key: "count", Value: -1}}}},
+			bson.D{{Key: "$limit", Value: 15}},
+		}},
 	}
 
 	pipeline := mongo.Pipeline{
@@ -229,6 +281,10 @@ func (m *Mongo) StatsAggregate(ctx context.Context, timeRangeHours, maxTimeMS in
 		SubmissionsOverTime: map[string]int{},
 		TopTags:             map[string]int{},
 		Verdicts:            map[string]int{},
+		FlaggedByPort:       map[string]int{},
+		FlaggedByProduct:    map[string]int{},
+		FlaggedByOrg:        map[string]int{},
+		FlaggedByCountry:    map[string]int{},
 	}
 	if len(rows) == 1 {
 		f := rows[0]
@@ -274,6 +330,23 @@ func (m *Mongo) StatsAggregate(ctx context.Context, timeRangeHours, maxTimeMS in
 		}
 		for _, v := range f.Verdicts {
 			out.Verdicts[v.ID] = v.Count
+		}
+		if len(f.FlaggedTotal) == 1 {
+			out.FlaggedServices = f.FlaggedTotal[0].Count
+		}
+		for _, p := range f.FlaggedPorts {
+			out.FlaggedByPort[p.ID] = p.Count
+		}
+		for _, p := range f.FlaggedProducts {
+			out.FlaggedByProduct[p.ID] = p.Count
+		}
+		for _, o := range f.FlaggedOrgs {
+			if o.ID != "" {
+				out.FlaggedByOrg[o.ID] = o.Count
+			}
+		}
+		for _, c := range f.FlaggedCountries {
+			out.FlaggedByCountry[c.ID] = c.Count
 		}
 	}
 
