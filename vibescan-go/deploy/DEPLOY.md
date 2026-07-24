@@ -495,7 +495,7 @@ credentials" story (matching the no-inbound-SSH SSM transport).
 (Or CLI: `aws iam create-open-id-connect-provider --url https://token.actions.githubusercontent.com --client-id-list sts.amazonaws.com`.)
 
 **B.2 — Create the deploy role** with a trust policy that only lets *this* repo's
-workflows assume it. Replace `ACCOUNT_ID` and `OWNER/REPO`:
+`main`-branch workflows assume it. Replace `ACCOUNT_ID` and `OWNER/REPO`:
 
 ```json
 {
@@ -507,12 +507,29 @@ workflows assume it. Replace `ACCOUNT_ID` and `OWNER/REPO`:
       "Action": "sts:AssumeRoleWithWebIdentity",
       "Condition": {
         "StringEquals": { "token.actions.githubusercontent.com:aud": "sts.amazonaws.com" },
-        "StringLike": { "token.actions.githubusercontent.com:sub": "repo:OWNER/REPO:ref:refs/heads/main" }
+        "StringLike": { "token.actions.githubusercontent.com:sub": [
+          "repo:OWNER/REPO:ref:refs/heads/main",
+          "repo:OWNER@*/REPO@*:ref:refs/heads/main"
+        ] }
       }
     }
   ]
 }
 ```
+
+> ⚠️ **`sub` format gotcha.** Some accounts issue the OIDC subject with **immutable
+> numeric IDs** — `repo:OWNER@<ownerID>/REPO@<repoID>:ref:refs/heads/main` — instead
+> of the plain `repo:OWNER/REPO:...`. If the trust policy only lists the plain form,
+> STS returns `AccessDenied: Not authorized to perform sts:AssumeRoleWithWebIdentity`
+> even though everything looks correct. The array above accepts **both** forms. To
+> see the exact `sub` your runner presents, check CloudTrail after a failed attempt:
+> ```
+> aws cloudtrail lookup-events \
+>   --lookup-attributes AttributeKey=EventName,AttributeValue=AssumeRoleWithWebIdentity \
+>   --max-results 1 --query "Events[].CloudTrailEvent" --output text
+> ```
+> and read the `userName` field. Update the role with `aws iam update-assume-role-policy`
+> if you tightened it and need to add the ID form.
 
 **B.3 — GitHub secrets.** Repo → **Settings → Secrets and variables → Actions**:
 
