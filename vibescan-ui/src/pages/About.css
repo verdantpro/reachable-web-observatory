@@ -92,6 +92,8 @@
   border: 1px solid var(--line);
   border-left: 2px solid var(--accent);
   border-radius: var(--radius);
+  /* Clears the sticky 58px header when deep-linked via /about#opt-out. */
+  scroll-margin-top: 74px;
   padding: 22px 24px 24px;
 }
 /* Vertical action list: each request type spans the full width — label +

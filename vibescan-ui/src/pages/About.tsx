@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { useMeta } from "../lib/meta";
 import "./About.css";
 
@@ -9,6 +11,16 @@ export default function About() {
     description: "What VibeScan scans and does not scan, how records work, and how to opt out or request removal.",
     path: "/about",
   });
+
+  // Deep links like /about#opt-out (e.g. the footer's "Opt out / report") scroll
+  // to the matching section — BrowserRouter doesn't handle hash scrolling itself.
+  const { hash } = useLocation();
+  useEffect(() => {
+    if (!hash) return;
+    const el = document.getElementById(hash.slice(1));
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [hash]);
+
   return (
     <div className="record">
       <div className="page wrap about">
@@ -89,7 +101,7 @@ export default function About() {
           </p>
         </section>
 
-        <section className="about-sec about-contact">
+        <section className="about-sec about-contact" id="opt-out">
           <h2 className="about-h">Opt out &amp; takedowns</h2>
           <p>
             One address handles all of this: <a className="about-mail" href={`mailto:${ABUSE}`}>{ABUSE}</a>.

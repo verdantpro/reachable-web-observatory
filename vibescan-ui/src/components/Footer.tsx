@@ -11,9 +11,7 @@ export default function Footer() {
           <a href="https://github.com/verdantpro/vibescan_rework" target="_blank" rel="noopener noreferrer">
             Source
           </a>
-          <a href="mailto:abuse@verdantprotocol.com?subject=Opt-out%20request%20(IP%20%2F%20CIDR)">
-            Opt out / report
-          </a>
+          <Link to="/about#opt-out">Opt out / report</Link>
         </nav>
       </div>
     </footer>
