@@ -154,7 +154,9 @@ the collector). Keyed by `ip/port` rather than Mongo `_id`.
 | `GET /api/v2/search?q=&port=&status=&secured=&product=&limit=&offset=` | Filtered / `$text` free-text search |
 | `GET /api/v2/services/{ip}/{port}?brief=` | Single service detail (incl. `fulltext`); `brief=1` omits `fulltext` |
 | `GET /api/v2/enrich/{ip}` | Shodan / InternetDB cross-reference (ports, CVEs, tags, org); cached |
-| `GET /api/v2/stats?time_range=<hours>` | Windowed aggregate snapshot (one `$facet` pass, 60s cached) |
+| `GET /api/v2/stats?time_range=<hours>` | Windowed aggregate snapshot (one `$facet` pass, 60s cached); includes **concentration** of at-risk services by port/product/org/country |
+| `GET /api/v2/trends?days=<n>` | Daily census snapshots (longitudinal exposure series) from the rollup worker |
+| `GET /api/v2/export?format=json\|csv&…` | Open dataset export (same filters as search); rate-limited, paginated |
 | `GET /api/v2/random-capture` | One random landing-page tile (`$sample`) |
 | `GET /api/v2/image/{ip}/{port}` | Serves base64 captures; 302-redirects to object storage for `r2:` refs |
 
@@ -170,7 +172,9 @@ disabled, so the UI falls back to the full image).
 ### Deferred (intentionally) in the read layer
 
 - **Stats are computed live** over the requested window (bounded `$facet` +
-  `maxTimeMS` + 60s cache, per-range), not from Redis/hourly rollups.
+  `maxTimeMS` + 60s cache, per-range), not from Redis/hourly rollups. A separate
+  **daily rollup worker** (`VIBESCAN_ROLLUP_WORKER`, default on) snapshots the whole
+  census once per day into `stats_daily` for the longitudinal `/api/v2/trends` series.
 - **Search uses a MongoDB `$text` index** (weighted over banner, geo
   city/country/region, cert_cn, whois, rdns, fulltext) for free text — so
   location queries like `shanghai` match the GeoIP subdocument. IP-like queries

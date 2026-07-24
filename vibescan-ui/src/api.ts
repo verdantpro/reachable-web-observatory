@@ -132,6 +132,18 @@ export interface Stats {
   flagged_by_country: Record<string, number>;
 }
 
+export interface DailyRollup {
+  date: string;
+  services: number;
+  hosts: number;
+  cleartext: number;
+  secure: number;
+  flagged: number;
+  exposed: number;
+  malicious: number;
+  suspicious: number;
+}
+
 export interface SearchParams {
   q?: string;
   port?: number;
@@ -233,6 +245,8 @@ export const api = {
     statsCache.set(timeRange, { at: Date.now(), p });
     return p;
   },
+
+  trends: (days = 90) => get<{ days: DailyRollup[] }>(`/api/v2/trends?days=${days}`),
 
   randomCapture: () => get<RandomCapture>(`/api/v2/random-capture`),
 
