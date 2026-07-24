@@ -10,6 +10,7 @@ export default function Footer() {
         </span>
         <nav className="footer-links">
           <Link to="/about">About</Link>
+          <Link to="/architecture">Architecture</Link>
           <Link to="/methodology">Methodology</Link>
           <Link to="/ethics">Ethics</Link>
           <Link to="/data">Data</Link>

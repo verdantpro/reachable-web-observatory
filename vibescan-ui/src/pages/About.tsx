@@ -67,7 +67,8 @@ export default function About() {
             ten independent threat-intelligence and reputation feeds into a single verdict, and the
             resilience work that keeps ingest running (disk-buffering submissions when the database is
             unavailable, deterministic record IDs for idempotent upserts) through a strangler migration
-            from an earlier Python prototype to Go.
+            from an earlier Python prototype to Go. The full stack and hosting are documented on the{" "}
+            <Link className="about-mail" to="/architecture">architecture</Link> page.
             {/* Optional: add 1–2 lines of personal background / resume tie-in here. */}
           </p>
         </section>
