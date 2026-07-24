@@ -7,43 +7,49 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="dark" />
     <meta name="theme-color" content="#15171b" />
-    <title>VibeScan — Live Internet Discovery</title>
+    <title>Reachable Web Observatory — a census of the public-IPv4 web</title>
     <meta
       name="description"
-      content="VibeScan — a live census of the reachable web: random public IPv4 discovery, HTTP capture, geolocation, and threat-intel enrichment."
+      content="An open, continuously-running measurement study of the reachable public-IPv4 web: where CVE-associated and reputation-flagged services concentrate, and how that exposure changes over time. Open data, documented methodology, ethical scanning."
     />
     <link rel="canonical" href="https://vibescan.verdantprotocol.com/" />
 
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="VibeScan" />
-    <meta property="og:title" content="VibeScan — Live Internet Discovery" />
+    <meta property="og:site_name" content="Reachable Web Observatory" />
+    <meta property="og:title" content="Reachable Web Observatory — a census of the public-IPv4 web" />
     <meta
       property="og:description"
-      content="A live census of the reachable web: random public IPv4 discovery, HTTP capture, geolocation, and threat-intel enrichment."
+      content="An open measurement study of the reachable public-IPv4 web — where risk concentrates, over time. Open data, documented methodology, ethical scanning."
     />
     <meta property="og:url" content="https://vibescan.verdantprotocol.com/" />
     <meta property="og:image" content="https://vibescan.verdantprotocol.com/og.png" />
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="VibeScan — Live Internet Discovery" />
+    <meta name="twitter:title" content="Reachable Web Observatory — a census of the public-IPv4 web" />
     <meta
       name="twitter:description"
-      content="A live census of the reachable web: random public IPv4 discovery, HTTP capture, geolocation, and threat-intel enrichment."
+      content="An open measurement study of the reachable public-IPv4 web — where risk concentrates, over time."
     />
     <meta name="twitter:image" content="https://vibescan.verdantprotocol.com/og.png" />
 
+    <!-- Structured data: an open research dataset (discoverable via Google Dataset Search). -->
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
-        "@type": "WebApplication",
-        "name": "VibeScan",
+        "@type": "Dataset",
+        "name": "Reachable Web Observatory",
+        "alternateName": "VibeScan",
+        "description": "A continuously-updated census of services on the reachable public-IPv4 web (common web ports), enriched with CVE associations and reputation signals, used to study where exposure and risk concentrate over time.",
         "url": "https://vibescan.verdantprotocol.com/",
-        "applicationCategory": "SecurityApplication",
-        "operatingSystem": "Web",
-        "description": "A distributed internet-observation platform: authenticated scanner agents, HTTP capture, threat-intelligence enrichment, search, telemetry, and ethical opt-out controls.",
-        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+        "keywords": ["internet measurement", "internet-wide scanning", "cleartext HTTP", "exposure", "CVE", "IPv4 census", "security"],
+        "isAccessibleForFree": true,
+        "license": "https://creativecommons.org/licenses/by/4.0/",
+        "creator": [
+          { "@type": "Person", "name": "Justin Walters" },
+          { "@type": "Organization", "name": "Verdant Protocol", "url": "https://verdantprotocol.com/" }
+        ]
       }
     </script>
   </head>

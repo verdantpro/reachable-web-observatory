@@ -1,31 +1,40 @@
-# VibeScan · Live Cleartext HTTP Acquisition
+# Reachable Web Observatory
 
-A distributed internet-observation platform built with **Go** and **React**:
-authenticated scanner agents, HTTP capture, threat-intelligence enrichment,
-search, telemetry, and ethical opt-out controls.
+*(codename: VibeScan)*
 
-**Live demo:** https://vibescan.verdantprotocol.com &nbsp;·&nbsp;
-**Ethics & opt-out:** https://vibescan.verdantprotocol.com/about
+An **open internet-measurement study** of the reachable public-IPv4 web, built with **Go**
+and **React**: random-sample scanning, HTTP capture, CVE/reputation enrichment, open data,
+a documented methodology, and an ethical opt-out/disclosure posture.
 
-> *"VibeScan" is an operational internet-measurement instrument — distinct from the
-> AI-code-scanning tools of the same name.*
+**Live:** https://vibescan.verdantprotocol.com &nbsp;·&nbsp;
+**Methodology:** [/methodology](https://vibescan.verdantprotocol.com/methodology) &nbsp;·&nbsp;
+**Ethics:** [/ethics](https://vibescan.verdantprotocol.com/ethics) &nbsp;·&nbsp;
+**Data:** [/data](https://vibescan.verdantprotocol.com/data) &nbsp;·&nbsp;
+**Scanned? Opt out:** [/scan-info](https://vibescan.verdantprotocol.com/scan-info)
 
 <!-- Add a hero screenshot at docs/screenshot.png, then uncomment:
-![VibeScan console](docs/screenshot.png)
+![Observatory console](docs/screenshot.png)
 -->
 
-## The problem
+## The research question
 
-What does the ordinary, reachable web look like when you stop searching for known
-domains and sample public IPv4 space instead? Answering that responsibly takes more
-than running nmap. VibeScan is a continuously operating census of randomly discovered
-public web services: it limits itself to common web ports, captures what an anonymous
-browser can see, stores point-in-time records, enriches them with public security data,
-and provides a human opt-out and takedown process.
+> *Across a uniform random sample of the reachable public-IPv4 web, where do CVE-associated
+> and reputation-flagged services concentrate — by network (ASN/org), geography, product/version,
+> and port — and how does that exposure change over time?*
 
-This repository is the **Go reimplementation** of an earlier Python prototype, migrated
-via a **strangler** strategy — the Go collector speaks the exact legacy v1 wire protocol,
-so existing agents keep submitting unchanged while components cut over one at a time.
+Rather than searching for known domains, the observatory samples public IPv4 space, captures
+what an anonymous browser can see on common web ports, enriches each host with public security
+data, and treats every capture as one observation in a continuing time series. Conduct follows
+the field's ethics norms — the [Menlo Report](https://www.dhs.gov/sites/default/files/publications/CSD-MenloPrinciplesCORE-20120803_1.pdf)
+and the [ZMap scanning best practices](https://github.com/zmap/zmap/wiki/Scanning-Best-Practices):
+slow rate, opt-out, published scanner ranges, and coordinated disclosure. Data is open (CC-BY-4.0).
+
+**Independent project** — not affiliated with a university and not IRB-reviewed; collaboration
+welcome. Maintained by an independent researcher under **Verdant Protocol**.
+
+The backend is a **Go reimplementation** of an earlier Python prototype, migrated via a
+**strangler** strategy — the Go collector speaks the exact legacy v1 wire protocol, so existing
+agents keep submitting unchanged while components cut over one at a time.
 
 ## Architecture
 
@@ -66,7 +75,7 @@ object storage → concurrent threat-intel enrichment → embedded React UI.
 
 ## Security & ethics
 
-VibeScan only observes what an anonymous visitor could already see. It does **not** sign in,
+The observatory only observes what an anonymous visitor could already see. It does **not** sign in,
 submit credentials, exploit/fuzz, probe non-web services, or scan ports exhaustively. Scanning
 runs continuously at a deliberately slow rate, every agent honors a CIDR exclusion list, and the
 agent's own source IP is anonymized in each record. Third-party reputation/threat verdicts are

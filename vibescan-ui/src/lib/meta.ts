@@ -1,6 +1,8 @@
 import { useEffect } from "react";
 
-const SITE = "VibeScan";
+const SITE = "Reachable Web Observatory";
+// Canonical origin. Keep the current live host until the research subdomain
+// (e.g. observatory.verdantprotocol.com) is provisioned, then update here.
 const ORIGIN = "https://vibescan.verdantprotocol.com";
 const OG_IMAGE = `${ORIGIN}/og.png`;
 

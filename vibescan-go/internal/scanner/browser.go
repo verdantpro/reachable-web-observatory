@@ -43,14 +43,25 @@ type Browser struct {
 	fav      *http.Client
 }
 
+// ScannerUserAgent identifies the observatory's captures to the operators whose
+// hosts it visits — the "signal intent" scanning best practice, and a browser-side
+// substitute for reverse DNS (which isn't settable on most infrastructure). It
+// points to the opt-out / scan-info page. Override with VIBESCAN_USER_AGENT.
+const ScannerUserAgent = "Mozilla/5.0 (compatible; ReachableWebObservatory/1.0; +https://vibescan.verdantprotocol.com/scan-info)"
+
 // NewBrowser launches Chromium and caps concurrent captures.
 func NewBrowser(concurrency int, delay time.Duration) *Browser {
+	ua := ScannerUserAgent
+	if v := os.Getenv("VIBESCAN_USER_AGENT"); v != "" {
+		ua = v
+	}
 	opts := append(chromedp.DefaultExecAllocatorOptions[:],
 		chromedp.Flag("headless", true),
 		chromedp.Flag("no-sandbox", true),
 		chromedp.Flag("disable-dev-shm-usage", true),
 		chromedp.Flag("ignore-certificate-errors", true),
 		chromedp.WindowSize(1280, 720),
+		chromedp.UserAgent(ua),
 	)
 	// In the container the browser is at a fixed path (e.g. /usr/bin/chromium);
 	// let it be pinned explicitly so auto-detection can't pick the wrong binary.

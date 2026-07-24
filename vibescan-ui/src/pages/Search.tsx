@@ -12,7 +12,7 @@ const PAGE = 60;
 
 export default function Search() {
   useMeta({
-    title: "Search the Census — VibeScan",
+    title: "Search the Census — Reachable Web Observatory",
     description: "Search captured web services by banner, product, port, status, location, CVEs, and reputation.",
     path: "/search",
   });

@@ -83,7 +83,7 @@ export default function Viewport({ detail, loading, auto, autoSeconds, error, on
 
       <aside className="vp-telemetry">
         <div className="eyebrow">◊ Telemetry</div>
-        <Line label="CALL SIGN" value={s ? `${s.ip}:${s.port}` : null} accent />
+        <Line label="HOST" value={s ? `${s.ip}:${s.port}` : null} accent />
         <Line label="PROTOCOL" value={s ? (s.secured ? "HTTPS" : "HTTP") : null} />
         <Line label="STATUS" value={s?.http_status} />
         <Line label="SERVER" value={s?.product} hideEmpty />
@@ -95,12 +95,12 @@ export default function Viewport({ detail, loading, auto, autoSeconds, error, on
 
         <div className="vp-controls">
           <button className="btn btn-primary" onClick={onAcquire} disabled={loading}>
-            {loading ? "◌ acquiring" : error ? "↻ retry" : "▸ acquire next"}
+            {loading ? "◌ sampling" : error ? "↻ retry" : "▸ sample a host"}
           </button>
           <button
             className={`btn${auto ? " btn-primary" : " btn-ghost"}`}
             onClick={onToggleAuto}
-            title={`Auto-acquire a new signal every ${autoSeconds} seconds`}
+            title={`Automatically sample a new host every ${autoSeconds} seconds`}
             aria-pressed={auto}
           >
             {auto ? "❚❚ pause auto" : `▶ auto · ${autoSeconds}s`}

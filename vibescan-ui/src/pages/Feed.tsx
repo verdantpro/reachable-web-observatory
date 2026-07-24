@@ -11,7 +11,7 @@ type Mode = "ranked" | "latest";
 
 export default function Feed() {
   useMeta({
-    title: "Signal Feed — VibeScan",
+    title: "Feed — Reachable Web Observatory",
     description: "A live feed of recently captured web services discovered across the public internet.",
     path: "/feed",
   });

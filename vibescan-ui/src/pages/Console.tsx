@@ -13,9 +13,9 @@ const AUTO_SECONDS = 6;
 
 export default function Console() {
   useMeta({
-    title: "VibeScan — Live Internet Discovery",
+    title: "Reachable Web Observatory — a census of the public-IPv4 web",
     description:
-      "A live census of the reachable web: random public IPv4 discovery, HTTP capture, geolocation, and threat-intel enrichment.",
+      "An open measurement study of the reachable public-IPv4 web: random discovery, HTTP capture, geolocation, and CVE/reputation enrichment — mapping where exposure concentrates over time.",
     path: "/",
   });
   const [detail, setDetail] = useState<SignalDetail | null>(null);
@@ -90,15 +90,18 @@ export default function Console() {
   return (
     <div className="console wrap">
       <div className="console-head">
-        <div className="eyebrow">◊ vibescan · live acquisition</div>
+        <div className="eyebrow">◊ Reachable Web Observatory · live census</div>
         <h1 className="console-h1 display" title="Total cleartext HTTP services captured across all time">
           {insecure != null ? insecure.toLocaleString() : "—"}{" "}
           <span className="console-h1-sub">cleartext HTTP services on record</span>
           <span className="console-h1-scope mono"> · all time</span>
         </h1>
         <p className="console-lede dim">
-          Random IPv4 discovery on common web ports — banners, screenshots, and geo.
-          Acquire a signal, or browse the {hosts != null ? hosts.toLocaleString() : ""} hosts indexed so far.
+          An open measurement study of the reachable public-IPv4 web: we sample random hosts on common
+          web ports and map where CVE-associated and reputation-flagged services concentrate. Draw a
+          random capture below, or browse the {hosts != null ? hosts.toLocaleString() : ""} hosts
+          observed so far.{" "}
+          <Link className="console-more" to="/methodology">How this works →</Link>
         </p>
       </div>
 
@@ -136,7 +139,7 @@ export default function Console() {
 
       <section className="console-recent">
         <div className="row spread console-section-head">
-          <span className="eyebrow">◊ Recent acquisitions</span>
+          <span className="eyebrow">◊ Recently observed</span>
           <Link className="mono console-more" to="/feed">
             full feed →
           </Link>
