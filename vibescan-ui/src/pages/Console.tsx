@@ -97,11 +97,38 @@ export default function Console() {
           <span className="console-h1-scope mono"> · all time</span>
         </h1>
         <p className="console-lede dim">
-          An open measurement study of the reachable public-IPv4 web: we sample random hosts on common
-          web ports and map where CVE-associated and reputation-flagged services concentrate. Draw a
-          random capture below, or browse all {hosts != null ? hosts.toLocaleString() : ""} hosts
-          observed to date (all time; the Stats page defaults to a recent window).{" "}
+          An open measurement study of the reachable public-IPv4 web. We sample random hosts on common
+          web ports and map where CVE-associated and reputation-flagged services concentrate — a
+          picture of systemic exposure, not an index of every host.{" "}
           <Link className="console-more" to="/methodology">How this works →</Link>
+        </p>
+
+        <div className="console-frame">
+          <div className="console-frame-q">
+            <span className="eyebrow">◊ The question</span>
+            <p>
+              Across a uniform random sample of the reachable public-IPv4 web, <em>where do
+              CVE-associated and reputation-flagged services concentrate</em> — by network, geography,
+              product, and port — and how does that change over time?
+            </p>
+          </div>
+          <div className="console-frame-look">
+            <span className="eyebrow">◊ What to look for</span>
+            <ul className="console-look-list">
+              <li>How much of the reachable web still serves <strong>cleartext HTTP</strong></li>
+              <li><strong>CVE-associated</strong> services clustering by network (ASN) and product</li>
+              <li>Geographic <strong>concentration</strong> of flagged hosts</li>
+              <li>How these shift <strong>over time</strong> as the census accrues</li>
+            </ul>
+          </div>
+        </div>
+
+        <p className="console-browse dim">
+          Draw a random capture below, or{" "}
+          <Link className="console-more" to="/feed">
+            browse all {hosts != null ? hosts.toLocaleString() : ""} hosts observed to date →
+          </Link>{" "}
+          (all-time totals; the Stats page defaults to a recent window).
         </p>
       </div>
 

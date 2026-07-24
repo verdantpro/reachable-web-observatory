@@ -6,7 +6,7 @@ export default function Footer() {
     <footer className="footer">
       <div className="wrap footer-inner mono">
         <span className="footer-note">
-          Reachable Web Observatory · a continuous census of the public-IPv4 web
+          Reachable Web Observatory · by Justin Walters, Verdant Protocol
         </span>
         <nav className="footer-links">
           <Link to="/about">About</Link>
@@ -17,6 +17,9 @@ export default function Footer() {
           <Link to="/scan-info">Scanned? Opt out</Link>
           <a href="https://github.com/verdantpro/vibescan_rework" target="_blank" rel="noopener noreferrer">
             Source
+          </a>
+          <a href="https://verdantprotocol.com/" target="_blank" rel="noopener noreferrer">
+            Garden
           </a>
         </nav>
       </div>

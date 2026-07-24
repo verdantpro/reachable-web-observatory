@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { api, type Stats } from "../api";
 import TimeSeries from "../components/TimeSeries";
 import ErrorState from "../components/ErrorState";
@@ -94,8 +95,13 @@ export default function StatsPage() {
         <div>
           <div className="eyebrow">◊ Telemetry</div>
           <h1 className="page-title display">Broadcast stats</h1>
+          <p className="page-hint">
+            Every figure reflects the selected window (<span className="mono">ALL</span> = all time) —{" "}
+            <Link className="hint-link" to="/methodology">what these measure →</Link>
+          </p>
         </div>
-        <div className="chips stats-range">
+        <div className="chips stats-range" aria-label="Time window">
+          <span className="stats-range-label mono">window</span>
           {RANGES.map(([label, h]) => (
             <button key={label} className={`chip mono${hours === h ? " on" : ""}`} onClick={() => setHours(h)}>
               {label}
