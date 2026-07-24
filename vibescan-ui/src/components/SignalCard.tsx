@@ -10,7 +10,10 @@ export default function SignalCard({ t }: { t: Tile }) {
   const srcLabel = t.sources && t.sources.length ? t.sources.join(", ") : "third-party feeds";
   const enriched = timeAgo(t.enriched_at);
   return (
-    <Link className="card hud" to={`/signal/${t.ip}/${t.port}`}>
+    <Link
+      className={`card hud${t.verdict === "malicious" ? " card--flagged" : t.verdict === "suspicious" ? " card--suspect" : ""}`}
+      to={`/signal/${t.ip}/${t.port}`}
+    >
       <div className="card-shot">
         {t.image_url ? (
           <img

@@ -97,6 +97,11 @@ func main() {
 		}
 	}
 
+	// Daily census snapshots for the longitudinal trend view.
+	if cfg.RollupWorkerEnabled {
+		go mongoStore.RunRollupWorker(ctx, 6*time.Hour, cfg.Debug)
+	}
+
 	ingestor := collector.NewIngestor(cfg, mongoStore, r2, geoResolver, buffer)
 	blacklist := collector.NewBlacklistCache(mongoStore)
 	srv := httpapi.NewServer(cfg, ingestor, blacklist, mongoStore, geoResolver, enricher)

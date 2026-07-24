@@ -8,6 +8,7 @@ import Stats from "./pages/Stats";
 import Signal from "./pages/Signal";
 import About from "./pages/About";
 import Methodology from "./pages/Methodology";
+import Architecture from "./pages/Architecture";
 import Ethics from "./pages/Ethics";
 import Data from "./pages/Data";
 import Disclosure from "./pages/Disclosure";
@@ -27,6 +28,7 @@ export default function App() {
           <Route path="/signal/:ip/:port" element={<Signal />} />
           <Route path="/about" element={<About />} />
           <Route path="/methodology" element={<Methodology />} />
+          <Route path="/architecture" element={<Architecture />} />
           <Route path="/ethics" element={<Ethics />} />
           <Route path="/data" element={<Data />} />
           <Route path="/disclosure" element={<Disclosure />} />

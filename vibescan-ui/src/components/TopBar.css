@@ -8,12 +8,10 @@
 }
 .topbar-inner { display: flex; align-items: center; height: 58px; gap: 28px; }
 
-.brand { display: flex; flex-direction: column; justify-content: center; gap: 1px; line-height: 1; }
+.brand { display: flex; align-items: baseline; }
 .brand:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: var(--radius); }
-.brand-word { display: flex; align-items: baseline; }
-.brand-mark { font-size: 17px; font-weight: 600; color: var(--ink); letter-spacing: 0.01em; }
-.brand-accent { font-size: 17px; font-weight: 600; color: var(--accent); letter-spacing: 0.01em; }
-.brand-sub { font-size: 9px; letter-spacing: 0.12em; color: var(--muted); text-transform: uppercase; }
+.brand-mark { font-size: 19px; font-weight: 600; color: var(--ink); letter-spacing: 0.01em; }
+.brand-accent { font-size: 19px; font-weight: 600; color: var(--accent); letter-spacing: 0.01em; }
 
 .nav { display: flex; gap: 4px; margin-right: auto; }
 .nav-link {
@@ -55,8 +53,7 @@
 
 @media (max-width: 720px) {
   .topbar-inner { gap: 12px; }
-  .brand-mark, .brand-accent { font-size: 13px; }
-  .brand-sub { display: none; }
+  .brand-mark, .brand-accent { font-size: 14px; }
   /* Collapse the clock/counter and the inline nav into a hamburger dropdown so the
      bar never overflows the viewport width. */
   .topbar-meta { display: none; }

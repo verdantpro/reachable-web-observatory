@@ -91,17 +91,65 @@ export default function Console() {
     <div className="console wrap">
       <div className="console-head">
         <div className="eyebrow">◊ Reachable Web Observatory · live census</div>
-        <h1 className="console-h1 display" title="Total cleartext HTTP services captured across all time">
+        <h1 className="console-h1 display" title="Cumulative total of every cleartext HTTP service the census has recorded since it began (the Stats page shows a recent window instead).">
           {insecure != null ? insecure.toLocaleString() : "—"}{" "}
-          <span className="console-h1-sub">cleartext HTTP services on record</span>
-          <span className="console-h1-scope mono"> · all time</span>
+          <span className="console-h1-sub">cleartext HTTP services recorded to date</span>
         </h1>
         <p className="console-lede dim">
-          An open measurement study of the reachable public-IPv4 web: we sample random hosts on common
-          web ports and map where CVE-associated and reputation-flagged services concentrate. Draw a
-          random capture below, or browse all {hosts != null ? hosts.toLocaleString() : ""} hosts
-          observed to date (all time; the Stats page defaults to a recent window).{" "}
-          <Link className="console-more" to="/methodology">How this works →</Link>
+          An open, continuously-running measurement study of the <em>ordinary</em> reachable web — and
+          where risk quietly accumulates across it.
+        </p>
+
+        <div className="console-purpose">
+          <p>
+            Most internet scanners hunt for known targets or try to inventory everything. This one is
+            different: it draws a uniform-random sample of public-IPv4 addresses, captures what an
+            anonymous visitor would see on a handful of common web ports, and enriches each host with
+            public CVE and reputation data. It is a research instrument, not a search engine — a
+            continuing time series of observations rather than a directory of the internet.
+          </p>
+          <p>
+            The point is to understand where exposure <em>concentrates</em>. Cleartext services,
+            software carrying known CVEs, and addresses flagged by threat-intelligence feeds are not
+            spread evenly — they cluster in particular networks, regions, and products, and that
+            clustering shifts over time. Measuring it is how a randomly-sampled census turns into a
+            picture of systemic risk on the everyday web.
+          </p>
+          <p>
+            Everything here is open: the live census below, the aggregate{" "}
+            <Link className="console-more" to="/stats">statistics</Link>, every per-host record, the
+            downloadable <Link className="console-more" to="/data">dataset</Link>, and the full{" "}
+            <Link className="console-more" to="/methodology">methodology</Link> and{" "}
+            <Link className="console-more" to="/ethics">ethics</Link>.
+          </p>
+        </div>
+
+        <div className="console-frame">
+          <div className="console-frame-q">
+            <span className="eyebrow">◊ The question</span>
+            <p>
+              Across a uniform random sample of the reachable public-IPv4 web, <em>where do
+              CVE-associated and reputation-flagged services concentrate</em> — by network, geography,
+              product, and port — and how does that change over time?
+            </p>
+          </div>
+          <div className="console-frame-look">
+            <span className="eyebrow">◊ What to look for</span>
+            <ul className="console-look-list">
+              <li>How much of the reachable web still serves <strong>cleartext HTTP</strong></li>
+              <li><strong>CVE-associated</strong> services clustering by network (ASN) and product</li>
+              <li>Geographic <strong>concentration</strong> of flagged hosts</li>
+              <li>How these shift <strong>over time</strong> as the census accrues</li>
+            </ul>
+          </div>
+        </div>
+
+        <p className="console-browse dim">
+          Draw a random capture below, or{" "}
+          <Link className="console-more" to="/feed">
+            browse all {hosts != null ? hosts.toLocaleString() : ""} hosts observed to date →
+          </Link>{" "}
+          (all-time totals; the Stats page defaults to a recent window).
         </p>
       </div>
 

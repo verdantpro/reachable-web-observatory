@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { api, type Tile } from "../api";
 import SignalCard from "../components/SignalCard";
 import ErrorState from "../components/ErrorState";
@@ -57,6 +58,10 @@ export default function Feed() {
               ? "Newest captured services first — any status, as the agents find them."
               : "Curated across the census — HTTP 200 and clear screenshots first."}
           </div>
+          <p className="page-hint">
+            Cards carry third-party CVE &amp; reputation signals (not verified findings) —{" "}
+            <Link className="hint-link" to="/methodology">how to read them →</Link>
+          </p>
         </div>
         <div className="chips">
           <button className={`chip mono${mode === "ranked" ? " on" : ""}`} onClick={() => setMode("ranked")}>

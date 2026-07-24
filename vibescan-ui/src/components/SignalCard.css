@@ -10,6 +10,12 @@
   border-color: var(--accent-deep);
   transform: translateY(-2px);
 }
+/* Flagged/suspect hosts get a subtle colored border + left accent so risk
+   patterns stand out when scanning a grid, without shouting. */
+.card--flagged { border-color: rgba(232, 105, 95, 0.32); border-left: 2px solid var(--alert); }
+.card--suspect { border-color: rgba(207, 155, 70, 0.32); border-left: 2px solid var(--amber); }
+.card--flagged:hover { border-color: var(--alert); }
+.card--suspect:hover { border-color: var(--amber); }
 .card:hover .card-shot img { filter: saturate(1) contrast(1); }
 .card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 

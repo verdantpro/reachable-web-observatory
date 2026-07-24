@@ -67,7 +67,8 @@ export default function About() {
             ten independent threat-intelligence and reputation feeds into a single verdict, and the
             resilience work that keeps ingest running (disk-buffering submissions when the database is
             unavailable, deterministic record IDs for idempotent upserts) through a strangler migration
-            from an earlier Python prototype to Go.
+            from an earlier Python prototype to Go. The full stack and hosting are documented on the{" "}
+            <Link className="about-mail" to="/architecture">architecture</Link> page.
             {/* Optional: add 1–2 lines of personal background / resume tie-in here. */}
           </p>
         </section>
@@ -109,7 +110,7 @@ export default function About() {
           <p>Please cite the dataset (and note the snapshot date) when using it in published work:</p>
           <div className="about-cite mono">
             Walters, J. (2026). <em>Reachable Web Observatory: a continuous census of the public-IPv4
-            web.</em> Verdant Protocol. https://vibescan.verdantprotocol.com/
+            web.</em> Verdant Protocol. https://observatory.verdantprotocol.com/
           </div>
           <div className="about-actions">
             <Link className="btn" to="/data">↓ data &amp; access</Link>

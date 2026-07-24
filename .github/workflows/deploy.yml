@@ -165,7 +165,7 @@ jobs:
 
           sleep 3
           # A failed health check rolls back to the previous image, then fails.
-          curl -fsS --max-time 20 https://vibescan.verdantprotocol.com/api/healthz || { echo HEALTHCHECK_FAILED >&2; rollback; exit 1; }
+          curl -fsS --max-time 20 https://observatory.verdantprotocol.com/api/healthz || { echo HEALTHCHECK_FAILED >&2; rollback; exit 1; }
           echo Healthcheck OK
           EOF
           )
@@ -223,7 +223,7 @@ jobs:
             echo "### Deployed \`${{ steps.meta.outputs.tag }}\`"
             echo ""
             echo "- Image: \`${{ steps.meta.outputs.image }}\`"
-            echo "- Site: https://vibescan.verdantprotocol.com/"
+            echo "- Site: https://observatory.verdantprotocol.com/"
             echo "- Transport: **AWS SSM** (no inbound SSH)"
             echo "- Auth: **GitHub OIDC** (assumed role, no static keys)"
           } >> "$GITHUB_STEP_SUMMARY"

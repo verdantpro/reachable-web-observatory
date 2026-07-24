@@ -5,14 +5,14 @@ const W = 640;
 const H = 200;
 const PAD = { t: 14, r: 14, b: 24, l: 34 };
 
-export default function TimeSeries({ data }: { data: Record<string, number> }) {
+export default function TimeSeries({ data, unit = "submissions" }: { data: Record<string, number>; unit?: string }) {
   const points = useMemo(
     () => Object.entries(data).sort((a, b) => a[0].localeCompare(b[0])).map(([label, value]) => ({ label, value })),
     [data]
   );
   const [hover, setHover] = useState<number | null>(null);
 
-  if (points.length === 0) return <div className="bar-empty mono dim">no submissions in range</div>;
+  if (points.length === 0) return <div className="bar-empty mono dim">no data in range</div>;
 
   const max = Math.max(...points.map((p) => p.value), 1);
   const iw = W - PAD.l - PAD.r;
@@ -58,7 +58,7 @@ export default function TimeSeries({ data }: { data: Record<string, number> }) {
       <div className="ts-foot mono dim">
         {hp ? (
           <span className="ts-tip">
-            <b>{hp.value.toLocaleString()}</b> submissions · {hp.label} UTC
+            <b>{hp.value.toLocaleString()}</b> {unit} · {hp.label} UTC
           </span>
         ) : (
           <span>{points[0].label} → {points[points.length - 1].label}</span>

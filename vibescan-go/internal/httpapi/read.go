@@ -375,6 +375,20 @@ func (s *Server) handleStats(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, stats)
 }
 
+// handleTrends returns the daily census snapshots (longitudinal exposure series).
+func (s *Server) handleTrends(w http.ResponseWriter, r *http.Request) {
+	days := clampInt(queryInt(r, "days", 90), 1, 730)
+	rows, err := s.store.ReadDailyRollups(r.Context(), days)
+	if err != nil {
+		s.readError(w, err)
+		return
+	}
+	if rows == nil {
+		rows = []store.DailyRollup{}
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"days": rows})
+}
+
 // handleImage serves base64 captures stored in MongoDB, or redirects to the R2
 // public URL for r2: references.
 func (s *Server) handleImage(w http.ResponseWriter, r *http.Request) {

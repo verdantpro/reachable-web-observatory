@@ -37,6 +37,7 @@ type Mongo struct {
 	results    *mongo.Collection
 	blacklist  *mongo.Collection
 	enrichment *mongo.Collection
+	rollups    *mongo.Collection
 }
 
 // Connect dials MongoDB and pings it. It always returns a non-nil *Mongo; the
@@ -67,6 +68,7 @@ func Connect(ctx context.Context, cfg *config.Config) (*Mongo, error) {
 		results:    db.Collection(cfg.ResultsCollection),
 		blacklist:  db.Collection(cfg.BlacklistCollection),
 		enrichment: db.Collection(cfg.EnrichmentCollection),
+		rollups:    db.Collection(cfg.RollupsCollection),
 	}, nil
 }
 

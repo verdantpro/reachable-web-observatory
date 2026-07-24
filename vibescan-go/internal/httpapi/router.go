@@ -55,6 +55,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/v2/search", s.handleSearch)
 	mux.HandleFunc("GET /api/v2/export", s.handleExport)
 	mux.HandleFunc("GET /api/v2/stats", s.handleStats)
+	mux.HandleFunc("GET /api/v2/trends", s.handleTrends)
 	mux.HandleFunc("GET /api/v2/random-capture", s.handleRandomCapture)
 	mux.HandleFunc("GET /api/v2/services/{ip}/{port}", s.handleServiceDetail)
 	mux.HandleFunc("GET /api/v2/image/{ip}/{port}", s.handleImage)

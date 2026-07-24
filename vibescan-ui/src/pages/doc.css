@@ -98,6 +98,21 @@
 }
 .doc-callout.accent { border-left-color: var(--accent); }
 
+/* ASCII architecture diagram — preserve whitespace, scroll if narrow. */
+.doc-diagram {
+  margin: 16px 0;
+  padding: 16px 18px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--ink-dim);
+  overflow-x: auto;
+  white-space: pre;
+}
+
 /* Compact reference / citation block. */
 .doc-cite {
   margin: 14px 0;

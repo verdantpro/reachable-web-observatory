@@ -37,7 +37,7 @@ export default function ScanInfo() {
           header, so you can spot (or filter) us directly in your access logs:
         </p>
         <div className="doc-cite">
-          Mozilla/5.0 (compatible; ReachableWebObservatory/1.0; +https://vibescan.verdantprotocol.com/scan-info)
+          Mozilla/5.0 (compatible; ReachableWebObservatory/1.0; +https://observatory.verdantprotocol.com/scan-info)
         </div>
         <p>
           Scanning currently runs from a single low-rate host on an ordinary connection — not a large

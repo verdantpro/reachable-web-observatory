@@ -125,6 +125,23 @@ export interface Stats {
   exposed_services: number;
   top_tags: Record<string, number>;
   verdicts: Record<string, number>;
+  flagged_services: number;
+  flagged_by_port: Record<string, number>;
+  flagged_by_product: Record<string, number>;
+  flagged_by_org: Record<string, number>;
+  flagged_by_country: Record<string, number>;
+}
+
+export interface DailyRollup {
+  date: string;
+  services: number;
+  hosts: number;
+  cleartext: number;
+  secure: number;
+  flagged: number;
+  exposed: number;
+  malicious: number;
+  suspicious: number;
 }
 
 export interface SearchParams {
@@ -228,6 +245,8 @@ export const api = {
     statsCache.set(timeRange, { at: Date.now(), p });
     return p;
   },
+
+  trends: (days = 90) => get<{ days: DailyRollup[] }>(`/api/v2/trends?days=${days}`),
 
   randomCapture: () => get<RandomCapture>(`/api/v2/random-capture`),
 

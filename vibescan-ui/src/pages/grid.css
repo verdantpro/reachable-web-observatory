@@ -2,6 +2,10 @@
 .page-head { margin-bottom: 22px; }
 .page-title { font-size: clamp(24px, 3.4vw, 36px); color: var(--ink); margin: 8px 0 4px; }
 .page-sub { color: var(--muted); font-size: 13px; }
+/* One-line contextual hint under a page title (cross-links, window notes). */
+.page-hint { color: var(--muted); font-size: 12px; margin: 8px 0 0; max-width: 60ch; line-height: 1.5; }
+.hint-link { color: var(--cyan); }
+.hint-link:hover { text-decoration: underline; }
 
 .signal-grid {
   display: grid;

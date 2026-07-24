@@ -42,10 +42,7 @@ export default function TopBar() {
     <header className="topbar">
       <div className="wrap topbar-inner">
         <NavLink to="/" className="brand">
-          <span className="brand-word">
-            <span className="brand-mark display">Reachable&nbsp;Web&nbsp;</span><span className="brand-accent display">Observatory</span>
-          </span>
-          <span className="brand-sub mono">A continuous census of the public-IPv4 web</span>
+          <span className="brand-mark display">Reachable&nbsp;Web&nbsp;</span><span className="brand-accent display">Observatory</span>
         </NavLink>
 
         <button

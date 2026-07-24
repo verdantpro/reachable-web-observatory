@@ -30,6 +30,7 @@ type Config struct {
 	ResultsCollection    string
 	BlacklistCollection  string
 	EnrichmentCollection string
+	RollupsCollection    string
 
 	GeoIPPath string
 	BufferDir string
@@ -61,6 +62,7 @@ type Config struct {
 	EnrichEnabled       bool
 	ShodanAPIKey        string
 	EnrichTTLHours      int     // durable cache freshness window
+	RollupWorkerEnabled bool    // background worker snapshots daily census stats for trends
 	EnrichWorkerEnabled bool    // background worker enriches recent hosts (InternetDB only)
 	EnrichWorkerRPS     float64 // shared outbound rate to Shodan/InternetDB
 	EnrichWorkerBatch   int     // hosts enriched per worker tick
@@ -190,6 +192,7 @@ func Load() *Config {
 		ResultsCollection:    envStr("MONGO_COLLECTION", "results"),
 		BlacklistCollection:  envStr("MONGO_COLLECTION_BLACKLIST", "cidr_blacklist"),
 		EnrichmentCollection: envStr("MONGO_COLLECTION_ENRICHMENT", "enrichment"),
+		RollupsCollection:    envStr("MONGO_COLLECTION_ROLLUPS", "stats_daily"),
 
 		GeoIPPath: envStr("GEOLITE2_CITY_MMDB", "./GeoLite2-City.mmdb"),
 		BufferDir: envStr("VIBESCAN_BUFFER_DIR", "cache/server_buffer"),
@@ -216,6 +219,7 @@ func Load() *Config {
 		EnrichEnabled:       envBool("VIBESCAN_ENRICH_ENABLED", true),
 		ShodanAPIKey:        envStr("SHODAN_API_KEY", ""),
 		EnrichTTLHours:      envInt("VIBESCAN_ENRICH_TTL_HOURS", 168),
+		RollupWorkerEnabled: envBool("VIBESCAN_ROLLUP_WORKER", true),
 		EnrichWorkerEnabled: envBool("VIBESCAN_ENRICH_WORKER", true),
 		EnrichWorkerRPS:     envFloat("VIBESCAN_ENRICH_RPS", 1),
 		EnrichWorkerBatch:   envInt("VIBESCAN_ENRICH_BATCH", 20),
