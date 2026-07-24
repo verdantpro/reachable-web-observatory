@@ -91,10 +91,9 @@ export default function Console() {
     <div className="console wrap">
       <div className="console-head">
         <div className="eyebrow">◊ Reachable Web Observatory · live census</div>
-        <h1 className="console-h1 display" title="Total cleartext HTTP services captured across all time">
+        <h1 className="console-h1 display" title="Cumulative total of every cleartext HTTP service the census has recorded since it began (the Stats page shows a recent window instead).">
           {insecure != null ? insecure.toLocaleString() : "—"}{" "}
-          <span className="console-h1-sub">cleartext HTTP services on record</span>
-          <span className="console-h1-scope mono"> · all time</span>
+          <span className="console-h1-sub">cleartext HTTP services recorded to date</span>
         </h1>
         <p className="console-lede dim">
           An open, continuously-running measurement study of the <em>ordinary</em> reachable web — and
