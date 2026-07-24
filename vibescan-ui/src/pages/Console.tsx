@@ -99,8 +99,8 @@ export default function Console() {
         <p className="console-lede dim">
           An open measurement study of the reachable public-IPv4 web: we sample random hosts on common
           web ports and map where CVE-associated and reputation-flagged services concentrate. Draw a
-          random capture below, or browse the {hosts != null ? hosts.toLocaleString() : ""} hosts
-          observed so far.{" "}
+          random capture below, or browse all {hosts != null ? hosts.toLocaleString() : ""} hosts
+          observed to date (all time; the Stats page defaults to a recent window).{" "}
           <Link className="console-more" to="/methodology">How this works →</Link>
         </p>
       </div>

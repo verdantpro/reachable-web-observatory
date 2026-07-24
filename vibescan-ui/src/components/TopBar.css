@@ -37,11 +37,45 @@
 .insecure-count { color: var(--muted); }
 .clock { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); white-space: nowrap; }
 
+/* Hamburger — desktop-hidden; the mobile menu trigger. */
+.nav-toggle {
+  display: none;
+  width: 38px;
+  height: 34px;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  line-height: 1;
+  color: var(--ink);
+  background: var(--glass);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+}
+.nav-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
 @media (max-width: 720px) {
   .topbar-inner { gap: 12px; }
-  .insecure-count { display: none; }
   .brand-mark, .brand-accent { font-size: 13px; }
   .brand-sub { display: none; }
-  /* Larger tap targets on touch; the fixed-height bar keeps the header compact. */
-  .nav-link { padding: 10px 10px; letter-spacing: 0.1em; }
+  /* Collapse the clock/counter and the inline nav into a hamburger dropdown so the
+     bar never overflows the viewport width. */
+  .topbar-meta { display: none; }
+  .nav-toggle { display: inline-flex; margin-left: auto; }
+
+  .nav {
+    position: absolute;
+    top: 58px;
+    left: 0;
+    right: 0;
+    margin-right: 0;
+    flex-direction: column;
+    gap: 2px;
+    padding: 6px 0 12px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--line);
+    box-shadow: 0 14px 26px -14px rgba(0, 0, 0, 0.6);
+    display: none;
+  }
+  .nav.open { display: flex; }
+  .nav-link { padding: 12px 10px; letter-spacing: 0.12em; font-size: 13px; }
 }

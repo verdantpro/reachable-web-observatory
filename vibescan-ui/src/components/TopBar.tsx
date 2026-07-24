@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import { api } from "../api";
 import "./TopBar.css";
 
@@ -23,6 +23,13 @@ function useClock() {
 export default function TopBar() {
   const clock = useClock();
   const [insecure, setInsecure] = useState<number | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const location = useLocation();
+
+  // Collapse the mobile menu whenever the route changes.
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [location.pathname]);
 
   useEffect(() => {
     api
@@ -41,7 +48,16 @@ export default function TopBar() {
           <span className="brand-sub mono">A continuous census of the public-IPv4 web</span>
         </NavLink>
 
-        <nav className="nav">
+        <button
+          className="nav-toggle mono"
+          aria-label={menuOpen ? "Close menu" : "Open menu"}
+          aria-expanded={menuOpen}
+          onClick={() => setMenuOpen((o) => !o)}
+        >
+          {menuOpen ? "✕" : "☰"}
+        </button>
+
+        <nav className={`nav${menuOpen ? " open" : ""}`}>
           {NAV.map((n) => (
             <NavLink key={n.to} to={n.to} end={n.end} className="nav-link mono">
               {n.label}
