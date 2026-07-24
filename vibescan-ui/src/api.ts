@@ -130,6 +130,10 @@ export interface Stats {
   flagged_by_product: Record<string, number>;
   flagged_by_org: Record<string, number>;
   flagged_by_country: Record<string, number>;
+  top_cves: Record<string, number>;
+  services_by_country: Record<string, number>;
+  total_by_org: Record<string, number>;
+  flagged_points: { lat: number; lon: number; insecure: boolean }[];
 }
 
 export interface DailyRollup {

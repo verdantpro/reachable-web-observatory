@@ -47,6 +47,33 @@ func (m *Mongo) UpsertEnrichment(ctx context.Context, ipInt int64, rec enrich.Re
 	return err
 }
 
+// BackfillEnrichmentDenorm re-applies the denormalized enrichment summary
+// (including the CVE list) from the enrichment cache onto every result doc, with
+// no outbound API calls. A one-time helper to populate fields added after records
+// were first enriched.
+func (m *Mongo) BackfillEnrichmentDenorm(ctx context.Context) (int, error) {
+	if m == nil || m.enrichment == nil {
+		return 0, nil
+	}
+	cur, err := m.enrichment.Find(ctx, bson.M{})
+	if err != nil {
+		return 0, err
+	}
+	defer cur.Close(ctx)
+	n := 0
+	for cur.Next(ctx) {
+		var doc enrichmentDoc
+		if err := cur.Decode(&doc); err != nil {
+			continue
+		}
+		if err := m.DenormalizeEnrichment(ctx, doc.IPInt, doc.Record); err != nil {
+			return n, err
+		}
+		n++
+	}
+	return n, cur.Err()
+}
+
 // RecentUnenrichedIPs returns up to limit recent captured IP strings whose result
 // docs carry no fresh `enriched_at` (missing or older than staleBefore), newest
 // first — the worker's queue.
@@ -107,10 +134,15 @@ func (m *Mongo) DenormalizeEnrichment(ctx context.Context, ipInt int64, rec enri
 	if sources == nil {
 		sources = []string{}
 	}
+	cves := rec.Vulns
+	if cves == nil {
+		cves = []string{}
+	}
 	_, err := m.results.UpdateMany(ctx,
 		bson.M{"ip": ipInt},
 		bson.M{"$set": bson.M{
 			"vuln_count":     len(rec.Vulns),
+			"cves":           cves, // full CVE-ID list for the "top CVEs" aggregation
 			"shodan_tags":    tags,
 			"extra_ports":    ports,
 			"verdict":        rec.Verdict, // "" for keyless/worker; set on the deep path

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { api, type Tile } from "../api";
 import SignalCard from "../components/SignalCard";
 import ErrorState from "../components/ErrorState";
@@ -16,13 +17,26 @@ export default function Search() {
     description: "Search captured web services by banner, product, port, status, location, CVEs, and reputation.",
     path: "/search",
   });
-  const [q, setQ] = useState("");
-  const [debounced, setDebounced] = useState("");
-  const [port, setPort] = useState("");
-  const [sec, setSec] = useState<SecFilter>("any");
-  const [status, setStatus] = useState<number | null>(null);
-  const [hasVulns, setHasVulns] = useState(false);
-  const [verdict, setVerdict] = useState("");
+  // Seed filters from the URL so deep-links (e.g. from Stats) land pre-filtered.
+  const [params] = useSearchParams();
+  const [q, setQ] = useState(() => params.get("q") ?? "");
+  const [debounced, setDebounced] = useState(() => (params.get("q") ?? "").trim());
+  const [port, setPort] = useState(() => params.get("port") ?? "");
+  const [sec, setSec] = useState<SecFilter>(() => {
+    const v = params.get("secured");
+    if (v === "https" || v === "1" || v === "true") return "https";
+    if (v === "http" || v === "0" || v === "false") return "http";
+    return "any";
+  });
+  const [status, setStatus] = useState<number | null>(() => {
+    const st = params.get("status");
+    return st ? Number(st) : null;
+  });
+  const [hasVulns, setHasVulns] = useState(() => {
+    const v = params.get("has_vulns");
+    return v === "1" || v === "true";
+  });
+  const [verdict, setVerdict] = useState(() => params.get("verdict") ?? "");
   const [tiles, setTiles] = useState<Tile[]>([]);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(false);
