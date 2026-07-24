@@ -59,6 +59,17 @@ export default function About() {
             academic or nonprofit partners is welcome; reach out at{" "}
             <a className="about-mail" href={`mailto:${ABUSE}`}>{ABUSE}</a>.
           </p>
+          <p>
+            On the engineering side it is a Go + React monorepo: a single Go binary runs the ingest
+            pipeline, the public JSON APIs, and the embedded UI, fed by a scanner agent that pairs nmap
+            discovery with headless-Chromium capture. The hardest — and most rewarding — parts were the{" "}
+            <em>concurrent enrichment pipeline</em> that reconciles each host's signals across roughly
+            ten independent threat-intelligence and reputation feeds into a single verdict, and the
+            resilience work that keeps ingest running (disk-buffering submissions when the database is
+            unavailable, deterministic record IDs for idempotent upserts) through a strangler migration
+            from an earlier Python prototype to Go.
+            {/* Optional: add 1–2 lines of personal background / resume tie-in here. */}
+          </p>
         </section>
 
         <section className="about-sec">
@@ -71,7 +82,11 @@ export default function About() {
             with public CVE and reputation data. Scanning runs continuously at a deliberately slow rate
             and honors an operator <Link className="about-mail" to="/scan-info">exclusion list</Link>.
             The console is a live view of <em>captured records</em> — a point-in-time snapshot, not a
-            real-time scan of the host you are looking at.
+            real-time scan of the host you are looking at. To be explicit: this is <em>passive
+            observation of information that is already public</em> — never authentication, exploitation,
+            or "hacking back." The boundary is spelled out in the{" "}
+            <Link className="about-mail" to="/ethics">ethics</Link> and{" "}
+            <Link className="about-mail" to="/methodology">methodology</Link>.
           </p>
         </section>
 
