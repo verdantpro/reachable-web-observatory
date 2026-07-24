@@ -97,11 +97,33 @@ export default function Console() {
           <span className="console-h1-scope mono"> · all time</span>
         </h1>
         <p className="console-lede dim">
-          An open measurement study of the reachable public-IPv4 web. We sample random hosts on common
-          web ports and map where CVE-associated and reputation-flagged services concentrate — a
-          picture of systemic exposure, not an index of every host.{" "}
-          <Link className="console-more" to="/methodology">How this works →</Link>
+          An open, continuously-running measurement study of the <em>ordinary</em> reachable web — and
+          where risk quietly accumulates across it.
         </p>
+
+        <div className="console-purpose">
+          <p>
+            Most internet scanners hunt for known targets or try to inventory everything. This one is
+            different: it draws a uniform-random sample of public-IPv4 addresses, captures what an
+            anonymous visitor would see on a handful of common web ports, and enriches each host with
+            public CVE and reputation data. It is a research instrument, not a search engine — a
+            continuing time series of observations rather than a directory of the internet.
+          </p>
+          <p>
+            The point is to understand where exposure <em>concentrates</em>. Cleartext services,
+            software carrying known CVEs, and addresses flagged by threat-intelligence feeds are not
+            spread evenly — they cluster in particular networks, regions, and products, and that
+            clustering shifts over time. Measuring it is how a randomly-sampled census turns into a
+            picture of systemic risk on the everyday web.
+          </p>
+          <p>
+            Everything here is open: the live census below, the aggregate{" "}
+            <Link className="console-more" to="/stats">statistics</Link>, every per-host record, the
+            downloadable <Link className="console-more" to="/data">dataset</Link>, and the full{" "}
+            <Link className="console-more" to="/methodology">methodology</Link> and{" "}
+            <Link className="console-more" to="/ethics">ethics</Link>.
+          </p>
+        </div>
 
         <div className="console-frame">
           <div className="console-frame-q">
