@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api, type Stats, type DailyRollup } from "../api";
 import TimeSeries from "../components/TimeSeries";
+import WorldMap, { type MapPoint } from "../components/WorldMap";
 import ErrorState from "../components/ErrorState";
 import { useMeta } from "../lib/meta";
 import "./grid.css";
@@ -28,30 +29,49 @@ const VERDICT_COLOR: Record<string, string> = {
   clean: "var(--accent)",
 };
 
-function BarRow({ label, value, max, color }: { label: string; value: number; max: number; color: string }) {
+function BarRow({ label, value, max, color, suffix = "", href }: { label: string; value: number; max: number; color: string; suffix?: string; href?: string }) {
   const pct = max > 0 ? Math.max(2, (value / max) * 100) : 0;
+  const labelEl = href ? (
+    href.startsWith("http") ? (
+      <a className="bar-label mono bar-link" href={href} target="_blank" rel="noopener noreferrer">{label}</a>
+    ) : (
+      <Link className="bar-label mono bar-link" to={href}>{label}</Link>
+    )
+  ) : (
+    <span className="bar-label mono">{label}</span>
+  );
   return (
-    <div className="bar-row" title={`${label}: ${value.toLocaleString()}`}>
-      <span className="bar-label mono">{label}</span>
+    <div className="bar-row" title={`${label}: ${value.toLocaleString()}${suffix}`}>
+      {labelEl}
       <span className="bar-track">
         <span className="bar-fill" style={{ width: `${pct}%`, background: color }} />
       </span>
-      <span className="bar-val mono">{value.toLocaleString()}</span>
+      <span className="bar-val mono">{value.toLocaleString()}{suffix}</span>
     </div>
   );
 }
 
-function BarList({ data, color = "var(--cyan)", limit = 10 }: { data: Record<string, number>; color?: string; limit?: number }) {
+function BarList({ data, color = "var(--cyan)", limit = 10, suffix = "", hrefFor }: { data: Record<string, number>; color?: string; limit?: number; suffix?: string; hrefFor?: (label: string) => string | undefined }) {
   const rows = Object.entries(data).sort((a, b) => b[1] - a[1]).slice(0, limit);
   const max = rows.length ? rows[0][1] : 0;
   if (!rows.length) return <div className="bar-empty mono dim">no data</div>;
   return (
     <div className="bar-list">
       {rows.map(([k, v]) => (
-        <BarRow key={k} label={k} value={v} max={max} color={color} />
+        <BarRow key={k} label={k} value={v} max={max} color={color} suffix={suffix} href={hrefFor?.(k)} />
       ))}
     </div>
   );
+}
+
+// Turn flagged-by-X + total-by-X into a % rate per bucket, dropping tiny samples.
+function rateMap(flagged: Record<string, number>, total: Record<string, number>, minSample = 5): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const [k, f] of Object.entries(flagged)) {
+    const t = total[k];
+    if (t && t >= minSample) out[k] = Math.round((f / t) * 100);
+  }
+  return out;
 }
 
 export default function StatsPage() {
@@ -63,6 +83,7 @@ export default function StatsPage() {
   const [hours, setHours] = useState(24);
   const [s, setS] = useState<Stats | null>(null);
   const [trends, setTrends] = useState<DailyRollup[]>([]);
+  const [density, setDensity] = useState(false); // Concentration: count vs % flagged
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
@@ -107,6 +128,42 @@ export default function StatsPage() {
     ? { "200": s.status_code_counts["200"] || 0, "3xx": s.status_code_counts["3xx"] || 0, "4xx": s.status_code_counts["4xx"] || 0, "5xx": s.status_code_counts["5xx"] || 0 }
     : {};
 
+  // Concentration: raw counts, or % flagged (rate) when the density toggle is on.
+  const conc = s
+    ? density
+      ? {
+          port: rateMap(s.flagged_by_port, s.services_by_port),
+          product: rateMap(s.flagged_by_product, s.top_banners),
+          org: rateMap(s.flagged_by_org, s.total_by_org),
+          country: rateMap(s.flagged_by_country, s.services_by_country),
+        }
+      : { port: s.flagged_by_port, product: s.flagged_by_product, org: s.flagged_by_org, country: s.flagged_by_country }
+    : { port: {}, product: {}, org: {}, country: {} };
+  const concSuffix = density ? "%" : "";
+
+  const flaggedMapPoints: MapPoint[] = (s?.flagged_points ?? [])
+    .filter((p) => p.lat || p.lon)
+    .map((p) => ({ ip: "", port: 0, lat: p.lat, lon: p.lon, insecure: p.insecure }));
+
+  // Notable findings, computed from the aggregates.
+  const topCve = s ? Object.entries(s.top_cves).sort((a, b) => b[1] - a[1])[0] : undefined;
+  const riskiestOrg = s ? Object.entries(rateMap(s.flagged_by_org, s.total_by_org)).sort((a, b) => b[1] - a[1])[0] : undefined;
+  const topProduct = s ? Object.entries(s.flagged_by_product).sort((a, b) => b[1] - a[1])[0] : undefined;
+  const cleartextTrend = (() => {
+    const pts = Object.entries(cleartextSeries).sort((a, b) => a[0].localeCompare(b[0]));
+    return pts.length >= 2 ? pts[pts.length - 1][1] - pts[0][1] : 0;
+  })();
+
+  // Deep-links from the bars into a pre-filtered Search (or NVD for CVEs). Product,
+  // org, country, and tag ride the free-text `q` (matched by the $text index);
+  // port and verdict use dedicated filters.
+  const portHref = (p: string) => `/search?port=${encodeURIComponent(p)}`;
+  const productHref = (p: string) => `/search?q=${encodeURIComponent(p)}`;
+  const countryHref = (c: string) => `/search?q=${encodeURIComponent(c)}`;
+  const tagHref = (t: string) => `/search?q=${encodeURIComponent(t)}`;
+  const verdictHref = (v: string) => `/search?verdict=${encodeURIComponent(v)}`;
+  const cveHref = (c: string) => `https://nvd.nist.gov/vuln/detail/${encodeURIComponent(c)}`;
+
   return (
     <div className="page wrap">
       <div className="page-head row spread stats-head">
@@ -136,6 +193,44 @@ export default function StatsPage() {
         <div className="empty">TELEMETRY OFFLINE</div>
       ) : (
         <>
+          {(topCve || riskiestOrg || topProduct) && (
+            <section className="highlights">
+              <div className="eyebrow highlights-h">◊ Notable findings</div>
+              <div className="highlights-grid">
+                {topCve && (
+                  <a className="highlight" href={cveHref(topCve[0])} target="_blank" rel="noopener noreferrer">
+                    <div className="highlight-k mono">Most prevalent CVE</div>
+                    <div className="highlight-v">{topCve[0]}</div>
+                    <div className="highlight-s mono dim">{topCve[1].toLocaleString()} hosts</div>
+                  </a>
+                )}
+                {riskiestOrg && (
+                  <div className="highlight">
+                    <div className="highlight-k mono">Riskiest network</div>
+                    <div className="highlight-v" title={riskiestOrg[0]}>{riskiestOrg[0]}</div>
+                    <div className="highlight-s mono dim">{riskiestOrg[1]}% of its services flagged</div>
+                  </div>
+                )}
+                {topProduct && (
+                  <Link className="highlight" to={productHref(topProduct[0])}>
+                    <div className="highlight-k mono">Most-flagged software</div>
+                    <div className="highlight-v" title={topProduct[0]}>{topProduct[0]}</div>
+                    <div className="highlight-s mono dim">{topProduct[1].toLocaleString()} at-risk services</div>
+                  </Link>
+                )}
+                <div className="highlight">
+                  <div className="highlight-k mono">Cleartext HTTP</div>
+                  <div className="highlight-v insecure">{insecurePct}%</div>
+                  <div className="highlight-s mono dim">
+                    {cleartextTrend === 0
+                      ? "of services this window"
+                      : `${cleartextTrend > 0 ? "▲" : "▼"} ${Math.abs(cleartextTrend)} pts over ${trends.length}d`}
+                  </div>
+                </div>
+              </div>
+            </section>
+          )}
+
           <div className="stat-tiles">
             <div className="tile panel hud">
               <div className="tile-label eyebrow">Hosts</div>
@@ -166,27 +261,60 @@ export default function StatsPage() {
           </div>
 
           <section className="panel panel-pad concentration">
-            <div className="eyebrow chart-head">◊ Concentration — where risk clusters</div>
+            <div className="row spread concentration-head">
+              <div className="eyebrow chart-head">◊ Concentration — where risk clusters</div>
+              <div className="chips" aria-label="Concentration measure">
+                <button className={`chip mono${!density ? " on" : ""}`} onClick={() => setDensity(false)}>count</button>
+                <button className={`chip mono${density ? " on" : ""}`} onClick={() => setDensity(true)}>% flagged</button>
+              </div>
+            </div>
             <p className="concentration-note mono dim">
-              Among the {s.flagged_services.toLocaleString()} at-risk services in this window
-              (CVE-associated or reputation-flagged), where they concentrate:
+              {density
+                ? "Share of each group's services that are at-risk (min. 5 services per group) — where risk is densest, not just most numerous."
+                : `Among the ${s.flagged_services.toLocaleString()} at-risk services in this window (CVE-associated or reputation-flagged), where they concentrate:`}
             </p>
             <div className="concentration-grid">
               <div className="concentration-cell">
                 <div className="concentration-h mono">By port</div>
-                <BarList data={s.flagged_by_port} color="var(--alert)" limit={8} />
+                <BarList data={conc.port} color="var(--alert)" limit={8} suffix={concSuffix} hrefFor={portHref} />
               </div>
               <div className="concentration-cell">
                 <div className="concentration-h mono">By product</div>
-                <BarList data={s.flagged_by_product} color="var(--alert)" limit={8} />
+                <BarList data={conc.product} color="var(--alert)" limit={8} suffix={concSuffix} hrefFor={productHref} />
               </div>
               <div className="concentration-cell">
                 <div className="concentration-h mono">By organization / network</div>
-                <BarList data={s.flagged_by_org} color="var(--amber)" limit={8} />
+                <BarList data={conc.org} color="var(--amber)" limit={8} suffix={concSuffix} hrefFor={countryHref} />
               </div>
               <div className="concentration-cell">
                 <div className="concentration-h mono">By country</div>
-                <BarList data={s.flagged_by_country} color="var(--amber)" limit={8} />
+                <BarList data={conc.country} color="var(--amber)" limit={8} suffix={concSuffix} hrefFor={countryHref} />
+              </div>
+            </div>
+          </section>
+
+          <section className="panel panel-pad">
+            <div className="eyebrow chart-head">◊ Most prevalent CVEs</div>
+            <p className="concentration-note mono dim">
+              The specific vulnerabilities most often associated with hosts in this window — third-party,
+              provider-reported associations, not confirmed exploitability.
+            </p>
+            <BarList data={s.top_cves} color="var(--alert)" limit={12} hrefFor={cveHref} />
+          </section>
+
+          <section className="panel panel-pad geo">
+            <div className="eyebrow chart-head">◊ Geography</div>
+            <div className="geo-grid">
+              <div className="geo-map">
+                {flaggedMapPoints.length ? (
+                  <WorldMap points={flaggedMapPoints} />
+                ) : (
+                  <div className="bar-empty mono dim">no geolocated flagged hosts yet</div>
+                )}
+              </div>
+              <div className="geo-rank">
+                <div className="concentration-h mono">Services by country</div>
+                <BarList data={s.services_by_country} color="var(--violet)" limit={10} hrefFor={countryHref} />
               </div>
             </div>
           </section>
@@ -217,7 +345,7 @@ export default function StatsPage() {
           <div className="stats-grid">
             <section className="panel panel-pad">
               <div className="eyebrow chart-head">◊ Services by port</div>
-              <BarList data={s.services_by_port} />
+              <BarList data={s.services_by_port} hrefFor={portHref} />
             </section>
 
             <section className="panel panel-pad">
@@ -237,12 +365,12 @@ export default function StatsPage() {
 
             <section className="panel panel-pad">
               <div className="eyebrow chart-head">◊ Top servers</div>
-              <BarList data={s.top_banners} color="var(--violet)" limit={8} />
+              <BarList data={s.top_banners} color="var(--violet)" limit={8} hrefFor={productHref} />
             </section>
 
             <section className="panel panel-pad">
               <div className="eyebrow chart-head">◊ Shodan tags</div>
-              <BarList data={s.top_tags} color="var(--accent-soft)" limit={8} />
+              <BarList data={s.top_tags} color="var(--accent-soft)" limit={8} hrefFor={tagHref} />
             </section>
 
             <section className="panel panel-pad">
@@ -256,6 +384,7 @@ export default function StatsPage() {
                       value={s.verdicts[k] || 0}
                       max={Math.max(...Object.values(s.verdicts), 1)}
                       color={VERDICT_COLOR[k]}
+                      href={verdictHref(k)}
                     />
                   ))}
                 </div>

@@ -11,6 +11,41 @@
 }
 @media (max-width: 620px) { .concentration-grid { grid-template-columns: 1fr; } }
 
+/* Notable findings strip */
+.highlights { margin-bottom: 18px; }
+.highlights-h { display: block; margin-bottom: 12px; }
+.highlights-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.highlight {
+  display: block;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-left: 2px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  color: inherit;
+  transition: border-color 0.15s;
+}
+a.highlight:hover { border-color: var(--accent); }
+.highlight-k { font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+.highlight-v { font-size: 18px; color: var(--ink); margin-top: 7px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.highlight-v.insecure { color: var(--red); }
+.highlight-s { font-size: 11px; margin-top: 4px; }
+@media (max-width: 820px) { .highlights-grid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 480px) { .highlights-grid { grid-template-columns: 1fr; } }
+
+/* Concentration header (title + count/% toggle) */
+.concentration-head { align-items: center; margin-bottom: 6px; }
+
+/* Clickable bar labels (deep-link into Search) */
+.bar-link { color: var(--ink-dim); }
+.bar-link:hover { color: var(--accent); text-decoration: underline; }
+
+/* Geography: risk map + country ranking */
+.geo { margin-bottom: 16px; }
+.geo-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; align-items: start; }
+.geo-map { min-width: 0; }
+@media (max-width: 820px) { .geo-grid { grid-template-columns: 1fr; } }
+
 /* Longitudinal exposure trend (daily rollups). */
 .trend { margin-bottom: 16px; border-left: 2px solid var(--accent); }
 .trend-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px 32px; margin-top: 6px; }

@@ -33,6 +33,19 @@ type Stats struct {
 	FlaggedByProduct map[string]int `json:"flagged_by_product"`
 	FlaggedByOrg     map[string]int `json:"flagged_by_org"`
 	FlaggedByCountry map[string]int `json:"flagged_by_country"`
+	// Findings: most-prevalent CVEs, per-dimension totals (density denominators),
+	// and flagged-host coordinates for the risk map.
+	TopCVEs           map[string]int `json:"top_cves"`
+	ServicesByCountry map[string]int `json:"services_by_country"`
+	TotalByOrg        map[string]int `json:"total_by_org"`
+	FlaggedPoints     []GeoPoint     `json:"flagged_points"`
+}
+
+// GeoPoint is one flagged host's location for the Stats risk map.
+type GeoPoint struct {
+	Lat      float64 `bson:"lat" json:"lat"`
+	Lon      float64 `bson:"lon" json:"lon"`
+	Insecure bool    `bson:"insecure" json:"insecure"`
 }
 
 // StatsTotals holds the headline counts.
@@ -60,6 +73,10 @@ type facetResult struct {
 	FlaggedProducts  []kv        `bson:"flagged_products"`
 	FlaggedOrgs      []kvStr     `bson:"flagged_orgs"`
 	FlaggedCountries []kvStr     `bson:"flagged_countries"`
+	TopCVEs          []kv        `bson:"top_cves"`
+	ServicesCountry  []kvStr     `bson:"services_by_country"`
+	TotalOrg         []kvStr     `bson:"total_by_org"`
+	FlaggedPoints    []GeoPoint  `bson:"flagged_points"`
 }
 
 type kv struct {
@@ -249,6 +266,39 @@ func (m *Mongo) StatsAggregate(ctx context.Context, timeRangeHours, maxTimeMS in
 			bson.D{{Key: "$sort", Value: bson.D{{Key: "count", Value: -1}}}},
 			bson.D{{Key: "$limit", Value: 15}},
 		}},
+		// --- Findings: top CVEs, geography totals, density denominators, risk map ---
+		{Key: "top_cves", Value: bson.A{
+			bson.D{{Key: "$unwind", Value: "$cves"}},
+			bson.D{{Key: "$group", Value: bson.D{{Key: "_id", Value: "$cves"}, {Key: "count", Value: bson.D{{Key: "$sum", Value: 1}}}}}},
+			bson.D{{Key: "$sort", Value: bson.D{{Key: "count", Value: -1}}}},
+			bson.D{{Key: "$limit", Value: 15}},
+		}},
+		{Key: "services_by_country", Value: bson.A{
+			bson.D{{Key: "$match", Value: bson.D{{Key: "geoip.country_iso", Value: bson.D{{Key: "$type", Value: "string"}, {Key: "$ne", Value: ""}}}}}},
+			bson.D{{Key: "$group", Value: bson.D{{Key: "_id", Value: "$geoip.country_iso"}, {Key: "count", Value: bson.D{{Key: "$sum", Value: 1}}}}}},
+			bson.D{{Key: "$sort", Value: bson.D{{Key: "count", Value: -1}}}},
+			bson.D{{Key: "$limit", Value: 30}},
+		}},
+		{Key: "total_by_org", Value: bson.A{
+			bson.D{{Key: "$match", Value: bson.D{{Key: "whois", Value: bson.D{{Key: "$type", Value: "string"}, {Key: "$nin", Value: bson.A{"", "unknown"}}}}}}},
+			bson.D{{Key: "$project", Value: bson.D{{Key: "org", Value: bson.D{{Key: "$trim", Value: bson.D{{Key: "input", Value: bson.D{{Key: "$arrayElemAt", Value: bson.A{
+				bson.D{{Key: "$split", Value: bson.A{"$whois", " - "}}}, 0,
+			}}}}}}}}}}},
+			bson.D{{Key: "$group", Value: bson.D{{Key: "_id", Value: "$org"}, {Key: "count", Value: bson.D{{Key: "$sum", Value: 1}}}}}},
+			bson.D{{Key: "$sort", Value: bson.D{{Key: "count", Value: -1}}}},
+			bson.D{{Key: "$limit", Value: 150}},
+		}},
+		{Key: "flagged_points", Value: bson.A{
+			bson.D{{Key: "$match", Value: flaggedMatch}},
+			bson.D{{Key: "$match", Value: bson.D{{Key: "geoip.lat", Value: bson.D{{Key: "$type", Value: "number"}}}}}},
+			bson.D{{Key: "$project", Value: bson.D{
+				{Key: "_id", Value: 0},
+				{Key: "lat", Value: "$geoip.lat"},
+				{Key: "lon", Value: "$geoip.lon"},
+				{Key: "insecure", Value: bson.D{{Key: "$eq", Value: bson.A{"$secured", false}}}},
+			}}},
+			bson.D{{Key: "$limit", Value: 500}},
+		}},
 	}
 
 	pipeline := mongo.Pipeline{
@@ -285,6 +335,10 @@ func (m *Mongo) StatsAggregate(ctx context.Context, timeRangeHours, maxTimeMS in
 		FlaggedByProduct:    map[string]int{},
 		FlaggedByOrg:        map[string]int{},
 		FlaggedByCountry:    map[string]int{},
+		TopCVEs:             map[string]int{},
+		ServicesByCountry:   map[string]int{},
+		TotalByOrg:          map[string]int{},
+		FlaggedPoints:       []GeoPoint{},
 	}
 	if len(rows) == 1 {
 		f := rows[0]
@@ -347,6 +401,20 @@ func (m *Mongo) StatsAggregate(ctx context.Context, timeRangeHours, maxTimeMS in
 		}
 		for _, c := range f.FlaggedCountries {
 			out.FlaggedByCountry[c.ID] = c.Count
+		}
+		for _, c := range f.TopCVEs {
+			out.TopCVEs[c.ID] = c.Count
+		}
+		for _, c := range f.ServicesCountry {
+			out.ServicesByCountry[c.ID] = c.Count
+		}
+		for _, o := range f.TotalOrg {
+			if o.ID != "" {
+				out.TotalByOrg[o.ID] = o.Count
+			}
+		}
+		if len(f.FlaggedPoints) > 0 {
+			out.FlaggedPoints = f.FlaggedPoints
 		}
 	}
 
