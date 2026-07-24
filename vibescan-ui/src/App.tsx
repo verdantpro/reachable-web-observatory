@@ -1,4 +1,5 @@
-import { Route, Routes } from "react-router-dom";
+import { useEffect } from "react";
+import { Route, Routes, useLocation } from "react-router-dom";
 import TopBar from "./components/TopBar";
 import Footer from "./components/Footer";
 import Console from "./pages/Console";
@@ -15,9 +16,21 @@ import Disclosure from "./pages/Disclosure";
 import ScanInfo from "./pages/ScanInfo";
 import NotFound from "./pages/NotFound";
 
+// Reset scroll to the top on navigation (React Router keeps the old offset).
+// Anchored links (/ethics#opt-out) scroll themselves, so leave those alone.
+function ScrollToTop() {
+  const { pathname, hash } = useLocation();
+  useEffect(() => {
+    if (hash) return;
+    window.scrollTo(0, 0);
+  }, [pathname, hash]);
+  return null;
+}
+
 export default function App() {
   return (
     <>
+      <ScrollToTop />
       <TopBar />
       <main>
         <Routes>
