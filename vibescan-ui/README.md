@@ -1,7 +1,8 @@
 # vibescan-ui
 
-**VibeScan · Live Cleartext HTTP Acquisition** — frontend recon console for
-HTTP/HTTPS discovery. React + TypeScript (Vite), talking to the Go v2 read APIs.
+Frontend for the **Reachable Web Observatory** (codename *VibeScan*) — the study
+console plus the research pages (methodology, ethics, data, disclosure, scan-info).
+React + TypeScript (Vite), talking to the Go v2 read APIs.
 
 In production the built `dist/` is **embedded** into the `vibescan-go` collector
 binary (see `vibescan-go/Dockerfile` and `vibescan-go/internal/web`) and served

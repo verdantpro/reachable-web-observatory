@@ -1,0 +1,145 @@
+/* Long-form research/policy document pages (methodology, ethics, data,
+   disclosure, scan-info). Shares the About "Field Record" document treatment. */
+
+.doc-page {
+  background: var(--ground);
+  color: var(--ink);
+}
+.doc {
+  max-width: 820px;
+  padding-top: 26px;
+  padding-bottom: 80px;
+}
+
+.doc-title {
+  font-size: clamp(28px, 4.6vw, 42px);
+  line-height: 1.06;
+  margin: 12px 0 0;
+  color: var(--ink);
+}
+.doc-lede {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: clamp(17px, 2.2vw, 22px);
+  line-height: 1.45;
+  color: var(--ink);
+  max-width: 46ch;
+  margin: 18px 0 0;
+  text-wrap: balance;
+}
+
+.doc-sec {
+  margin-top: 40px;
+  padding-top: 22px;
+  border-top: 1px solid var(--line);
+  scroll-margin-top: 74px;
+}
+.doc-h {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-size: clamp(19px, 2.4vw, 24px);
+  color: var(--ink);
+  margin: 0 0 14px;
+}
+.doc-sub-h {
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: 0.02em;
+  color: var(--ink);
+  margin: 20px 0 8px;
+}
+.doc p {
+  margin: 0 0 14px;
+  max-width: 68ch;
+  color: var(--ink-dim);
+  line-height: 1.65;
+  font-size: 16px;
+}
+.doc p:last-child { margin-bottom: 0; }
+.doc a.doc-link { color: var(--accent); }
+.doc a.doc-link:hover { text-decoration: underline; }
+.doc em { color: var(--ink); font-style: italic; }
+.doc code, .doc .mono { font-family: var(--font-mono); color: var(--ink); font-size: 0.92em; }
+
+.doc-list {
+  margin: 0 0 14px;
+  padding: 0;
+  list-style: none;
+  max-width: 68ch;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.doc-list li {
+  position: relative;
+  padding-left: 20px;
+  color: var(--ink-dim);
+  line-height: 1.55;
+  font-size: 16px;
+}
+.doc-list li::before {
+  content: "—";
+  position: absolute;
+  left: 0;
+  color: var(--accent);
+}
+
+/* Emphasis callout (limitations, key notices). */
+.doc-callout {
+  margin: 18px 0;
+  padding: 16px 18px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-left: 2px solid var(--amber);
+  border-radius: var(--radius);
+  color: var(--ink-dim);
+  font-size: 15px;
+  line-height: 1.6;
+}
+.doc-callout.accent { border-left-color: var(--accent); }
+
+/* Compact reference / citation block. */
+.doc-cite {
+  margin: 14px 0;
+  padding: 14px 16px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--ink);
+  overflow-x: auto;
+}
+
+/* Two-column mapping table (ethics checklist, schema, data fields). */
+.doc-table-wrap { overflow-x: auto; margin: 14px 0; }
+.doc-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  min-width: 460px;
+}
+.doc-table th,
+.doc-table td {
+  text-align: left;
+  vertical-align: top;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+}
+.doc-table th {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.doc-table td { color: var(--ink-dim); line-height: 1.5; }
+.doc-table td:first-child { color: var(--ink); white-space: nowrap; }
+.doc-table code { font-size: 12.5px; }
+
+.doc-actions { display: flex; flex-wrap: wrap; gap: 12px; margin: 18px 0 0; }
+
+@media (max-width: 560px) {
+  .doc-table td:first-child { white-space: normal; }
+}

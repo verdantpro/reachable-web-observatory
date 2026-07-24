@@ -4,7 +4,7 @@ import "./NotFound.css";
 
 export default function NotFound() {
   useMeta({
-    title: "Signal Lost (404) — VibeScan",
+    title: "Not found (404) — Reachable Web Observatory",
     description: "The requested page could not be found.",
   });
   return (

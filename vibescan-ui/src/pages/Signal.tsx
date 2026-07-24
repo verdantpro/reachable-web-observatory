@@ -33,7 +33,7 @@ export default function Signal() {
   const [state, setState] = useState<"loading" | "ok" | "error">("loading");
 
   useMeta({
-    title: ip && port ? `${ip}:${port} — VibeScan record` : "Record — VibeScan",
+    title: ip && port ? `${ip}:${port} — Reachable Web Observatory record` : "Record — Reachable Web Observatory",
     description: "A point-in-time capture and telemetry record for a discovered web service.",
   });
 

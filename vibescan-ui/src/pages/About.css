@@ -21,6 +21,17 @@
   color: var(--muted);
   margin: 12px 0 0;
 }
+.about-cite {
+  margin: 12px 0 4px;
+  padding: 14px 16px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--ink);
+  overflow-x: auto;
+}
 .about-lede {
   font-family: var(--font-serif);
   font-style: italic;

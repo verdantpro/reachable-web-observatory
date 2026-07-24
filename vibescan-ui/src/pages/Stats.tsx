@@ -55,7 +55,7 @@ function BarList({ data, color = "var(--cyan)", limit = 10 }: { data: Record<str
 
 export default function StatsPage() {
   useMeta({
-    title: "Internet Exposure Statistics — VibeScan",
+    title: "Exposure Statistics — Reachable Web Observatory",
     description: "Aggregate statistics on discovered web services: ports, status codes, cleartext exposure, CVEs, and reputation.",
     path: "/stats",
   });

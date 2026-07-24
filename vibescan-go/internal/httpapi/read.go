@@ -2,6 +2,8 @@ package httpapi
 
 import (
 	"encoding/base64"
+	"encoding/csv"
+	"encoding/json"
 	"errors"
 	"net/http"
 	"strconv"
@@ -165,10 +167,35 @@ func (s *Server) handleSearch(w http.ResponseWriter, r *http.Request) {
 	limit := clampInt(queryInt(r, "limit", 100), 1, s.cfg.MaxGallery)
 	offset := clampInt(queryInt(r, "offset", 0), 0, 1_000_000)
 
+	opts := searchFilters(r)
+	opts.Limit = limit + 1
+	opts.Offset = offset
+	opts.MaxTimeMS = s.cfg.AggMaxTimeMS
+
+	docs, err := s.store.Search(r.Context(), opts)
+	if err != nil {
+		s.readError(w, err)
+		return
+	}
+	hasMore := len(docs) > limit
+	if hasMore {
+		docs = docs[:limit]
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"entries":  s.toTiles(docs),
+		"has_more": hasMore,
+		"query":    opts.Query,
+	})
+}
+
+// searchFilters parses the shared search/export filter parameters (everything
+// except paging), so /search and /export apply identical semantics.
+func searchFilters(r *http.Request) store.ListOpts {
 	opts := store.ListOpts{
-		Limit: limit + 1, Offset: offset, MaxTimeMS: s.cfg.AggMaxTimeMS,
 		Query:   strings.TrimSpace(r.URL.Query().Get("q")),
 		Product: strings.TrimSpace(r.URL.Query().Get("product")),
+		Tag:     strings.TrimSpace(r.URL.Query().Get("tag")),
+		Verdict: strings.TrimSpace(r.URL.Query().Get("verdict")),
 	}
 	if v := r.URL.Query().Get("port"); v != "" {
 		if n, err := strconv.Atoi(v); err == nil {
@@ -188,23 +215,69 @@ func (s *Server) handleSearch(w http.ResponseWriter, r *http.Request) {
 		b := v == "1" || strings.EqualFold(v, "true")
 		opts.HasVulns = &b
 	}
-	opts.Tag = strings.TrimSpace(r.URL.Query().Get("tag"))
-	opts.Verdict = strings.TrimSpace(r.URL.Query().Get("verdict"))
+	return opts
+}
+
+// maxExportLimit caps a single export page; use offset to paginate larger pulls.
+const maxExportLimit = 2000
+
+// handleExport serves the open dataset as JSON (default) or CSV, using the same
+// filters as /search. It is rate-limited and paginated like the other read APIs.
+func (s *Server) handleExport(w http.ResponseWriter, r *http.Request) {
+	limit := clampInt(queryInt(r, "limit", 1000), 1, maxExportLimit)
+	offset := clampInt(queryInt(r, "offset", 0), 0, 1_000_000)
+
+	opts := searchFilters(r)
+	opts.Limit = limit
+	opts.Offset = offset
+	opts.MaxTimeMS = s.cfg.AggMaxTimeMS
 
 	docs, err := s.store.Search(r.Context(), opts)
 	if err != nil {
 		s.readError(w, err)
 		return
 	}
-	hasMore := len(docs) > limit
-	if hasMore {
-		docs = docs[:limit]
+	tiles := s.toTiles(docs)
+
+	switch strings.ToLower(strings.TrimSpace(r.URL.Query().Get("format"))) {
+	case "csv":
+		writeTilesCSV(w, tiles)
+	default:
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.Header().Set("Content-Disposition", `attachment; filename="rwo-export.json"`)
+		_ = json.NewEncoder(w).Encode(tiles)
 	}
-	writeJSON(w, http.StatusOK, map[string]any{
-		"entries":  s.toTiles(docs),
-		"has_more": hasMore,
-		"query":    opts.Query,
+}
+
+// writeTilesCSV emits a flat, analysis-friendly CSV of the export records.
+func writeTilesCSV(w http.ResponseWriter, tiles []tile) {
+	w.Header().Set("Content-Type", "text/csv; charset=utf-8")
+	w.Header().Set("Content-Disposition", `attachment; filename="rwo-export.csv"`)
+	cw := csv.NewWriter(w)
+	_ = cw.Write([]string{
+		"ip", "port", "secured", "http_status", "product", "banner", "cert_cn", "whois",
+		"country_iso", "city", "lat", "lon", "vuln_count", "verdict", "sources", "enriched_at", "updated_at",
 	})
+	for _, t := range tiles {
+		status := ""
+		if t.HTTPStatus != nil {
+			status = strconv.Itoa(*t.HTTPStatus)
+		}
+		countryISO, city, lat, lon := "", "", "", ""
+		if t.Geo != nil {
+			countryISO, city = t.Geo.CountryISO, t.Geo.City
+			lat = strconv.FormatFloat(t.Geo.Lat, 'f', -1, 64)
+			lon = strconv.FormatFloat(t.Geo.Lon, 'f', -1, 64)
+		}
+		_ = cw.Write([]string{
+			t.IP, strconv.Itoa(t.Port), strconv.FormatBool(t.Secured), status,
+			t.Product, t.Banner, t.CertCN, t.Whois,
+			countryISO, city, lat, lon,
+			strconv.Itoa(t.VulnCount), t.Verdict, strings.Join(t.Sources, "|"),
+			t.EnrichedAt, t.UpdatedAt,
+		})
+	}
+	cw.Flush()
 }
 
 func (s *Server) handleServiceDetail(w http.ResponseWriter, r *http.Request) {

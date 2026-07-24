@@ -7,6 +7,11 @@ import Search from "./pages/Search";
 import Stats from "./pages/Stats";
 import Signal from "./pages/Signal";
 import About from "./pages/About";
+import Methodology from "./pages/Methodology";
+import Ethics from "./pages/Ethics";
+import Data from "./pages/Data";
+import Disclosure from "./pages/Disclosure";
+import ScanInfo from "./pages/ScanInfo";
 import NotFound from "./pages/NotFound";
 
 export default function App() {
@@ -21,6 +26,11 @@ export default function App() {
           <Route path="/stats" element={<Stats />} />
           <Route path="/signal/:ip/:port" element={<Signal />} />
           <Route path="/about" element={<About />} />
+          <Route path="/methodology" element={<Methodology />} />
+          <Route path="/ethics" element={<Ethics />} />
+          <Route path="/data" element={<Data />} />
+          <Route path="/disclosure" element={<Disclosure />} />
+          <Route path="/scan-info" element={<ScanInfo />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>

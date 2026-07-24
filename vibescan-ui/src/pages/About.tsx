@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useMeta } from "../lib/meta";
 import "./About.css";
 
@@ -7,13 +7,13 @@ const ABUSE = "abuse@verdantprotocol.com";
 
 export default function About() {
   useMeta({
-    title: "About, Ethics & Opt-Out — VibeScan",
-    description: "What VibeScan scans and does not scan, how records work, and how to opt out or request removal.",
+    title: "About — Reachable Web Observatory",
+    description:
+      "The Reachable Web Observatory is an open measurement study of the public-IPv4 web: its research question, who runs it, and how to cite it.",
     path: "/about",
   });
 
-  // Deep links like /about#opt-out (e.g. the footer's "Opt out / report") scroll
-  // to the matching section — BrowserRouter doesn't handle hash scrolling itself.
+  // Support deep links to section anchors (e.g. /about#cite).
   const { hash } = useLocation();
   useEffect(() => {
     if (!hash) return;
@@ -24,129 +24,85 @@ export default function About() {
   return (
     <div className="record">
       <div className="page wrap about">
-        <div className="eyebrow">◊ About the record</div>
-        <h1 className="about-title display">What VibeScan is</h1>
-        <p className="about-tagline mono">VibeScan · Live Cleartext HTTP Acquisition</p>
+        <div className="eyebrow">◊ About the study</div>
+        <h1 className="about-title display">The Reachable Web Observatory</h1>
+        <p className="about-tagline mono">A continuous census of the public-IPv4 web</p>
         <p className="about-lede">
-          A public census of the reachable web — a screenshot and a few facts about services found,
-          at random, across the public internet.
+          An open measurement study of the ordinary, reachable web — and where exposure and risk
+          quietly concentrate across it.
         </p>
 
         <section className="about-sec">
-          <h2 className="about-h">How it works</h2>
+          <h2 className="about-h">The question</h2>
           <p>
-            VibeScan generates random public IPv4 addresses, checks a handful of common web ports
-            (<span className="mono">80, 443, 8000, 8080, 8443</span>) with nmap, and — for anything
-            answering HTTP or HTTPS — takes a screenshot in a headless browser and files it as a{" "}
-            <em>record</em>: the capture, the service banner, HTTP status, the TLS certificate name,
-            coarse geolocation derived from the IP, and a snapshot of the page's HTML.
-          </p>
-          <p>
-            Scanning runs continuously in the background at a deliberately slow rate, and every agent
-            honors an exclusion list (below) before it touches an address.
+            Across a uniform random sample of the reachable public-IPv4 web, <em>where do
+            CVE-associated and reputation-flagged services concentrate</em> — by network, geography,
+            product, and port — and how does that exposure change over time? Rather than searching for
+            known domains, the observatory samples public IPv4 space and treats each captured service
+            as one observation in a continuing time series. See the{" "}
+            <Link className="about-mail" to="/methodology">methodology</Link> for how the measurement
+            works and its limitations.
           </p>
         </section>
 
         <section className="about-sec">
-          <h2 className="about-h">What “live” means</h2>
+          <h2 className="about-h">Who runs it</h2>
           <p>
-            The console updates live, but it is a live view of <em>captured records</em> — not a
-            real-time scan of the host you happen to be looking at. Each record shows when it was
-            captured (its <span className="mono">Seen</span> time). A page may have changed, moved,
-            or gone away since; the record is a point-in-time snapshot, not the current state of that
-            server.
-          </p>
-        </section>
-
-        <section className="about-sec">
-          <h2 className="about-h">Scope &amp; limits</h2>
-          <p>We only look at what an anonymous visitor could already see. Specifically, VibeScan does not:</p>
-          <ul className="about-list">
-            <li>sign in, submit credentials, or use any authentication;</li>
-            <li>exploit, fuzz, or attempt to bypass anything — it loads the page a browser would;</li>
-            <li>probe non-web services or scan ports exhaustively;</li>
-            <li>capture addresses on its exclusion list.</li>
-          </ul>
-          <p>
-            The scanning agent's own source IP is anonymized in the record. Read APIs are rate-limited.
-          </p>
-          <p>
-            You don't have to take our word for any of this — VibeScan is open source, so you can read
-            exactly what it does:{" "}
-            <a
-              className="about-mail"
-              href="https://github.com/verdantpro/vibescan_rework"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              github.com/verdantpro/vibescan_rework
+            {/* Personalize: add your name and (optionally) an ORCID or personal page here. */}
+            The observatory is built and maintained by an independent security researcher under{" "}
+            <a className="about-mail" href="https://verdantprotocol.com/" target="_blank" rel="noopener noreferrer">
+              Verdant Protocol
             </a>
-            .
+            . It is an <em>independent</em> project — not affiliated with a university and not reviewed
+            by an institutional review board — conducted in line with the field's established ethics
+            norms (see <Link className="about-mail" to="/ethics">ethics</Link>). Collaboration with
+            academic or nonprofit partners is welcome; reach out at{" "}
+            <a className="about-mail" href={`mailto:${ABUSE}`}>{ABUSE}</a>.
           </p>
         </section>
 
         <section className="about-sec">
-          <h2 className="about-h">A note on content</h2>
+          <h2 className="about-h">How it works, briefly</h2>
           <p>
-            Records are screenshots of third-party sites. They may contain material we did not create
-            and cannot vouch for, and — because discovery is random — occasionally something personal
-            or sensitive. If a record includes information about you or someone else that shouldn't be
-            on public display, tell us and we'll take it down.
-          </p>
-          <p>
-            Hosts are also cross-referenced against third-party reputation and threat feeds
-            (Shodan, VirusTotal, AbuseIPDB, GreyNoise, and others, each attributed on the record).
-            Those verdicts are the vendors', not ours, and can be wrong — if a label is inaccurate,
-            dispute it at the address below and we'll correct or remove it.
+            Agents generate random public IPv4 addresses, check a few common web ports
+            (<span className="mono">80, 443, 8000, 8080, 8443</span>), and — for hosts answering HTTP or
+            HTTPS — record what an anonymous visitor would see: a screenshot, the banner, HTTP status,
+            the TLS certificate name, coarse geolocation, and structural hashes. Each host is enriched
+            with public CVE and reputation data. Scanning runs continuously at a deliberately slow rate
+            and honors an operator <Link className="about-mail" to="/scan-info">exclusion list</Link>.
+            The console is a live view of <em>captured records</em> — a point-in-time snapshot, not a
+            real-time scan of the host you are looking at.
           </p>
         </section>
 
-        <section className="about-sec about-contact" id="opt-out">
-          <h2 className="about-h">Opt out &amp; takedowns</h2>
+        <section className="about-sec">
+          <h2 className="about-h">A note on the data</h2>
           <p>
-            One address handles all of this: <a className="about-mail" href={`mailto:${ABUSE}`}>{ABUSE}</a>.
-            It's monitored by a person.
+            Records contain only what an anonymous visitor could already see, but — because discovery
+            is random — a capture can occasionally include something personal or sensitive. CVE and
+            reputation labels come from third-party feeds (Shodan, VirusTotal, AbuseIPDB, GreyNoise, and
+            others, each attributed on the record); they are associations, not verified findings, and
+            can be wrong. If a record shouldn't be public, or a label is inaccurate, tell us and we will
+            correct or remove it — see <Link className="about-mail" to="/disclosure">disclosure</Link>{" "}
+            and <Link className="about-mail" to="/scan-info">opt-out</Link>. The dataset is open; see{" "}
+            <Link className="about-mail" to="/data">data &amp; access</Link>.
           </p>
+        </section>
 
+        <section className="about-sec about-contact" id="cite">
+          <h2 className="about-h">How to cite</h2>
+          <p>Please cite the dataset (and note the snapshot date) when using it in published work:</p>
+          <div className="about-cite mono">
+            Verdant Protocol. <em>Reachable Web Observatory: a continuous census of the public-IPv4
+            web.</em> 2026. https://vibescan.verdantprotocol.com/
+          </div>
           <div className="about-actions">
-            <div className="about-action">
-              <div className="about-action-h mono">Stop future scans</div>
-              <p>
-                Send the IP or CIDR range you control. We add it to the scan blacklist; agents stop
-                capturing it within about an hour, permanently.
-              </p>
-              <a
-                className="btn"
-                href={`mailto:${ABUSE}?subject=${encodeURIComponent("Opt-out request (IP / CIDR)")}`}
-              >
-                ✉ request exclusion
-              </a>
-            </div>
-
-            <div className="about-action">
-              <div className="about-action-h mono">Remove existing records</div>
-              <p>
-                Send the host(s) or range you want removed and we'll delete those records. There is no
-                automatic expiry — captures stay until removal is requested.
-              </p>
-              <a
-                className="btn"
-                href={`mailto:${ABUSE}?subject=${encodeURIComponent("Takedown request (host / range)")}`}
-              >
-                ✉ request removal
-              </a>
-            </div>
-
-            <div className="about-action">
-              <div className="about-action-h mono">Report abuse or illegal content</div>
-              <p>Flag a record that shouldn't be hosted anywhere and we'll act on it promptly.</p>
-              <a
-                className="btn"
-                href={`mailto:${ABUSE}?subject=${encodeURIComponent("Abuse report")}`}
-              >
-                ✉ report a record
-              </a>
-            </div>
+            <Link className="btn" to="/data">↓ data &amp; access</Link>
+            <Link className="btn" to="/methodology">methodology</Link>
+            <Link className="btn" to="/ethics">ethics</Link>
+            <a className="btn" href="https://github.com/verdantpro/vibescan_rework" target="_blank" rel="noopener noreferrer">
+              source
+            </a>
           </div>
         </section>
       </div>

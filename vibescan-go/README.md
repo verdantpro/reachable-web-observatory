@@ -1,9 +1,9 @@
 # vibescan-go
 
-A Go reimplementation of the VibeScan backend, ported incrementally from the
-Python app in `../vibescan_v2`. It reuses the existing MongoDB / object-storage
-data so Go and Python services can run side-by-side against the same store
-during migration.
+The Go backend for the **Reachable Web Observatory** (codename *VibeScan*), ported
+incrementally from the Python app in `../vibescan_v2`. It reuses the existing MongoDB /
+object-storage data so Go and Python services can run side-by-side against the same
+store during migration.
 
 The production binary serves **ingest + v2 read APIs + the embedded React UI**
 from one process (same origin in prod — no CORS required).
