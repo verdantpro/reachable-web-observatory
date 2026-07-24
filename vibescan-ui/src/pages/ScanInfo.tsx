@@ -40,16 +40,11 @@ export default function ScanInfo() {
           Mozilla/5.0 (compatible; ReachableWebObservatory/1.0; +https://vibescan.verdantprotocol.com/scan-info)
         </div>
         <p>
-          Scanning runs from a single, dedicated low-rate host — not a large distributed fleet. Its
-          public IP address is:
-        </p>
-        <div className="doc-cite">
-          {/* TODO: replace with the dedicated scanner host's public IP / CIDR once provisioned. */}
-          &lt;scanner IP — to be published&gt;
-        </div>
-        <p>
-          You can filter our traffic by that address or by the User-Agent above; either way, the fastest
-          way to stop it for good is to opt out below.
+          Scanning currently runs from a single low-rate host on an ordinary connection — not a large
+          distributed fleet. To protect the operator's privacy we don't publish that host's IP address,
+          but you can reliably identify and filter our traffic by the User-Agent above. The most durable
+          way to stop it for good is to opt out below, which works regardless of which address we scan
+          from.
         </p>
       </section>
 
