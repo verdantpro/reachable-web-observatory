@@ -229,6 +229,7 @@ Production packaging: `Dockerfile.agent` + `deploy/docker-compose.agent.yml` +
 | `VIBESCAN_CAPTURE_HTTP` | `1` | `0` = discover-only |
 | `VIBESCAN_NO_REPORT` | off | Redact `submitted_by` (→ `0.0.0.0`) + set `anon` |
 | `VIBESCAN_RDAP` | `1` | RDAP ownership lookup (cached /24) |
+| `VIBESCAN_USER_AGENT` | identifying UA | Browser User-Agent for captures; defaults to a self-identifying string linking to `/scan-info` (signal intent) |
 ## Layout
 
 ```

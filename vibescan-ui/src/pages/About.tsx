@@ -48,8 +48,8 @@ export default function About() {
         <section className="about-sec">
           <h2 className="about-h">Who runs it</h2>
           <p>
-            {/* Personalize: add your name and (optionally) an ORCID or personal page here. */}
-            The observatory is built and maintained by an independent security researcher under{" "}
+            The observatory is built and maintained by <strong>Justin Walters</strong>, an
+            independent security researcher, under{" "}
             <a className="about-mail" href="https://verdantprotocol.com/" target="_blank" rel="noopener noreferrer">
               Verdant Protocol
             </a>
@@ -93,8 +93,8 @@ export default function About() {
           <h2 className="about-h">How to cite</h2>
           <p>Please cite the dataset (and note the snapshot date) when using it in published work:</p>
           <div className="about-cite mono">
-            Verdant Protocol. <em>Reachable Web Observatory: a continuous census of the public-IPv4
-            web.</em> 2026. https://vibescan.verdantprotocol.com/
+            Walters, J. (2026). <em>Reachable Web Observatory: a continuous census of the public-IPv4
+            web.</em> Verdant Protocol. https://vibescan.verdantprotocol.com/
           </div>
           <div className="about-actions">
             <Link className="btn" to="/data">↓ data &amp; access</Link>

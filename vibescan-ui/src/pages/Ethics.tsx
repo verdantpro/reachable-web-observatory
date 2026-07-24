@@ -82,7 +82,7 @@ export default function Ethics() {
             </thead>
             <tbody>
               <tr><td>Minimize scan rate &amp; footprint</td><td>Yes — slow, continuous sampling on five ports only.</td></tr>
-              <tr><td>Signal intent (rDNS, WHOIS, a webpage)</td><td>Yes — this site, the <Link className="doc-link" to="/scan-info">scan-info</Link> page, and published scanner ranges.</td></tr>
+              <tr><td>Signal intent (rDNS, WHOIS, a webpage)</td><td>Yes — this site, a self-identifying <Link className="doc-link" to="/scan-info">User-Agent</Link> on every request, and a published scanner address.</td></tr>
               <tr><td>Provide an opt-out mechanism</td><td>Yes — CIDR exclusion list, honored within about an hour (<Link className="doc-link" to="/ethics#opt-out">below</Link>).</td></tr>
               <tr><td>Test new scanning code locally first</td><td>Yes — changes are exercised against our own systems before release.</td></tr>
               <tr><td>Coordinate with local network operators</td><td>Yes — scanning runs from infrastructure whose operator is aware of it.</td></tr>

@@ -98,8 +98,8 @@ export default function Data() {
       <section className="doc-sec" id="cite">
         <h2 className="doc-h">How to cite</h2>
         <div className="doc-cite">
-          Verdant Protocol. <em>Reachable Web Observatory: a continuous census of the public-IPv4
-          web.</em> 2026. https://vibescan.verdantprotocol.com/
+          Walters, J. (2026). <em>Reachable Web Observatory: a continuous census of the public-IPv4
+          web.</em> Verdant Protocol. https://vibescan.verdantprotocol.com/
         </div>
         <p>
           Please cite the dataset and note the snapshot date when using it in published work.

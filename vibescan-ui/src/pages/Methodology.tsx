@@ -55,7 +55,10 @@ export default function Methodology() {
         </p>
         <p>
           The agents do not sign in, submit credentials, exploit or fuzz anything, or probe non-web
-          services — they load the page a browser would and nothing more.
+          services — they load the page a browser would and nothing more. Every request carries a
+          self-identifying <span className="mono">User-Agent</span> linking to the{" "}
+          <Link className="doc-link" to="/scan-info">scan-info</Link> page, so operators can see who we
+          are and opt out.
         </p>
       </section>
 

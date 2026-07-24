@@ -30,19 +30,26 @@ export default function ScanInfo() {
         </p>
       </section>
 
-      <section className="doc-sec" id="ranges">
-        <h2 className="doc-h">Our scanner IP ranges</h2>
+      <section className="doc-sec" id="identify">
+        <h2 className="doc-h">How to identify our traffic</h2>
         <p>
-          So you can identify (or filter) our traffic, scanning originates from the following
-          addresses:
+          Every page fetch we make announces itself in the <span className="mono">User-Agent</span>{" "}
+          header, so you can spot (or filter) us directly in your access logs:
         </p>
         <div className="doc-cite">
-          {/* TODO: replace with the project's real scanner egress IPs / CIDRs. */}
-          &lt;scanner IP / CIDR — to be published&gt;
+          Mozilla/5.0 (compatible; ReachableWebObservatory/1.0; +https://vibescan.verdantprotocol.com/scan-info)
         </div>
         <p>
-          These hosts also carry reverse-DNS names and WHOIS abuse contacts pointing back to this
-          project.
+          Scanning runs from a single, dedicated low-rate host — not a large distributed fleet. Its
+          public IP address is:
+        </p>
+        <div className="doc-cite">
+          {/* TODO: replace with the dedicated scanner host's public IP / CIDR once provisioned. */}
+          &lt;scanner IP — to be published&gt;
+        </div>
+        <p>
+          You can filter our traffic by that address or by the User-Agent above; either way, the fastest
+          way to stop it for good is to opt out below.
         </p>
       </section>
 
