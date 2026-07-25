@@ -43,8 +43,19 @@
   border-radius: 3px;
   backdrop-filter: blur(2px);
 }
+/* Top badges laid out in a wrapping row so the verdict + CVE tags never overlap
+   (they used to be pinned to opposite corners and collided on narrow cards). */
+.card-badges {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: space-between;
+}
 .card-vuln {
-  position: absolute; right: 8px; top: 8px;
   font-size: 10.5px; padding: 2px 7px;
   color: var(--alert);
   background: rgba(15, 17, 20, 0.82);
@@ -53,7 +64,6 @@
   backdrop-filter: blur(2px);
 }
 .card-verdict {
-  position: absolute; left: 8px; top: 8px;
   font-size: 10px; padding: 2px 7px;
   letter-spacing: 0.1em; text-transform: uppercase;
   background: rgba(15, 17, 20, 0.82);
