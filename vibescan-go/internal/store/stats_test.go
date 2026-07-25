@@ -5,6 +5,21 @@ import (
 	"time"
 )
 
+func TestNormalizedProductLabel(t *testing.T) {
+	cases := map[string]string{
+		"Apache httpd":       "Apache HTTP Server",
+		"Apache HTTP Server": "Apache HTTP Server",
+		"nginx/1.24.0":       "nginx",
+		"product: nginx":     "nginx",
+		"http":               "Unknown",
+	}
+	for input, want := range cases {
+		if got := normalizedProductLabel(input); got != want {
+			t.Errorf("normalizedProductLabel(%q) = %q, want %q", input, got, want)
+		}
+	}
+}
+
 func TestFormatBucket(t *testing.T) {
 	at := time.Date(2026, time.July, 25, 14, 37, 0, 0, time.UTC)
 	tests := []struct {

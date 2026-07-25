@@ -260,8 +260,8 @@
   letter-spacing: 0.08em;
   color: var(--muted);
 }
-.fr-xref .fr-note { grid-template-columns: 110px 1fr; }
-.fr-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.fr-xref .fr-note { grid-template-columns: 110px minmax(0, 1fr); }
+.fr-chips { display: flex; flex-wrap: wrap; gap: 6px; min-width: 0; }
 .fr-chip {
   font-family: var(--font-mono);
   font-size: 11.5px;
@@ -269,8 +269,12 @@
   border: 1px solid var(--line-2);
   border-radius: 3px;
   color: var(--ink-dim);
-  white-space: nowrap;
+  white-space: normal;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
+.fr-note dd { min-width: 0; }
 .fr-chip.vuln {
   color: var(--alert);
   border-color: rgba(217, 83, 74, 0.5);
@@ -285,6 +289,18 @@
 }
 .fr-xref-attr a { color: var(--accent); }
 .fr-xref-attr a:hover { text-decoration: underline; }
+.fr-rubric {
+  margin: 8px 0 16px;
+  color: var(--ink-dim);
+}
+.fr-rubric summary, .fr-cve-groups summary {
+  cursor: pointer;
+  color: var(--accent-soft);
+  font-size: 11px;
+}
+.fr-rubric p { margin: 8px 0 0; max-width: 76ch; }
+.fr-cve-groups { display: grid; gap: 8px; }
+.fr-cve-groups .fr-chips { margin-top: 7px; display: flex; }
 .fr-xref-scope {
   margin: 10px 0 0;
   max-width: 92ch;

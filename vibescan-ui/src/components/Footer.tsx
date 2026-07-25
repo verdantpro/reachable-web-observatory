@@ -15,7 +15,7 @@ export default function Footer() {
               Reachable Web <span className="footer-brand-accent">Observatory</span>
             </div>
             <p className="footer-brand-tag">
-              A continuous, ethically-conducted census of the public-IPv4 web.
+              A continuous, ethically conducted random sample of the reachable public-IPv4 web.
             </p>
             <p className="footer-brand-by mono">by Justin Walters · Verdant Protocol</p>
             <a className="footer-garden mono" href="https://verdantprotocol.com/" target="_blank" rel="noopener noreferrer">

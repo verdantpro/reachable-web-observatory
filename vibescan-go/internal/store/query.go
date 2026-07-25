@@ -82,6 +82,7 @@ type ListOpts struct {
 	HasVulns *bool
 	Tag      string
 	Verdict  string // clean|suspicious|malicious
+	Sort     string // newest|relevance|vulns|ip
 }
 
 // hasCaptureMatch is the aggregation match ensuring a real (non-error) capture,
@@ -280,7 +281,29 @@ func searchMatch(o ListOpts) bson.D {
 }
 
 func (m *Mongo) Search(ctx context.Context, o ListOpts) ([]ServiceDoc, error) {
-	return m.aggregateDocs(ctx, listPipeline(searchMatch(o), o.Offset, o.Limit), o.MaxTimeMS)
+	pipeline := mongo.Pipeline{bson.D{{Key: "$match", Value: searchMatch(o)}}}
+	sort := bson.D{{Key: "updated_at", Value: -1}, {Key: "received_at", Value: -1}, {Key: "_id", Value: -1}}
+	switch o.Sort {
+	case "relevance":
+		if strings.TrimSpace(o.Query) != "" && !isIPLike(strings.TrimSpace(o.Query)) {
+			pipeline = append(pipeline, bson.D{{Key: "$addFields", Value: bson.D{
+				{Key: "search_score", Value: bson.D{{Key: "$meta", Value: "textScore"}}},
+			}}})
+			sort = bson.D{{Key: "search_score", Value: -1}, {Key: "updated_at", Value: -1}, {Key: "_id", Value: -1}}
+		}
+	case "vulns":
+		sort = bson.D{{Key: "vuln_count", Value: -1}, {Key: "updated_at", Value: -1}, {Key: "_id", Value: -1}}
+	case "ip":
+		sort = bson.D{{Key: "ip", Value: 1}, {Key: "port", Value: 1}, {Key: "_id", Value: 1}}
+	}
+	pipeline = append(pipeline,
+		bson.D{{Key: "$sort", Value: sort}},
+		bson.D{{Key: "$skip", Value: o.Offset}},
+		bson.D{{Key: "$limit", Value: o.Limit}},
+		hasFulltextStage(),
+		bson.D{{Key: "$project", Value: bson.D{{Key: "fulltext", Value: 0}, {Key: "search_score", Value: 0}}}},
+	)
+	return m.aggregateDocs(ctx, pipeline, o.MaxTimeMS)
 }
 
 // CountSearch returns the exact number of records matching the same filter used
@@ -291,6 +314,33 @@ func (m *Mongo) CountSearch(ctx context.Context, o ListOpts) (int64, error) {
 		opts.SetMaxTime(time.Duration(o.MaxTimeMS) * time.Millisecond)
 	}
 	return m.results.CountDocuments(ctx, searchMatch(o), opts)
+}
+
+// CountSearchHosts returns the number of distinct IP addresses matching the
+// same filter used by Search.
+func (m *Mongo) CountSearchHosts(ctx context.Context, o ListOpts) (int, error) {
+	pipeline := mongo.Pipeline{
+		bson.D{{Key: "$match", Value: searchMatch(o)}},
+		bson.D{{Key: "$group", Value: bson.D{{Key: "_id", Value: "$ip"}}}},
+		bson.D{{Key: "$count", Value: "count"}},
+	}
+	opts := options.Aggregate()
+	if o.MaxTimeMS > 0 {
+		opts.SetMaxTime(time.Duration(o.MaxTimeMS) * time.Millisecond)
+	}
+	cur, err := m.results.Aggregate(ctx, pipeline, opts)
+	if err != nil {
+		return 0, err
+	}
+	defer cur.Close(ctx)
+	var rows []countOnly
+	if err := cur.All(ctx, &rows); err != nil {
+		return 0, err
+	}
+	if len(rows) == 0 {
+		return 0, nil
+	}
+	return rows[0].Count, nil
 }
 
 // isIPLike reports whether q looks like an IPv4 address or a leading fragment of

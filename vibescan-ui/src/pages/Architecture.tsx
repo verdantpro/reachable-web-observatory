@@ -91,7 +91,7 @@ export default function Architecture() {
         <p>Operational properties of the collector:</p>
         <ul className="doc-list">
           <li><strong>Designed for failure.</strong> If MongoDB is unreachable, accepted submissions are spooled to disk as BSON and flushed when it recovers — ingest never drops data because the database blinked.</li>
-          <li><strong>Idempotent by construction.</strong> Each service's <code>_id</code> is derived deterministically from <code>ip:port</code>, so re-observing a host updates one document instead of duplicating it — essential for a continuously re-sampling census.</li>
+          <li><strong>Idempotent by construction.</strong> Each service's <code>_id</code> is derived deterministically from <code>ip:port</code>, so re-observing a host updates one document instead of duplicating it — essential for a continuously updated sample.</li>
           <li><strong>Bounded concurrency &amp; rate limits.</strong> Object-storage uploads run with a bounded worker pool; the public read APIs are throttled per client IP with an in-process token bucket.</li>
           <li><strong>Strangler migration.</strong> The Go collector speaks the exact legacy v1 wire protocol (HMAC + gzip + base64) of an earlier Python prototype, verified byte-for-byte with golden tests, so old and new agents could run side-by-side during the rewrite rather than a risky flag-day cutover.</li>
         </ul>
@@ -191,7 +191,7 @@ export default function Architecture() {
         </ul>
         <p>
           Two background workers keep the data fresh: an <em>enrichment worker</em> that keeps recent
-          hosts cross-referenced, and a <em>daily rollup worker</em> that snapshots the census once a day
+          hosts cross-referenced, and a <em>daily rollup worker</em> that snapshots aggregate sample statistics once a day
           so exposure can be charted over time. Full details are in the{" "}
           <Link className="doc-link" to="/methodology">methodology</Link>; the code is{" "}
           <a className="doc-link" href="https://github.com/verdantpro/vibescan_rework" target="_blank" rel="noopener noreferrer">open source</a>.

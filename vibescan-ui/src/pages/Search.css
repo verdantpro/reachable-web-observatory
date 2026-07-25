@@ -40,6 +40,14 @@
 }
 .filter-port:focus { outline: none; border-color: var(--accent); }
 .filter-port:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.filter-select {
+  color: var(--ink);
+  background: var(--panel);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  padding: 8px 28px 8px 10px;
+}
+.filter-select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 .chips { display: flex; gap: 6px; flex-wrap: wrap; }
 .chip {
@@ -76,3 +84,4 @@
   cursor: pointer;
 }
 .search-examples button:hover { border-color: var(--accent); }
+.search-examples button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }

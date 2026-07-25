@@ -13,7 +13,7 @@ const AUTO_SECONDS = 6;
 
 export default function Console() {
   useMeta({
-    title: "Reachable Web Observatory — a census of the public-IPv4 web",
+    title: "Reachable Web Observatory — a random sample of the public-IPv4 web",
     description:
       "An open measurement study of the reachable public-IPv4 web: random discovery, HTTP capture, geolocation, and CVE/reputation enrichment — mapping where exposure concentrates over time.",
     path: "/",
@@ -86,45 +86,44 @@ export default function Console() {
 
   const insecure = stats?.secure_capture_counts.insecure ?? null;
   const hosts = stats?.totals.hosts ?? null;
+  const services = stats?.totals.services ?? null;
+  const insecureShare = insecure != null && services ? Math.round((insecure / services) * 100) : null;
+  const latestObserved = latest[0]?.updated_at
+    ? new Date(latest[0].updated_at).toISOString().replace("T", " ").replace(".000Z", " UTC")
+    : null;
 
   return (
     <div className="console wrap">
       <div className="console-head">
-        <div className="eyebrow">◊ Reachable Web Observatory · live census</div>
+        <div className="eyebrow">◊ Continuous random-sample observatory</div>
         <h1 className="console-title display">Reachable Web Observatory</h1>
-        <div className="console-h1 display" title="Cumulative total of every cleartext HTTP service the census has recorded since it began (the Stats page shows a recent window instead).">
+        <div className="console-h1 display" title="Cumulative total of every cleartext HTTP service the Observatory has recorded since it began (the Stats page shows a recent window instead).">
           {insecure != null ? insecure.toLocaleString() : "—"}{" "}
           <span className="console-h1-sub">cleartext HTTP services recorded to date</span>
         </div>
+        <p className="console-browse mono">
+          {hosts?.toLocaleString() ?? "—"} distinct hosts · {services?.toLocaleString() ?? "—"} retained
+          service records · {insecureShare ?? "—"}% cleartext
+          {latestObserved ? ` · latest observation ${latestObserved}` : ""}
+        </p>
         <p className="console-lede dim">
-          An open, continuously-running measurement study of the <em>ordinary</em> reachable web — and
-          where observable exposure and third-party security signals concentrate across it.
+          A continuously updated random sample of the reachable public-IPv4 web. Stored observations
+          cover five common web ports; this is not a full internet inventory or a vulnerability scan.
         </p>
 
         <div className="console-purpose">
           <p>
-            Most internet scanners hunt for known targets or try to inventory everything. This one is
-            different: it draws a uniform-random sample of public-IPv4 addresses, captures what an
+            The Observatory draws a uniform-random sample of public-IPv4 addresses, captures what an
             anonymous visitor would see on a handful of common web ports, and enriches each host with
-            public CVE and reputation data. It is a research instrument, not a search engine — a
-            current-state service census paired with daily aggregate snapshots, rather than a directory
+            public host-level CVE and reputation data. It is a research instrument, not a search engine — a
+            sampled collection paired with daily aggregate snapshots, rather than a directory
             or a retained history of every capture.
           </p>
-          <p>
-            The point is to understand where observable signals <em>concentrate</em>. Cleartext
-            services, hosts associated by InternetDB with known CVEs, and addresses flagged by
-            reputation providers are not spread evenly — they cluster in particular networks, regions,
-            and products, and that clustering shifts over time. Measuring those distributions shows
-            patterns in the sampled, reachable web without treating provider associations as verified
-            findings.
-          </p>
-          <p>
-            Everything here is open: the live census below, the aggregate{" "}
-            <Link className="console-more" to="/stats">statistics</Link>, every per-host record, the
-            downloadable <Link className="console-more" to="/data">dataset</Link>, and the full{" "}
-            <Link className="console-more" to="/methodology">methodology</Link> and{" "}
-            <Link className="console-more" to="/ethics">ethics</Link>.
-          </p>
+          <div className="doc-actions">
+            <Link className="btn btn-primary" to="/feed">Explore observations</Link>
+            <Link className="btn" to="/stats">View findings</Link>
+            <Link className="btn" to="/methodology">Read method &amp; ethics</Link>
+          </div>
         </div>
 
         <div className="console-frame">
@@ -142,7 +141,7 @@ export default function Console() {
               <li>How much of the reachable web still serves <strong>cleartext HTTP</strong></li>
               <li><strong>CVE-associated</strong> services clustering by network (ASN) and product</li>
               <li>Geographic <strong>concentration</strong> of flagged hosts</li>
-              <li>How these shift <strong>over time</strong> as the census accrues</li>
+              <li>How these shift <strong>over time</strong> as the sample accrues</li>
             </ul>
           </div>
         </div>

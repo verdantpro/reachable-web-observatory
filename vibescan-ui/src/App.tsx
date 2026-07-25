@@ -15,6 +15,7 @@ import Data from "./pages/Data";
 import Disclosure from "./pages/Disclosure";
 import ScanInfo from "./pages/ScanInfo";
 import NotFound from "./pages/NotFound";
+import ExternalHost from "./pages/ExternalHost";
 
 // Reset scroll to the top on navigation (React Router keeps the old offset).
 // Anchored links (/ethics#opt-out) scroll themselves, so leave those alone.
@@ -31,14 +32,16 @@ export default function App() {
   return (
     <>
       <ScrollToTop />
+      <a className="skip-link" href="#main-content">Skip to main content</a>
       <TopBar />
-      <main>
+      <main id="main-content" tabIndex={-1}>
         <Routes>
           <Route path="/" element={<Console />} />
           <Route path="/feed" element={<Feed />} />
           <Route path="/search" element={<Search />} />
           <Route path="/stats" element={<Stats />} />
           <Route path="/signal/:ip/:port" element={<Signal />} />
+          <Route path="/external/:ip/:port" element={<ExternalHost />} />
           <Route path="/about" element={<About />} />
           <Route path="/methodology" element={<Methodology />} />
           <Route path="/architecture" element={<Architecture />} />

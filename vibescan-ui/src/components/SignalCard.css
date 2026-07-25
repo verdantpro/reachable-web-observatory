@@ -6,6 +6,7 @@
   overflow: hidden;
   transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
 }
+.signal-grid .card { content-visibility: auto; contain-intrinsic-size: 360px; }
 .card:hover {
   border-color: var(--accent-deep);
   transform: translateY(-2px);
@@ -93,4 +94,10 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.card-match {
+  margin-top: 8px;
+  color: var(--accent-soft);
+  font-size: 11px;
+  line-height: 1.4;
 }

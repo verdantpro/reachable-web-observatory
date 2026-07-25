@@ -7,6 +7,15 @@ export const API_BASE =
   (import.meta.env.VITE_API_BASE as string | undefined) ??
   (import.meta.env.DEV ? "http://127.0.0.1:8000" : "");
 
+/** Resolve an API path against the configured API host.
+ * This is also used by ordinary links, which do not pass through apiFetch. */
+export function apiURL(path: string): string {
+  if (/^https?:\/\//i.test(path)) return path;
+  const base = API_BASE.replace(/\/+$/, "");
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  return base + normalizedPath;
+}
+
 export interface Geo {
   ip: string;
   lat: number;
@@ -43,6 +52,7 @@ export interface Tile {
   verdict?: string;
   sources?: string[];
   enriched_at?: string;
+  match_reason?: string;
 }
 
 export interface Enrichment {
@@ -95,6 +105,7 @@ export interface ListResponse {
   has_more: boolean;
   query?: string;
   total?: number;
+  total_hosts?: number;
 }
 
 export interface RandomCapture {
@@ -161,13 +172,14 @@ export interface SearchParams {
   verdict?: string;
   limit?: number;
   offset?: number;
+  sort?: "newest" | "relevance" | "vulns" | "ip";
 }
 
 /** Resolve a possibly-relative image_url against the API host. */
 export function imageURL(url: string): string {
   if (!url) return "";
   if (url.startsWith("http")) return url;
-  return API_BASE + url;
+  return apiURL(url);
 }
 
 /** A failed API call. `offline` means the collector was unreachable or reported
@@ -191,7 +203,7 @@ export function isOffline(e: unknown): boolean {
 async function get<T>(path: string): Promise<T> {
   let res: Response;
   try {
-    res = await fetch(API_BASE + path);
+    res = await fetch(apiURL(path));
   } catch {
     // Network-level failure: the collector is unreachable.
     throw new ApiError(`${path} → unreachable`, { offline: true });
@@ -236,6 +248,7 @@ export const api = {
     if (p.hasVulns) q.set("has_vulns", "1");
     if (p.tag) q.set("tag", p.tag);
     if (p.verdict) q.set("verdict", p.verdict);
+    if (p.sort) q.set("sort", p.sort);
     q.set("limit", String(p.limit ?? 60));
     q.set("offset", String(p.offset ?? 0));
     return get<ListResponse>(`/api/v2/search?${q.toString()}`);

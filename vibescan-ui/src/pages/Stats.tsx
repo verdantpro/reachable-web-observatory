@@ -74,10 +74,31 @@ function rateMap(flagged: Record<string, number>, total: Record<string, number>,
   return out;
 }
 
+function downloadStatsTables(s: Stats) {
+  const rows: string[][] = [["table", "label", "value"]];
+  const add = (table: string, values: Record<string, number>) => {
+    for (const [label, value] of Object.entries(values)) rows.push([table, label, String(value)]);
+  };
+  add("services_by_port", s.services_by_port);
+  add("status_code_counts", s.status_code_counts);
+  add("secure_capture_counts", s.secure_capture_counts);
+  add("products", s.top_banners);
+  add("host_associated_cves", s.top_cves);
+  add("services_by_country", s.services_by_country);
+  add("provider_verdicts", s.verdicts);
+  const csv = rows.map((row) => row.map((cell) => `"${cell.replaceAll('"', '""')}"`).join(",")).join("\n");
+  const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `rwo-statistics-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export default function StatsPage() {
   useMeta({
-    title: "Exposure Statistics — Reachable Web Observatory",
-    description: "Aggregate statistics on discovered web services: ports, status codes, cleartext exposure, CVEs, and reputation.",
+    title: "Study findings — Reachable Web Observatory",
+    description: "Descriptive statistics for sampled web-service observations and host-level provider associations.",
     path: "/stats",
   });
   const [hours, setHours] = useState(24);
@@ -123,6 +144,9 @@ export default function StatsPage() {
   const insecure = s?.secure_capture_counts.insecure ?? 0;
   const total = secure + insecure;
   const insecurePct = total ? Math.round((insecure / total) * 100) : 0;
+  const windowDescription = hours === 0
+    ? "all observations retained to date"
+    : `the rolling ${hours === 1 ? "1 hour" : hours === 24 ? "24 hours" : `${hours / 24} days`} ending when this page was loaded`;
 
   const statusData: Record<string, number> = s
     ? { "200": s.status_code_counts["200"] || 0, "3xx": s.status_code_counts["3xx"] || 0, "4xx": s.status_code_counts["4xx"] || 0, "5xx": s.status_code_counts["5xx"] || 0 }
@@ -171,39 +195,46 @@ export default function StatsPage() {
       <div className="page-head row spread stats-head">
         <div>
           <div className="eyebrow">◊ Telemetry</div>
-          <h1 className="page-title display">Broadcast stats</h1>
+          <h1 className="page-title display">Study findings</h1>
           <p className="page-hint">
-            Every figure reflects the selected window (<span className="mono">ALL</span> = all time) —{" "}
+            Descriptive service-level results for {windowDescription}. These are sampled observations,
+            not estimates of every public host. Percentages show their numerator and denominator below —{" "}
             <Link className="hint-link" to="/methodology">what these measure →</Link>
           </p>
         </div>
         <div className="chips stats-range" aria-label="Time window">
           <span className="stats-range-label mono">window</span>
           {RANGES.map(([label, h]) => (
-            <button key={label} className={`chip mono${hours === h ? " on" : ""}`} onClick={() => setHours(h)}>
+            <button key={label} className={`chip mono${hours === h ? " on" : ""}`} aria-pressed={hours === h} onClick={() => setHours(h)}>
               {label}
             </button>
           ))}
+          {s && <button className="chip mono" onClick={() => downloadStatsTables(s)}>download tables CSV</button>}
         </div>
       </div>
 
       {loading && !s ? (
-        <div className="empty">◌ AGGREGATING…</div>
+        <div className="empty" role="status" aria-live="polite">◌ AGGREGATING…</div>
       ) : error && !s ? (
         <ErrorState onRetry={() => setReloadKey((k) => k + 1)} />
       ) : !s ? (
         <div className="empty">TELEMETRY OFFLINE</div>
       ) : (
         <>
+          <div className="sr-only" aria-live="polite">
+            Statistics loaded for {windowDescription}: {s.totals.hosts.toLocaleString()}{" "}
+            {s.totals.hosts === 1 ? "host" : "hosts"} and {s.totals.services.toLocaleString()}{" "}
+            {s.totals.services === 1 ? "service" : "services"}.
+          </div>
           {(topCve || highestShareOrg || topProduct) && (
             <section className="highlights">
               <h2 className="eyebrow highlights-h">◊ Notable findings</h2>
               <div className="highlights-grid">
                 {topCve && (
                   <a className="highlight" href={cveHref(topCve[0])} target="_blank" rel="noopener noreferrer">
-                    <div className="highlight-k mono">Most prevalent CVE</div>
+                    <div className="highlight-k mono">Most prevalent host-associated CVE</div>
                     <div className="highlight-v">{topCve[0]}</div>
-                    <div className="highlight-s mono dim">{topCve[1].toLocaleString()} hosts</div>
+                    <div className="highlight-s mono dim">{topCve[1].toLocaleString()} provider-associated hosts</div>
                   </a>
                 )}
                 {highestShareOrg && (
@@ -217,7 +248,7 @@ export default function StatsPage() {
                 )}
                 {topProduct && (
                   <Link className="highlight" to={productHref(topProduct[0])}>
-                    <div className="highlight-k mono">Most-flagged software</div>
+                    <div className="highlight-k mono">Most provider-flagged software label</div>
                     <div className="highlight-v" title={topProduct[0]}>{topProduct[0]}</div>
                     <div className="highlight-s mono dim">{topProduct[1].toLocaleString()} flagged services</div>
                   </Link>
@@ -237,11 +268,11 @@ export default function StatsPage() {
 
           <div className="stat-tiles">
             <div className="tile panel hud">
-              <div className="tile-label eyebrow">Hosts</div>
+              <div className="tile-label eyebrow">{s.totals.hosts === 1 ? "Host" : "Hosts"}</div>
               <div className="tile-num display">{s.totals.hosts.toLocaleString()}</div>
             </div>
             <div className="tile panel hud">
-              <div className="tile-label eyebrow">Services</div>
+              <div className="tile-label eyebrow">{s.totals.services === 1 ? "Service" : "Services"}</div>
               <div className="tile-num display">{s.totals.services.toLocaleString()}</div>
             </div>
             <div className="tile panel hud tile-insecure">
@@ -251,7 +282,7 @@ export default function StatsPage() {
                 <span className="tile-bar-fill" style={{ width: `${insecurePct}%` }} />
               </div>
               <div className="tile-sub mono dim">
-                {insecure.toLocaleString()} insecure · {secure.toLocaleString()} https
+                    {insecure.toLocaleString()} of {total.toLocaleString()} services · {secure.toLocaleString()} HTTPS
               </div>
             </div>
             <div
@@ -260,7 +291,9 @@ export default function StatsPage() {
             >
               <div className="tile-label eyebrow">CVE-associated</div>
               <div className="tile-num display insecure">{s.exposed_services.toLocaleString()}</div>
-              <div className="tile-sub mono dim">host has ≥1 CVE · Shodan, provider-reported</div>
+              <div className="tile-sub mono dim">
+                {s.exposed_services.toLocaleString()} of {s.totals.services.toLocaleString()} service records have a host with ≥1 provider-associated CVE
+              </div>
             </div>
           </div>
 
@@ -268,8 +301,8 @@ export default function StatsPage() {
             <div className="row spread concentration-head">
               <h2 className="eyebrow chart-head">◊ Concentration — where provider signals cluster</h2>
               <div className="chips" aria-label="Concentration measure">
-                <button className={`chip mono${!density ? " on" : ""}`} onClick={() => setDensity(false)}>count</button>
-                <button className={`chip mono${density ? " on" : ""}`} onClick={() => setDensity(true)}>% flagged</button>
+                <button className={`chip mono${!density ? " on" : ""}`} aria-pressed={!density} onClick={() => setDensity(false)}>count</button>
+                <button className={`chip mono${density ? " on" : ""}`} aria-pressed={density} onClick={() => setDensity(true)}>% flagged</button>
               </div>
             </div>
             <p className="concentration-note mono dim">
@@ -327,7 +360,7 @@ export default function StatsPage() {
             <h2 className="eyebrow chart-head">
               ◊ Exposure over time{trends.length >= 2 ? ` · last ${trends.length} days` : ""}
             </h2>
-            {trends.length >= 2 ? (
+            {trends.length >= 3 ? (
               <div className="trend-grid">
                 <div className="trend-cell">
                   <h3 className="concentration-h mono">CVE- or reputation-flagged services</h3>
@@ -340,8 +373,7 @@ export default function StatsPage() {
               </div>
             ) : (
               <p className="concentration-note mono dim">
-                Collecting daily snapshots — the longitudinal trend appears once a few days of history
-                have accrued.
+                Collecting daily snapshots — a trend is shown after at least three daily observations.
               </p>
             )}
           </section>

@@ -37,10 +37,14 @@ export default function WorldMap({ points }: { points: MapPoint[] }) {
     const project = (lon: number, lat: number) => projection([lon, lat]) ?? [0, 0];
     return { paths, project };
   }, [land]);
+  const httpCount = points.filter((p) => p.insecure).length;
+  const httpsCount = points.length - httpCount;
+  const summary = `Map of ${points.length} geolocated service observations: ${httpsCount} captured over HTTPS and ${httpCount} over cleartext HTTP.`;
 
   return (
     <div className="worldmap">
-      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Signal origins worldwide">
+      <p className="sr-only">{summary}</p>
+      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" role="img" aria-label={summary}>
         <defs>
           <radialGradient id="glow" cx="50%" cy="50%" r="50%">
             <stop offset="0%" stopColor="rgba(88,169,124,0.9)" />
