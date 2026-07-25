@@ -72,7 +72,15 @@ export default function Signal() {
           <div>
             <span className="fr-eyebrow">Case</span>
             <h1 className="fr-callsign">
-              {s.ip}<span className="port">:{s.port}</span>
+              <a
+                className="fr-callsign-link"
+                href={`${s.secured ? "https" : "http"}://${s.ip}:${s.port}`}
+                target="_blank"
+                rel="noopener noreferrer nofollow"
+                title="Open the live host in a new tab. This is a real, randomly-discovered server — it may have changed since capture and could be hostile."
+              >
+                {s.ip}<span className="port">:{s.port}</span><span className="fr-callsign-ext" aria-hidden="true">↗</span>
+              </a>
             </h1>
           </div>
           <div className="fr-caseright">
