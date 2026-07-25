@@ -139,8 +139,8 @@ runbook: [`vibescan-go/deploy/DEPLOY.md`](vibescan-go/deploy/DEPLOY.md).
 
 ## License
 
-Source-available for evaluation and portfolio review only — **not** open source and **not**
-licensed for reuse. See [`LICENSE`](LICENSE).
+Source code is **open source under the [MIT license](LICENSE)**. The published **dataset** is
+licensed separately under **Creative Commons Attribution 4.0 (CC-BY-4.0)**.
 
 ---
 

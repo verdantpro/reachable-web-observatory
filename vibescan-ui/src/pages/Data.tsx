@@ -91,7 +91,7 @@ export default function Data() {
             Creative Commons Attribution 4.0 (CC-BY-4.0)
           </a>{" "}
           — free to use, share, and build on with attribution. (The source code is separately
-          source-available; see the repository <span className="mono">LICENSE</span>.)
+          open-source under the <span className="mono">MIT</span> license.)
         </p>
       </section>
 

@@ -55,7 +55,7 @@ export default function Footer() {
           <span>© 2026 Reachable Web Observatory · codename VibeScan</span>
           <span className="footer-bottom-links">
             <a href={`${REPO}/blob/main/LICENSE`} target="_blank" rel="noopener noreferrer">
-              Code: source-available
+              Code: MIT
             </a>
             <span className="footer-dot">·</span>
             <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">
