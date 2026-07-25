@@ -46,6 +46,17 @@ func main() {
 			log.Printf("[migrate] backfill done: %d hosts re-denormalized", n)
 		}
 	}
+	if os.Getenv("VIBESCAN_BACKFILL_PRODUCTS") != "" {
+		bctx, bcancel := context.WithTimeout(context.Background(), 15*time.Minute)
+		defer bcancel()
+		log.Printf("[migrate] normalizing legacy product banners…")
+		n, err := mongoStore.BackfillProductIdentity(bctx)
+		if err != nil {
+			log.Printf("[migrate] product backfill error after %d records: %v", n, err)
+		} else {
+			log.Printf("[migrate] product backfill done: %d records updated", n)
+		}
+	}
 
 	log.Printf("[migrate] done")
 }

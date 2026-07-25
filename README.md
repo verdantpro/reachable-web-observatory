@@ -3,8 +3,8 @@
 *(codename: VibeScan)*
 
 An **open internet-measurement study** of the reachable public-IPv4 web, built with **Go**
-and **React**: random-sample scanning, HTTP capture, CVE/reputation enrichment, open data,
-a documented methodology, and an ethical opt-out/disclosure posture.
+and **React**: random-sample scanning, HTTP capture, attributed third-party enrichment,
+open data, a documented methodology, and an ethical opt-out/disclosure posture.
 
 **Live:** https://observatory.verdantprotocol.com &nbsp;·&nbsp;
 **Methodology:** [/methodology](https://observatory.verdantprotocol.com/methodology) &nbsp;·&nbsp;
@@ -27,7 +27,10 @@ what an anonymous browser can see on common web ports, enriches each host with p
 data, and treats every capture as one observation in a continuing time series. Conduct follows
 the field's ethics norms — the [Menlo Report](https://www.dhs.gov/sites/default/files/publications/CSD-MenloPrinciplesCORE-20120803_1.pdf)
 and the [ZMap scanning best practices](https://github.com/zmap/zmap/wiki/Scanning-Best-Practices):
-slow rate, opt-out, published scanner ranges, and coordinated disclosure. Data is open (CC-BY-4.0).
+slow rate, a self-identifying HTTP User-Agent, opt-out, and coordinated disclosure. The
+scanner address is not currently published; the project says so plainly on its operator-facing
+pages and will update them when scanning moves to dedicated infrastructure. Data is open
+(CC-BY-4.0).
 
 **Independent project** — not affiliated with a university and not IRB-reviewed; collaboration
 welcome. Maintained by an independent researcher under **Verdant Protocol**.
@@ -61,8 +64,9 @@ object storage → concurrent threat-intel enrichment → embedded React UI.
   from a single process; the UI is embedded via `go:embed` in a multi-stage image (~60 MB).
 - **Designed for failure** — disk buffering (BSON) when MongoDB is unavailable, deterministic
   `_id` so upserts collide correctly, bounded-concurrency enrichment, per-client rate limits.
-- **Rendering hostile pages safely** — captures run in a containerized headless Chromium on a
-  separate scanner host, isolated from the collector.
+- **Rendering hostile pages safely** — captures run in containerized headless Chromium. Moving
+  the scanner to a dedicated VPS, isolated from the collector, is planned but not represented as
+  complete.
 - **Enrichment without leaking keys** — server-side fan-out across InternetDB/Shodan and
   threat feeds (VirusTotal, AbuseIPDB, GreyNoise, OTX, ThreatFox, …); API keys never reach
   the browser, results are cached and throttled. Reputation/CVE data is surfaced with its
@@ -77,10 +81,15 @@ object storage → concurrent threat-intel enrichment → embedded React UI.
 
 The observatory only observes what an anonymous visitor could already see. It does **not** sign in,
 submit credentials, exploit/fuzz, probe non-web services, or scan ports exhaustively. Scanning
-runs continuously at a deliberately slow rate, every agent honors a CIDR exclusion list, and the
-agent's own source IP is anonymized in each record. Third-party reputation/threat verdicts are
-the vendors' and may be wrong. A human monitors the abuse address for opt-out, takedown, and
-abuse reports. Full policy: [`/about`](https://observatory.verdantprotocol.com/about).
+runs continuously at a deliberately slow rate and every agent honors a CIDR exclusion list.
+Public service records intentionally retain the exact observed IP address and port, screenshot,
+page source, and an explicit link to open the live host. The live host may have changed and
+opening it is a direct visit to a third-party system; the UI warns readers before they follow it.
+The scanner's submission address is a separate field and anonymous agents redact it to
+`0.0.0.0`. Third-party reputation/threat verdicts are attributed associations and may be wrong.
+A human monitors `abuse@verdantprotocol.com` for opt-out, takedown, and abuse reports; research
+correspondence goes to `research@verdantprotocol.com`. Full policy:
+[`/ethics`](https://observatory.verdantprotocol.com/ethics).
 
 ## Repository layout
 
@@ -89,8 +98,8 @@ abuse reports. Full policy: [`/about`](https://observatory.verdantprotocol.com/a
 | [`vibescan-go/`](vibescan-go/) | Collector, v2 APIs, scanner agent, migrate, Docker/Caddy deploy — [README](vibescan-go/README.md) |
 | [`vibescan-ui/`](vibescan-ui/) | React/Vite console (embedded into the Go image in prod) — [README](vibescan-ui/README.md) |
 
-The legacy Python app (`vibescan_v2`) is a separate Git remote kept for dual-run / reference
-and is **not** part of this repo.
+[`vibescan_v2/`](vibescan_v2/) contains the legacy Python implementation retained for migration
+reference. New development belongs in the Go collector and React UI.
 
 ## Local development
 
@@ -108,8 +117,9 @@ npm run dev
 ```
 
 MongoDB is optional at startup — the collector spools accepted submissions to disk and flushes
-once the database recovers. See [`vibescan-go/README.md`](vibescan-go/README.md) for the agent,
-enrichment, and full v2 API reference.
+once the database recovers. Read routes show an unavailable state until MongoDB is reachable.
+See [`vibescan-go/README.md`](vibescan-go/README.md) for the agent, enrichment, migration
+backfills, and full v2 API reference.
 
 ## Test & deploy
 
@@ -130,11 +140,15 @@ runbook: [`vibescan-go/deploy/DEPLOY.md`](vibescan-go/deploy/DEPLOY.md).
 
 ## Known limitations
 
-- Stats are computed live per request (bounded `$facet` + 60s cache), not from rollups.
+- Windowed stats are computed live per request (bounded `$facet` + 60s cache); daily rollups
+  separately power the longitudinal trends series.
 - Search uses a MongoDB `$text` index, not Atlas Search.
 - Threat/reputation verdicts come from third-party feeds and can be inaccurate.
-- Thumbnails are generated going forward; captures made before the pipeline landed have none
-  and fall back to the full image (a one-off backfill pass is a clean follow-up).
+- Historical captures may lack generated thumbnails and fall back to their full image.
+- The ranked feed prioritizes readable HTTP 200 captures for browsing convenience; the Latest
+  feed, search, exports, and exact-address record pages keep the underlying observations
+  available without that presentation ranking.
+- The scanner has not yet moved to its planned dedicated VPS, and no scanner IP is published.
 - Interactions (votes, tags, favorites, auth) and live SSE streaming are not yet in this layer.
 
 ## License
@@ -151,6 +165,6 @@ licensed separately under **Creative Commons Attribution 4.0 (CC-BY-4.0)**.
   • Add Topics: golang, react, cybersecurity, internet-scanner, threat-intelligence, mongodb, aws,
     data-visualization
   • Add docs/screenshot.png and uncomment the hero image above.
-  • Add a 1200×630 social preview at vibescan-ui/public/og.png (referenced by the
-    Open Graph / Twitter tags in index.html and src/lib/meta.ts).
+  • The 1200×630 social preview lives at vibescan-ui/public/og.png and is referenced
+    by the Open Graph / Twitter tags in index.html and src/lib/meta.ts.
 -->

@@ -24,6 +24,7 @@ type tile struct {
 	Port            int        `json:"port"`
 	Banner          string     `json:"banner"`
 	Product         string     `json:"product"`
+	ProductVersion  string     `json:"product_version,omitempty"`
 	HTTPStatus      *int       `json:"http_status"`
 	Secured         bool       `json:"secured"`
 	Whois           string     `json:"whois"`
@@ -76,11 +77,18 @@ func (s *Server) toTile(d store.ServiceDoc) tile {
 	if ts.IsZero() {
 		ts = d.ReceivedAt
 	}
+	product := d.ProductFamily
+	productVersion := d.ProductVersion
+	if product == "" {
+		normalized := media.NormalizeProduct(d.Banner)
+		product, productVersion = normalized.Family, normalized.Version
+	}
 	return tile{
 		IP:              d.IPStr,
 		Port:            d.Port,
 		Banner:          strings.TrimSpace(d.Banner),
-		Product:         media.ExtractProduct(d.Banner),
+		Product:         product,
+		ProductVersion:  productVersion,
 		HTTPStatus:      d.HTTPStatus,
 		Secured:         d.Secured,
 		Whois:           firstWhois(d.Whois),
@@ -181,10 +189,16 @@ func (s *Server) handleSearch(w http.ResponseWriter, r *http.Request) {
 	if hasMore {
 		docs = docs[:limit]
 	}
+	total, err := s.store.CountSearch(r.Context(), opts)
+	if err != nil {
+		s.readError(w, err)
+		return
+	}
 	writeJSON(w, http.StatusOK, map[string]any{
 		"entries":  s.toTiles(docs),
 		"has_more": hasMore,
 		"query":    opts.Query,
+		"total":    total,
 	})
 }
 

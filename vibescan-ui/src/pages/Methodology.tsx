@@ -54,9 +54,10 @@ export default function Methodology() {
           duplicating it.
         </p>
         <p>
-          The agents do not sign in, submit credentials, exploit or fuzz anything, or probe non-web
-          services — they load the page a browser would and nothing more. Every request carries a
-          self-identifying <span className="mono">User-Agent</span> linking to the{" "}
+          The agents do not sign in, submit credentials, exploit or fuzz anything. Network discovery
+          checks only the five listed web ports; when a service responds, the agent loads the page a
+          browser would and nothing more. Every HTTP page fetch carries a self-identifying{" "}
+          <span className="mono">User-Agent</span> linking to the{" "}
           <Link className="doc-link" to="/scan-info">scan-info</Link> page, so operators can see who we
           are and opt out.
         </p>
@@ -69,17 +70,17 @@ export default function Methodology() {
           keyless <span className="mono">InternetDB</span> supplies associated CVEs, tags, and other
           open ports; on the record view, additional threat-intelligence feeds (VirusTotal, AbuseIPDB,
           GreyNoise, AlienVault OTX, ThreatFox, IPQualityScore, Pulsedive, IPinfo, plus ip-api and
-          RIPEstat) are queried and reconciled into a coarse <span className="mono">clean</span> /{" "}
-          <span className="mono">suspicious</span> / <span className="mono">malicious</span> verdict.
-          Every enrichment record carries its contributing <em>sources</em> and a{" "}
-          <em>last-enriched</em> timestamp; these are provider associations, not independently verified
-          findings.
+          RIPEstat) are queried. The record preserves the returned evidence, including disagreements,
+          absence of reports, and provider timestamps where available. Every enrichment record carries
+          its contributing <em>sources</em> and a <em>last-enriched</em> timestamp; these are provider
+          associations, not independently verified findings.
         </p>
         <div className="doc-callout">
           A CVE association means a third party has linked the host's software or network to a known
           vulnerability identifier — it is not proof the host is exploitable or unpatched. Reputation
-          verdicts are the vendors', and can be wrong or stale. The observatory reports them <em>as
-          third-party signals</em> and never as ground truth.
+          assessments can be wrong or stale. CVEs, CPEs, hostnames, and additional ports from InternetDB
+          describe the <em>host</em>, not necessarily the particular web service shown on the record.
+          The observatory reports all of these <em>as third-party signals</em> and never as ground truth.
         </div>
       </section>
 
@@ -135,8 +136,9 @@ export default function Methodology() {
           <a className="doc-link" href="https://github.com/verdantpro/vibescan_rework" target="_blank" rel="noopener noreferrer">
             open source
           </a>
-          , the record schema is documented on the <Link className="doc-link" to="/data">data</Link>{" "}
-          page, and dataset snapshots are published openly. The scanning conduct follows established
+          , and the live record schema and export interface are documented on the{" "}
+          <Link className="doc-link" to="/data">data</Link> page. Dated archival snapshots are planned
+          but are not yet published. The scanning conduct follows established
           norms for internet measurement — see <Link className="doc-link" to="/ethics">ethics</Link>.
         </p>
       </section>

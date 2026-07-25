@@ -29,6 +29,13 @@ func Handler() http.Handler {
 	index, _ := fs.ReadFile(sub, "index.html")
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Individual observations remain publicly reachable but should not be
+		// indexed or archived by search engines. The HTTP header also protects
+		// non-JavaScript crawlers that never see the client-rendered meta tag.
+		if strings.HasPrefix(r.URL.Path, "/signal/") {
+			w.Header().Set("X-Robots-Tag", "noindex, nofollow, noarchive")
+		}
+
 		// Explicit non-SPA endpoints (avoid HTML shell for crawlers). These are
 		// served with an explicit Content-Type and a real 404 when absent, so a
 		// crawler never receives the SPA index.html in their place.

@@ -1,4 +1,4 @@
-# vibescan — public discovery console
+# Reachable Web Observatory
 User-agent: *
 Allow: /
 Disallow: /api/

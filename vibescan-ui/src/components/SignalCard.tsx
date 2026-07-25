@@ -4,7 +4,7 @@ import { timeAgo } from "../lib/time";
 import StatusBadge from "./StatusBadge";
 import "./SignalCard.css";
 
-export default function SignalCard({ t }: { t: Tile }) {
+export default function SignalCard({ t, relatedPorts = [] }: { t: Tile; relatedPorts?: number[] }) {
   const flagged = t.verdict === "malicious" || t.verdict === "suspicious";
   const provenance = flagged || (t.vuln_count ?? 0) > 0;
   const srcLabel = t.sources && t.sources.length ? t.sources.join(", ") : "third-party feeds";
@@ -18,7 +18,7 @@ export default function SignalCard({ t }: { t: Tile }) {
         {t.image_url ? (
           <img
             src={imageURL(t.thumb_url || t.image_url)}
-            alt=""
+            alt={`Capture of ${t.ip}:${t.port}${t.product ? ` — ${t.product}` : ""}${t.http_status ? `, HTTP ${t.http_status}` : ""}`}
             loading="lazy"
             decoding="async"
             width={1147}
@@ -37,7 +37,7 @@ export default function SignalCard({ t }: { t: Tile }) {
                 className={`card-verdict mono ${t.verdict}`}
                 title={`Reputation match from ${srcLabel}${enriched ? ` (${enriched})` : ""} — not independently verified, may be inaccurate`}
               >
-                {t.verdict === "malicious" ? "⚑ poss. malicious" : "⚑ suspect"}
+                {t.verdict === "malicious" ? "⚑ corroborated signals" : "⚑ limited evidence"}
               </span>
             ) : null}
             {t.vuln_count ? (
@@ -52,8 +52,15 @@ export default function SignalCard({ t }: { t: Tile }) {
         )}
       </div>
       <div className="card-meta">
+        {relatedPorts.length > 1 && (
+          <div className="card-ports mono" aria-label={`Same capture observed on ports ${relatedPorts.join(", ")}`}>
+            {relatedPorts.map((port) => <span key={port}>:{port}</span>)}
+          </div>
+        )}
         <div className="row spread">
-          <span className="mono card-product">{t.product || "unknown"}</span>
+          <span className="mono card-product">
+            {t.product || "unknown"}{t.product_version ? ` ${t.product_version}` : ""}
+          </span>
           <span className="row" style={{ gap: 6 }}>
             {t.secured ? (
               <span className="lock" title="Captured over TLS (after any redirects)">HTTPS</span>

@@ -3,6 +3,7 @@ import DocPage from "../components/DocPage";
 import { useMeta } from "../lib/meta";
 
 const ABUSE = "abuse@verdantprotocol.com";
+const RESEARCH = "research@verdantprotocol.com";
 
 export default function Disclosure() {
   useMeta({
@@ -21,31 +22,43 @@ export default function Disclosure() {
         <h2 className="doc-h">Principles</h2>
         <ul className="doc-list">
           <li>We observe; we do not exploit, confirm, or interact beyond loading a page a browser would.</li>
-          <li>We reduce risk rather than increase it — findings are never published in a form that makes an individual vulnerable host easier to attack.</li>
-          <li>We act in good faith and give operators a reasonable, private window to respond before any aggregate detail is shared.</li>
+          <li>
+            Individual observations are published openly, including the address, capture, service
+            metadata, and third-party host associations described on the{" "}
+            <Link className="doc-link" to="/data">data page</Link>.
+          </li>
+          <li>
+            We preserve conflicting, clean, stale, missing, and adverse evidence rather than presenting
+            a third-party association as a verified vulnerability or compromise.
+          </li>
+          <li>
+            Record pages are public but marked for exclusion from search-engine indexes. Operators can
+            request correction, removal, or exclusion from future scans.
+          </li>
         </ul>
       </section>
 
       <section className="doc-sec" id="what-we-do">
         <h2 className="doc-h">When we observe a vulnerable or compromised host</h2>
         <p>
-          Where a record suggests a host is exploitable, serving malware, or acting as attack
-          infrastructure, we make a <em>best-effort</em> attempt to notify the responsible party —
+          Where third-party evidence suggests a host may be exploitable, serving malware, or acting as
+          attack infrastructure, we make a <em>best-effort</em> attempt to notify the responsible party —
           typically the network's published abuse contact or CERT — with the minimum detail needed to
           locate and fix it. Because reputation and CVE signals come from{" "}
           <Link className="doc-link" to="/methodology#enrichment">third-party feeds</Link> and can be
-          wrong, notifications are framed as leads to verify, not confirmed compromises.
+          wrong or stale, notifications and public records frame them as leads to verify, not confirmed
+          compromises.
         </p>
       </section>
 
       <section className="doc-sec" id="systemic">
         <h2 className="doc-h">Systemic findings</h2>
         <p>
-          If the study uncovers a <em>systemic</em> issue — a widespread default credential, an exposed
-          management interface across a product line, a vulnerable library at scale — we follow
-          coordinated disclosure: notify the vendor or coordinating body first, allow a standard
-          remediation window (typically 90 days), and only then publish aggregate findings that help
-          the community without pinpointing exploitable targets.
+          If the study independently confirms a <em>systemic</em> issue — a widespread default
+          credential, an exposed management interface across a product line, or a vulnerable library at
+          scale — we follow coordinated disclosure: notify the vendor or coordinating body first, allow
+          a standard remediation window (typically 90 days), and only then publish analysis of the
+          confirmed issue. Unverified provider associations remain clearly labelled as such.
         </p>
       </section>
 
@@ -62,6 +75,10 @@ export default function Disclosure() {
           Good-faith security research and vulnerability reports are welcome. We will not pursue action
           against anyone who reports an issue with this project responsibly and in good faith.
         </div>
+        <p>
+          For research collaboration, dataset questions, and citation help, contact{" "}
+          <a className="doc-link" href={`mailto:${RESEARCH}`}>{RESEARCH}</a>.
+        </p>
       </section>
     </DocPage>
   );

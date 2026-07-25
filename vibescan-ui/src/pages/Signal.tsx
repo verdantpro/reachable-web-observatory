@@ -36,6 +36,7 @@ export default function Signal() {
   useMeta({
     title: ip && port ? `${ip}:${port} — Reachable Web Observatory record` : "Record — Reachable Web Observatory",
     description: "A point-in-time capture and telemetry record for a discovered web service.",
+    noIndex: true,
   });
 
   useEffect(() => {
@@ -54,14 +55,19 @@ export default function Signal() {
     };
   }, [ip, port]);
 
-  if (state === "loading") return <div className="record"><div className="page wrap empty">◌ Tuning…</div></div>;
-  if (state === "error" || !d) return <div className="record"><div className="page wrap empty">Signal not found</div></div>;
+  if (state === "loading") return <div className="record"><div className="page wrap empty"><h1>Loading observation…</h1></div></div>;
+  if (state === "error" || !d) return <div className="record"><div className="page wrap empty"><h1>Observation not found</h1></div></div>;
 
   const s = d.service;
   const geo = s.geo;
   const seen = s.updated_at?.replace("T", " ").replace("Z", " UTC");
   const origin = geo ? [geo.city, geo.region, geo.country].filter(Boolean).join(" · ") : null;
   const submitter = d.anon || d.submitted_by === "0.0.0.0" ? "anonymous" : d.submitted_by;
+  const isFallbackGeo =
+    !!geo &&
+    ((Math.abs(geo.lat - 37.751) < 0.001 && Math.abs(geo.lon + 97.822) < 0.001) ||
+      (geo.accuracy_radius_km ?? 0) >= 500);
+  const showCoordinates = !!geo && !isFallbackGeo && (geo.lat !== 0 || geo.lon !== 0);
 
   return (
     <div className="record">
@@ -70,18 +76,22 @@ export default function Signal() {
 
         <header className="fr-casehead">
           <div>
-            <span className="fr-eyebrow">Case</span>
+            <span className="fr-eyebrow">Observation</span>
             <h1 className="fr-callsign">
-              <a
-                className="fr-callsign-link"
-                href={`${s.secured ? "https" : "http"}://${s.ip}:${s.port}`}
-                target="_blank"
-                rel="noopener noreferrer nofollow"
-                title="Open the live host in a new tab. This is a real, randomly-discovered server — it may have changed since capture and could be hostile."
-              >
-                {s.ip}<span className="port">:{s.port}</span><span className="fr-callsign-ext" aria-hidden="true">↗</span>
-              </a>
+              {s.ip}<span className="port">:{s.port}</span>
             </h1>
+            <a
+              className="fr-live-link mono"
+              href={`${s.secured ? "https" : "http"}://${s.ip}:${s.port}`}
+              target="_blank"
+              rel="noopener noreferrer nofollow"
+              title="Leaves the observatory and contacts the current third-party service directly."
+            >
+              Open current live service ↗
+            </a>
+            <span className="fr-live-warning mono">
+              External host · may have changed since capture · open with appropriate caution
+            </span>
           </div>
           <div className="fr-caseright">
             <span className={`fr-class ${s.secured ? "ok" : "alert"}`}>
@@ -89,7 +99,7 @@ export default function Signal() {
             </span>
             {seen && (
               <div className="fr-filed">
-                <span>Seen</span>
+                <span>Observed</span>
                 {seen}
               </div>
             )}
@@ -115,17 +125,17 @@ export default function Signal() {
               )}
             </div>
             <figcaption className="fr-cap">
-              <span>Exhibit A{s.capture_hash ? ` · capture ${s.capture_hash.slice(0, 8)}` : ""}</span>
+              <span>Capture{s.capture_hash ? ` · ${s.capture_hash.slice(0, 8)}` : ""}</span>
               <span>{s.capture_ext ? s.capture_ext.toUpperCase() : ""}</span>
             </figcaption>
           </figure>
 
           <aside className="fr-notes">
-            <div className="fr-notes-h">Field notes</div>
+            <h2 className="fr-notes-h">Service metadata</h2>
             <dl>
               <Note label="Operator" value={s.whois} hideEmpty />
               <Note label="Origin" value={origin} hideEmpty />
-              <Note label="Coord" value={geo ? `${geo.lat.toFixed(4)}, ${geo.lon.toFixed(4)}` : null} hideEmpty />
+              <Note label="Coord" value={showCoordinates ? `${geo!.lat.toFixed(4)}, ${geo!.lon.toFixed(4)}` : null} hideEmpty />
               <Note label="Country" value={geo?.country_iso} hideEmpty />
               <Note label="Server" value={s.product} hideEmpty />
               <Note
@@ -142,9 +152,9 @@ export default function Signal() {
           </aside>
         </div>
 
-        {geo && (geo.lat !== 0 || geo.lon !== 0) && (
+        {showCoordinates && geo && (
           <section className="fr-sec fr-location">
-            <div className="fr-sec-h">Approximate location</div>
+            <h2 className="fr-sec-h">Approximate location</h2>
             <div className="fr-loc-body">
               <LocationMap lat={geo.lat} lon={geo.lon} />
               <dl className="fr-loc-facts">
@@ -160,17 +170,30 @@ export default function Signal() {
             </p>
           </section>
         )}
+        {geo && isFallbackGeo && (
+          <section className="fr-sec fr-location">
+            <h2 className="fr-sec-h">Approximate location</h2>
+            <p>
+              Country-level geolocation only: {geo.country || geo.country_iso || "unknown country"}.
+              Coordinates are suppressed because the provider did not return a meaningful position.
+            </p>
+          </section>
+        )}
 
         <CrossReference ip={s.ip} />
 
         <section className="fr-sec">
-          <div className="fr-sec-h">Service banner</div>
+          <h2 className="fr-sec-h">Service banner</h2>
           <pre className="fr-pre">{s.banner || "— no banner —"}</pre>
         </section>
 
         {d.fulltext && (
           <section className="fr-sec">
-            <div className="fr-sec-h">Page source · {d.fulltext.length.toLocaleString()} chars</div>
+            <h2 className="fr-sec-h">Page source · {d.fulltext.length.toLocaleString()} chars</h2>
+            <p className="fr-source-note mono">
+              Captured from this service at observation time; public page content can contain version,
+              endpoint, or personal information and may no longer match the live host.
+            </p>
             <pre className="fr-pre fr-scroll">{d.fulltext}</pre>
           </section>
         )}

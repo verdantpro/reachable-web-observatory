@@ -3,6 +3,7 @@ import "./Footer.css";
 
 const REPO = "https://github.com/verdantpro/vibescan_rework";
 const ABUSE = "abuse@verdantprotocol.com";
+const RESEARCH = "research@verdantprotocol.com";
 
 export default function Footer() {
   return (
@@ -46,13 +47,14 @@ export default function Footer() {
             <ul>
               <li><Link to="/scan-info">Scanned? Opt out</Link></li>
               <li><Link to="/disclosure">Disclosure</Link></li>
-              <li><a href={`mailto:${ABUSE}`}>Contact / abuse</a></li>
+              <li><a href={`mailto:${ABUSE}`}>Abuse / removal</a></li>
+              <li><a href={`mailto:${RESEARCH}`}>Research contact</a></li>
             </ul>
           </nav>
         </div>
 
         <div className="footer-bottom mono">
-          <span>© 2026 Reachable Web Observatory · codename VibeScan</span>
+          <span>© 2026 Reachable Web Observatory</span>
           <span className="footer-bottom-links">
             <a href={`${REPO}/blob/main/LICENSE`} target="_blank" rel="noopener noreferrer">
               Code: MIT

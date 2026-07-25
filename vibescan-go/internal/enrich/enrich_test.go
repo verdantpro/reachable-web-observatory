@@ -77,12 +77,25 @@ func TestComputeVerdict(t *testing.T) {
 	if v := computeVerdict(&ThreatIntel{AbuseIPDB: &AbuseData{Confidence: 40}}); v != "suspicious" {
 		t.Fatalf("abuse 40 → %q, want suspicious", v)
 	}
-	// Malicious escalation dominates.
+	// One strong provider is adverse evidence, but not a corroborated finding.
 	if v := computeVerdict(&ThreatIntel{
-		OTX:        &OTXData{PulseCount: 3}, // would be suspicious alone
-		VirusTotal: &VTData{Malicious: 5},   // malicious
+		VirusTotal: &VTData{Malicious: 5},
+	}); v != "suspicious" {
+		t.Fatalf("VT alone → %q, want suspicious", v)
+	}
+	// Two independent strong providers produce the highest derived summary.
+	if v := computeVerdict(&ThreatIntel{
+		VirusTotal: &VTData{Malicious: 5},
+		AbuseIPDB:  &AbuseData{Confidence: 90},
 	}); v != "malicious" {
-		t.Fatalf("VT malicious → %q, want malicious", v)
+		t.Fatalf("corroborated evidence → %q, want malicious", v)
+	}
+	// Stale adverse evidence is still displayed by the API, but does not
+	// escalate the derived summary.
+	if v := computeVerdict(&ThreatIntel{
+		VirusTotal: &VTData{Malicious: 5, LastAnalysisDate: "2022-10-16"},
+	}); v != "clean" {
+		t.Fatalf("stale VT → %q, want clean", v)
 	}
 }
 

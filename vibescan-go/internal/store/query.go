@@ -22,6 +22,9 @@ type ServiceDoc struct {
 	IPStr           string             `bson:"ip_str"`
 	Port            int                `bson:"port"`
 	Banner          string             `bson:"banner"`
+	ProductFamily   string             `bson:"product_family"`
+	ProductVersion  string             `bson:"product_version"`
+	ProductMajor    string             `bson:"product_major_version"`
 	Capture         string             `bson:"capture"`
 	Thumb           string             `bson:"thumb"`
 	CaptureHash     string             `bson:"capture_hash"`
@@ -221,7 +224,7 @@ const maxQueryLen = 128
 // except IP-like queries (containing a dot), which route to an anchored, escaped
 // ip_str prefix match — $text tokenizes on "." so it can't match dotted IPs, and
 // an anchored literal regex is both index-friendly and ReDoS-proof.
-func (m *Mongo) Search(ctx context.Context, o ListOpts) ([]ServiceDoc, error) {
+func searchMatch(o ListOpts) bson.D {
 	// $text must sit at the top level of the match document (it cannot be nested
 	// in $and/$or), so filters are merged as sibling keys — an implicit AND.
 	match := bson.D{}
@@ -273,7 +276,21 @@ func (m *Mongo) Search(ctx context.Context, o ListOpts) ([]ServiceDoc, error) {
 		match = append(match, hasCaptureMatch...)
 	}
 
-	return m.aggregateDocs(ctx, listPipeline(match, o.Offset, o.Limit), o.MaxTimeMS)
+	return match
+}
+
+func (m *Mongo) Search(ctx context.Context, o ListOpts) ([]ServiceDoc, error) {
+	return m.aggregateDocs(ctx, listPipeline(searchMatch(o), o.Offset, o.Limit), o.MaxTimeMS)
+}
+
+// CountSearch returns the exact number of records matching the same filter used
+// by Search. Keeping match construction shared prevents count/results drift.
+func (m *Mongo) CountSearch(ctx context.Context, o ListOpts) (int64, error) {
+	opts := options.Count()
+	if o.MaxTimeMS > 0 {
+		opts.SetMaxTime(time.Duration(o.MaxTimeMS) * time.Millisecond)
+	}
+	return m.results.CountDocuments(ctx, searchMatch(o), opts)
 }
 
 // isIPLike reports whether q looks like an IPv4 address or a leading fragment of

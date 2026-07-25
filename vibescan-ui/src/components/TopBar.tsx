@@ -9,6 +9,7 @@ const NAV = [
   { to: "/search", label: "SEARCH" },
   { to: "/stats", label: "STATS" },
   { to: "/data", label: "DATA" },
+  { to: "/methodology", label: "METHODS" },
 ];
 
 function useClock() {

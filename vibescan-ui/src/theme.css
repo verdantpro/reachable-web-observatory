@@ -76,6 +76,7 @@ img { max-width: 100%; display: block; }
 .display { font-family: var(--font-display); font-weight: 600; letter-spacing: 0; }
 .mono { font-family: var(--font-mono); }
 .eyebrow {
+  margin: 0;
   font-family: var(--font-mono);
   font-size: 10.5px;
   letter-spacing: 0.28em;

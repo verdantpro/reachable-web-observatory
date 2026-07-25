@@ -91,10 +91,11 @@ export default function Console() {
     <div className="console wrap">
       <div className="console-head">
         <div className="eyebrow">◊ Reachable Web Observatory · live census</div>
-        <h1 className="console-h1 display" title="Cumulative total of every cleartext HTTP service the census has recorded since it began (the Stats page shows a recent window instead).">
+        <h1 className="console-title display">Reachable Web Observatory</h1>
+        <div className="console-h1 display" title="Cumulative total of every cleartext HTTP service the census has recorded since it began (the Stats page shows a recent window instead).">
           {insecure != null ? insecure.toLocaleString() : "—"}{" "}
           <span className="console-h1-sub">cleartext HTTP services recorded to date</span>
-        </h1>
+        </div>
         <p className="console-lede dim">
           An open, continuously-running measurement study of the <em>ordinary</em> reachable web — and
           where risk quietly accumulates across it.
@@ -126,7 +127,7 @@ export default function Console() {
 
         <div className="console-frame">
           <div className="console-frame-q">
-            <span className="eyebrow">◊ The question</span>
+            <h2 className="eyebrow">◊ The question</h2>
             <p>
               Across a uniform random sample of the reachable public-IPv4 web, <em>where do
               CVE-associated and reputation-flagged services concentrate</em> — by network, geography,
@@ -134,7 +135,7 @@ export default function Console() {
             </p>
           </div>
           <div className="console-frame-look">
-            <span className="eyebrow">◊ What to look for</span>
+            <h2 className="eyebrow">◊ What to look for</h2>
             <ul className="console-look-list">
               <li>How much of the reachable web still serves <strong>cleartext HTTP</strong></li>
               <li><strong>CVE-associated</strong> services clustering by network (ASN) and product</li>
@@ -166,7 +167,7 @@ export default function Console() {
       {latest.length > 0 && (
         <section className="console-recent">
           <div className="row spread console-section-head">
-            <span className="eyebrow">◊ Latest signals</span>
+            <h2 className="eyebrow">◊ Latest observations</h2>
             <span className="mono dim">newest first · any status</span>
           </div>
           <div className="console-strip">
@@ -179,7 +180,7 @@ export default function Console() {
 
       <section className="panel panel-pad console-map">
         <div className="row spread console-section-head">
-          <span className="eyebrow">◊ Signal origins</span>
+          <h2 className="eyebrow">◊ Observation origins</h2>
           <span className="mono dim">geolocated · last {recent.length} captures</span>
         </div>
         <WorldMap points={points} />
@@ -187,7 +188,7 @@ export default function Console() {
 
       <section className="console-recent">
         <div className="row spread console-section-head">
-          <span className="eyebrow">◊ Recently observed</span>
+          <h2 className="eyebrow">◊ Representative observations</h2>
           <Link className="mono console-more" to="/feed">
             full feed →
           </Link>

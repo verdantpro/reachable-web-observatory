@@ -203,9 +203,10 @@ func (e *Enricher) fanOutThreat(ctx context.Context, ip string, t *ThreatIntel) 
 	wg.Wait()
 }
 
-// computeVerdict ports scope-recon's output.rs thresholds. Returns "" (unknown)
-// when no reputation source ran — so the keyless worker never emits a false
-// "clean".
+// computeVerdict produces a deliberately conservative summary of independent
+// provider evidence. One provider can justify "suspicious", but "malicious"
+// requires corroboration from at least two providers. Provider rows remain the
+// primary public evidence; this value is only a derived browsing/filter aid.
 func computeVerdict(t *ThreatIntel) string {
 	if t == nil {
 		return ""
@@ -215,50 +216,61 @@ func computeVerdict(t *ThreatIntel) string {
 	if !hasRep {
 		return ""
 	}
-	sev := 0
+	strong, weak := 0, 0
 	if t.ThreatFox != nil && t.ThreatFox.IOCCount > 0 {
-		sev = 2
+		strong++
 	}
-	if t.VirusTotal != nil && t.VirusTotal.Malicious > 0 {
-		sev = 2
+	if t.VirusTotal != nil && providerDateFresh(t.VirusTotal.LastAnalysisDate, 180*24*time.Hour) {
+		if t.VirusTotal.Malicious > 0 {
+			strong++
+		} else if t.VirusTotal.Suspicious > 0 {
+			weak++
+		}
 	}
 	if t.AbuseIPDB != nil && t.AbuseIPDB.Confidence >= 75 {
-		sev = 2
+		strong++
+	} else if t.AbuseIPDB != nil && t.AbuseIPDB.Confidence >= 25 {
+		weak++
 	}
 	if t.GreyNoise != nil && t.GreyNoise.Classification == "malicious" {
-		sev = 2
+		strong++
 	}
 	if t.IPQS != nil && t.IPQS.FraudScore >= 75 {
-		sev = 2
+		strong++
+	} else if t.IPQS != nil && t.IPQS.FraudScore >= 30 {
+		weak++
 	}
 	if t.Pulsedive != nil && (t.Pulsedive.Risk == "critical" || t.Pulsedive.Risk == "high") {
-		sev = 2
+		strong++
+	} else if t.Pulsedive != nil && t.Pulsedive.Risk == "medium" {
+		weak++
 	}
-	if sev < 1 {
-		if t.VirusTotal != nil && t.VirusTotal.Suspicious > 0 {
-			sev = 1
-		}
-		if t.AbuseIPDB != nil && t.AbuseIPDB.Confidence >= 25 {
-			sev = 1
-		}
-		if t.OTX != nil && t.OTX.PulseCount > 0 {
-			sev = 1
-		}
-		if t.IPQS != nil && t.IPQS.FraudScore >= 30 {
-			sev = 1
-		}
-		if t.Pulsedive != nil && t.Pulsedive.Risk == "medium" {
-			sev = 1
-		}
+	if t.OTX != nil && t.OTX.PulseCount > 0 {
+		weak++
 	}
-	switch sev {
-	case 2:
+	switch {
+	case strong >= 2:
 		return "malicious"
-	case 1:
+	case strong == 1 || weak > 0:
 		return "suspicious"
 	default:
 		return "clean"
 	}
+}
+
+// providerDateFresh treats an absent provider date as unknown/current for
+// compatibility with feeds that do not return timestamps. A parseable stale
+// date, however, cannot escalate the derived summary.
+func providerDateFresh(raw string, maxAge time.Duration) bool {
+	if strings.TrimSpace(raw) == "" {
+		return true
+	}
+	for _, layout := range []string{time.RFC3339, "2006-01-02"} {
+		if parsed, err := time.Parse(layout, raw); err == nil {
+			return time.Since(parsed) <= maxAge
+		}
+	}
+	return false
 }
 
 // --- keyless sources (throttled; also used by the worker) ---

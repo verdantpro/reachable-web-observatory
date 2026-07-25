@@ -39,8 +39,9 @@ base64), so existing Python agents keep working while the Go agent is primary.
 ## Deploy
 
 Target stack: **AWS EC2 t3.micro** (image pulled from **ECR**) + **MongoDB Atlas
-M0** + **S3/CloudFront**, behind **Caddy**, with the **Go agent** on a separate
-scanner host.
+M0** + **S3/CloudFront**, behind **Caddy**. The **Go agent** is intended to move
+to a separate scanner VPS; that isolation and a publishable scanner IP are not
+claimed until the move is complete.
 
 **Full step-by-step runbook: [`deploy/DEPLOY.md`](deploy/DEPLOY.md).**
 
@@ -71,6 +72,12 @@ produces a small Alpine image (~60 MB) containing:
 `internal/web/dist/` is **generated** by the UI build (`vibescan-ui`,
 `VITE_API_BASE=""`); a placeholder ships so the module always builds. Indexes
 are created on startup and via `cmd/migrate` (`internal/store/indexes.go`).
+The migration command also supports opt-in, idempotent historical backfills:
+
+```bash
+VIBESCAN_BACKFILL_ENRICH=1 go run ./cmd/migrate   # re-denormalize cached CVE/enrichment data
+VIBESCAN_BACKFILL_PRODUCTS=1 go run ./cmd/migrate # parse legacy banners into product fields
+```
 
 The plan is a **strangler** migration: the Go collector speaks the exact legacy
 v1 wire protocol, so agents keep submitting unchanged while components cut over
@@ -161,7 +168,7 @@ the collector). Keyed by `ip/port` rather than Mongo `_id`.
 | `GET /api/v2/image/{ip}/{port}` | Serves base64 captures; 302-redirects to object storage for `r2:` refs |
 
 A gallery/search **tile** carries `ip, port, banner, product, http_status,
-secured, whois, image_url, thumb_url, capture_hash/ext, has_fulltext,
+product_version, secured, whois, image_url, thumb_url, capture_hash/ext, has_fulltext,
 screenshot_phash, dom_hash, cert_cn, updated_at, geo` plus the denormalized
 enrichment summary `vuln_count, tags, extra_ports, verdict, sources, enriched_at`.
 `image_url` resolves to the object-storage public URL (S3/CloudFront or R2) when
@@ -183,6 +190,11 @@ disabled, so the UI falls back to the full image).
   length-capped and regex-escaped, so no ReDoS surface. The text index is
   reconciled on startup (`indexes.go`): if its field set/weights change it is
   dropped and rebuilt once, otherwise left untouched.
+- **Product identity is normalized at ingest** into `product_family`,
+  `product_version`, and `product_major_version`. Search and statistics use the
+  normalized family so version-bearing banners do not fragment one product into
+  many misleading categories. `VIBESCAN_BACKFILL_PRODUCTS=1` applies the same
+  parser to historical records through `cmd/migrate`.
 - The public `/api/v2/*` endpoints are rate-limited per client IP (in-process
   token bucket; `VIBESCAN_READ_RATE_RPS` / `VIBESCAN_READ_RATE_BURST`, RPS ≤ 0
   disables).
@@ -205,6 +217,20 @@ disabled, so the UI falls back to the full image).
   keys stay server-side. ip-api + RIPEstat (keyless) also run in the worker.
   `search?verdict=` and a Stats verdict facet cover hosts that have been enriched.
 - Votes, tags, favorites, auth, and live SSE streams are not in this layer yet.
+
+### Public record policy
+
+The read API intentionally exposes each observed service by exact IP address and
+port, including its screenshot and captured source when available. The Signal UI
+also retains a direct link to the live host, with a warning that the destination
+is third-party and may have changed since capture. These target identifiers are
+not anonymized or selectively hidden.
+
+`submitted_by` identifies the submitting scanner, not the observed target. Agents
+using `VIBESCAN_NO_REPORT=1` store `0.0.0.0` and set `anon`; the public detail API
+also re-redacts anonymous legacy records. Signal routes are discouraged from search
+indexing with both page metadata and the server's `X-Robots-Tag`. Removal and
+correction requests go to `abuse@verdantprotocol.com`.
 
 ## Agent
 
@@ -231,9 +257,11 @@ Production packaging: `Dockerfile.agent` + `deploy/docker-compose.agent.yml` +
 | `VIBESCAN_BATCH_SIZE` | `10` | Random IPs per nmap batch |
 | `VIBESCAN_BROWSER_CONCURRENCY` | `2` | Concurrent Chromium captures |
 | `VIBESCAN_CAPTURE_HTTP` | `1` | `0` = discover-only |
+| `VIBESCAN_CAPTURE_DELAY` | `2.0` | Seconds to let a page settle before capture |
 | `VIBESCAN_NO_REPORT` | off | Redact `submitted_by` (→ `0.0.0.0`) + set `anon` |
 | `VIBESCAN_RDAP` | `1` | RDAP ownership lookup (cached /24) |
 | `VIBESCAN_USER_AGENT` | identifying UA | Browser User-Agent for captures; defaults to a self-identifying string linking to `/scan-info` (signal intent) |
+| `VIBESCAN_CHROME_PATH` | auto-detected | Optional explicit Chrome/Chromium executable |
 ## Layout
 
 ```

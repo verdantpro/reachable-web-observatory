@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 import { api, type Tile } from "../api";
 import SignalCard from "../components/SignalCard";
@@ -23,6 +23,24 @@ export default function Feed() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
+  const groupedTiles = useMemo(() => {
+    const groups = new Map<string, { tile: Tile; ports: number[] }>();
+    for (const tile of tiles) {
+      const identity = tile.dom_hash || tile.capture_hash || `${tile.port}`;
+      const key = `${tile.ip}:${identity}`;
+      const existing = groups.get(key);
+      if (existing) {
+        if (!existing.ports.includes(tile.port)) existing.ports.push(tile.port);
+      } else {
+        groups.set(key, { tile, ports: [tile.port] });
+      }
+    }
+    return [...groups.values()].map((group) => ({
+      ...group,
+      ports: group.ports.sort((a, b) => a - b),
+    }));
+  }, [tiles]);
+  const collapsedCount = tiles.length - groupedTiles.length;
 
   // Switching mode restarts pagination from the top.
   useEffect(() => {
@@ -62,6 +80,12 @@ export default function Feed() {
             Cards carry third-party CVE &amp; reputation signals (not verified findings) —{" "}
             <Link className="hint-link" to="/methodology">how to read them →</Link>
           </p>
+          {collapsedCount > 0 && (
+            <p className="page-hint mono">
+              {collapsedCount} visually duplicate same-host {collapsedCount === 1 ? "service is" : "services are"} grouped
+              into port chips below; every service remains available in search.
+            </p>
+          )}
         </div>
         <div className="chips">
           <button className={`chip mono${mode === "ranked" ? " on" : ""}`} onClick={() => setMode("ranked")}>
@@ -79,8 +103,8 @@ export default function Feed() {
         <div className="empty">NO SIGNALS ON RECORD</div>
       ) : (
         <div className="signal-grid">
-          {tiles.map((t) => (
-            <SignalCard key={`${t.ip}:${t.port}`} t={t} />
+          {groupedTiles.map(({ tile, ports }) => (
+            <SignalCard key={`${tile.ip}:${tile.port}`} t={tile} relatedPorts={ports} />
           ))}
         </div>
       )}

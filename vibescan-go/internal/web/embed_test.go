@@ -55,3 +55,13 @@ func TestUnknownRouteFallsBackToSPA(t *testing.T) {
 		t.Errorf("content-type = %q, want text/html (SPA shell)", ct)
 	}
 }
+
+func TestSignalRouteIsPublicButNoIndex(t *testing.T) {
+	res := get(t, Handler(), "/signal/192.0.2.1/80")
+	if res.StatusCode != http.StatusOK {
+		t.Fatalf("status = %d, want 200", res.StatusCode)
+	}
+	if got := res.Header.Get("X-Robots-Tag"); got != "noindex, nofollow, noarchive" {
+		t.Errorf("X-Robots-Tag = %q", got)
+	}
+}

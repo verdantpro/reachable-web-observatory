@@ -23,6 +23,7 @@ export interface Tile {
   port: number;
   banner: string;
   product: string;
+  product_version?: string;
   http_status: number | null;
   secured: boolean;
   whois: string;
@@ -93,6 +94,7 @@ export interface ListResponse {
   entries: Tile[];
   has_more: boolean;
   query?: string;
+  total?: number;
 }
 
 export interface RandomCapture {

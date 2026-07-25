@@ -32,11 +32,11 @@
 }
 .card-noshot {
   display: grid; place-items: center; height: 100%;
-  color: var(--muted-2); font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--muted-2); font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase;
 }
 .card-callsign {
   position: absolute; left: 8px; bottom: 8px;
-  font-size: 11px; padding: 2px 7px;
+  font-size: 12px; padding: 2px 7px;
   color: var(--accent);
   background: rgba(15, 17, 20, 0.8);
   border: 1px solid rgba(88, 169, 124, 0.35);
@@ -56,7 +56,7 @@
   justify-content: space-between;
 }
 .card-vuln {
-  font-size: 10.5px; padding: 2px 7px;
+  font-size: 12px; padding: 2px 7px;
   color: var(--alert);
   background: rgba(15, 17, 20, 0.82);
   border: 1px solid rgba(217, 83, 74, 0.5);
@@ -64,7 +64,7 @@
   backdrop-filter: blur(2px);
 }
 .card-verdict {
-  font-size: 10px; padding: 2px 7px;
+  font-size: 12px; padding: 2px 7px;
   letter-spacing: 0.1em; text-transform: uppercase;
   background: rgba(15, 17, 20, 0.82);
   border-radius: 3px;
@@ -73,13 +73,20 @@
 .card-verdict.malicious { color: var(--alert); border: 1px solid rgba(217, 83, 74, 0.55); }
 .card-verdict.suspicious { color: var(--amber); border: 1px solid rgba(207, 155, 70, 0.55); }
 .card-meta { padding: 10px 12px 12px; display: grid; gap: 6px; }
+.card-ports { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 3px; }
+.card-ports span {
+  padding: 3px 6px;
+  border: 1px solid var(--line-2);
+  color: var(--accent);
+  font-size: 12px;
+}
 .card-product { font-size: 13px; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 55%; }
-.card-sub { font-size: 11px; }
+.card-sub { font-size: 12px; }
 .card-sub .dim { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .card-sub .dim:first-child { max-width: 70%; }
 /* Provenance qualifier for third-party reputation/CVE data (only on flagged cards). */
 .card-provenance {
-  font-size: 9.5px;
+  font-size: 12px;
   letter-spacing: 0.04em;
   color: var(--muted);
   text-transform: uppercase;

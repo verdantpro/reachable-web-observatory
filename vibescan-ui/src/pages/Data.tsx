@@ -8,10 +8,10 @@ const FIELDS: [string, string][] = [
   ["http_status", "HTTP status returned by the capture."],
   ["secured", "true = captured over TLS (HTTPS); false = cleartext HTTP."],
   ["cert_cn", "TLS certificate common name, when HTTPS."],
-  ["geo", "Coarse IP-based geolocation (country, region, city, lat/lon)."],
+  ["geo", "Coarse IP-based geolocation (country, region, city, lat/lon, and accuracy radius)."],
   ["whois", "Network / organization from WHOIS, when available."],
-  ["vuln_count", "Number of CVEs a third party (Shodan InternetDB) associates with the host."],
-  ["verdict", "Reputation verdict from threat feeds: clean / suspicious / malicious."],
+  ["vuln_count", "Number of CVEs Shodan InternetDB associates with the host, not necessarily this service."],
+  ["verdict", "A derived summary of third-party reputation evidence; not an independently verified finding."],
   ["sources", "Which enrichment feeds contributed to this record."],
   ["enriched_at", "When enrichment was last refreshed (RFC 3339)."],
   ["updated_at", "When the service was last observed (RFC 3339)."],
@@ -49,8 +49,8 @@ export default function Data() {
             .
           </li>
           <li>
-            <strong>Snapshots.</strong> Periodic dated JSON/CSV dumps for reproducible analysis
-            <span className="mono"> (cadence &amp; archive links — to be published here)</span>.
+            <strong>Snapshots.</strong> Dated archival dumps are planned but are not published yet.
+            Until then, record the export time and query parameters when citing a live export.
           </li>
         </ul>
         <div className="doc-actions">
@@ -77,9 +77,12 @@ export default function Data() {
           </table>
         </div>
         <div className="doc-callout">
-          CVE and reputation fields are <em>third-party associations</em>, not verified findings — see{" "}
-          <Link className="doc-link" to="/methodology#limitations">limitations</Link>. Records contain
-          only what an anonymous visitor could already see.
+          Individual records are public and can include exact addresses, screenshots, page source,
+          service metadata, coarse geolocation, and host-level third-party enrichment. CVE and
+          reputation fields are <em>third-party associations</em>, not verified findings — see{" "}
+          <Link className="doc-link" to="/methodology#limitations">limitations</Link>. Host-level fields
+          such as CVEs, CPEs, hostnames, and additional ports are not necessarily attributable to the
+          particular web service in the record.
         </div>
       </section>
 

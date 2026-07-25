@@ -27,16 +27,40 @@ Design tokens live on `:root` in `src/theme.css`.
 | Path | Screen |
 |------|--------|
 | `/` | **Live** — acquisition viewport + latest/recent rails + world map + headline |
-| `/feed` | **Feed** — captured services, `ranked` (curated) or `latest` (recency) |
-| `/search` | **Search** — query + port/status/protocol filters, `$text`-backed |
-| `/stats` | **Stats** — telemetry dashboard (ports, status, servers, over-time) |
-| `/signal/:ip/:port` | **Signal** — the case file: exhibit + field notes + banner + page source |
-| `/about` | **About** — how it works, scope, and the opt-out / takedown / abuse posture |
+| `/feed` | **Feed** — captured services, `ranked` (readable captures first) or `latest` (strict recency) |
+| `/search` | **Search** — query + product/port/status/protocol/CVE/tag/verdict filters |
+| `/stats` | **Stats** — census totals, concentration, geography, reputation, CVEs, and trends |
+| `/signal/:ip/:port` | **Signal** — public exact-address record, screenshot, notes, page source, and live-host link |
+| `/data` | **Data** — export/API access, schema, license, and citation |
+| `/methodology` | **Methodology** — sampling, capture, enrichment, analysis, and limitations |
+| `/ethics` | **Ethics** — collection boundaries, public-record policy, risk, and opt-out |
+| `/architecture` | **Architecture** — agent, collector, storage, frontend, and deployment |
+| `/scan-info` | **Scan info** — identifying scan traffic and requesting exclusion/removal |
+| `/disclosure` | **Disclosure** — coordinated disclosure and data-correction policy |
+| `/about` | **About** — project ownership, contact, scope, and research framing |
 | `*` | **NotFound** — a real client-side 404 for unknown paths |
 
 Each route sets its own `<title>`, description, canonical, and Open Graph / Twitter
 tags via the `useMeta` hook (`src/lib/meta.ts`); baseline social tags + JSON-LD live
-in `index.html`. A global footer (About & ethics · opt-out contact) is on every page.
+in `index.html`. Exact-address Signal pages add `noindex, nofollow, noarchive`; the
+Go server also sends `X-Robots-Tag` for those routes. A global footer with research,
+ethics, and removal contacts is on every page.
+
+### Public records and presentation
+
+- Exact observed IP/port pages, screenshots, captured source, and live-host links are
+  intentionally public. The live-host control opens the observed third-party endpoint
+  directly and carries an explicit safety/staleness warning.
+- The scanner submission address is a different field and is redacted when an agent
+  submits anonymously.
+- The ranked feed is only a browsing view: it favors successful, legible captures.
+  Latest, Search, exports, and direct Signal routes continue to surface the complete
+  available dataset.
+- CVEs, reputation labels, geolocation, ownership, and product identity retain source
+  and freshness context. They are associations, not verified vulnerabilities or claims
+  about an operator.
+- `research@verdantprotocol.com` handles research questions and
+  `abuse@verdantprotocol.com` handles exclusions, removals, disputes, and abuse reports.
 
 ## Run
 
@@ -81,6 +105,8 @@ the embedded app uses relative URLs even without an env file.
   reputation/flags/IOCs (attributed per vendor). `SignalCard` shows `⚠ N CVEs`
   and reputation badges; Search filters on `has CVEs` and `verdict`; Stats has a
   CVE-associated + reputation facet — all fed by the collector's denormalized fields.
+- Product filters and concentration tables use normalized `product_family` and
+  `product_version` fields rather than treating an entire server banner as one product.
 - Third-party reputation/CVE data is labelled as such: flagged cards carry a
   `source · when · unverified` provenance line (from the tile's `sources` /
   `enriched_at`), and metrics are scoped in copy ("· all time" vs the Stats window)
@@ -91,8 +117,8 @@ the embedded app uses relative URLs even without an env file.
   lazy/async decoding to keep layout shift at zero.
 - SEO/PWA artifacts ship from `public/`: `sitemap.xml` and `manifest.webmanifest`
   (served with correct content types by the Go embed handler, not the SPA shell).
-  A 1200×630 `og.png` and a repo screenshot are the only assets left to add.
-- Design tokens (`src/theme.css`) meet WCAG AA contrast on the dark ground; the
-  header hides its subtitle and switches to a single-column signal strip on narrow
-  mobile widths.
+  `og.png` is the 1200×630 social preview referenced by the baseline and route-level
+  Open Graph / Twitter metadata. A repo screenshot is still optional.
+- The header becomes a menu on narrow screens; route layouts are tested at desktop
+  and mobile widths with no horizontal overflow. Design tokens live in `src/theme.css`.
 - Deploy of the combined stack: **[`../vibescan-go/deploy/DEPLOY.md`](../vibescan-go/deploy/DEPLOY.md)**.

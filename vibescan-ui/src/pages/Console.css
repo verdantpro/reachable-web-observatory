@@ -1,10 +1,16 @@
 .console { padding: 34px 24px 64px; display: flex; flex-direction: column; gap: 22px; }
 
 .console-head { max-width: 780px; }
-.console-h1 {
+.console-title {
+  margin: 12px 0 0;
+  color: var(--ink);
   font-size: clamp(30px, 5vw, 52px);
   line-height: 1.02;
-  margin: 12px 0 10px;
+}
+.console-h1 {
+  font-size: clamp(26px, 4vw, 44px);
+  line-height: 1.02;
+  margin: 18px 0 10px;
   color: var(--ink);
 }
 .console-h1-sub {

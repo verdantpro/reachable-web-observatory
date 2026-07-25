@@ -1,4 +1,4 @@
-export function statusClass(s: number | null | undefined): string {
+function statusClass(s: number | null | undefined): string {
   if (s == null) return "badge-mute";
   if (s === 200) return "badge-ok";
   if (s >= 300 && s < 400) return "badge-redir";

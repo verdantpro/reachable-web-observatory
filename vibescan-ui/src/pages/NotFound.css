@@ -6,6 +6,8 @@
   padding-top: 72px;
   padding-bottom: 96px;
   max-width: 620px;
+  margin-inline: auto;
+  text-align: center;
 }
 .nf-code {
   font-size: 13px;
@@ -24,10 +26,12 @@
   color: var(--ink-dim);
   margin: 16px 0 0;
   max-width: 44ch;
+  margin-inline: auto;
 }
 .nf-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
   margin-top: 28px;
+  justify-content: center;
 }
