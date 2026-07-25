@@ -1,5 +1,5 @@
 import { useEffect, type ReactNode } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation } from "react-router";
 import "../pages/doc.css";
 
 /** Shared layout for the long-form research/policy pages. */

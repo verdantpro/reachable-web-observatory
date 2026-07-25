@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import DocPage from "../components/DocPage";
 import { useMeta } from "../lib/meta";
 

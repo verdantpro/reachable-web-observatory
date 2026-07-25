@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { imageURL, type Tile } from "../api";
 import { timeAgo } from "../lib/time";
 import StatusBadge from "./StatusBadge";

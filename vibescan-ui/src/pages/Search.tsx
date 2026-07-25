@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router";
 import { api, type Tile } from "../api";
 import SignalCard from "../components/SignalCard";
 import ErrorState from "../components/ErrorState";
