@@ -28,7 +28,7 @@ export default function Architecture() {
     <DocPage
       eyebrow="◊ Engineering"
       title="Architecture"
-      lede="How the observatory is built, wired together, and hosted — and the reasoning behind the choices, in enough depth to evaluate the engineering."
+      lede="How the observatory is built, wired together, and hosted — including its data flow, operational boundaries, and deployment model."
     >
       <section className="doc-sec" id="overview">
         <h2 className="doc-h">The shape of the system</h2>
@@ -40,17 +40,26 @@ export default function Architecture() {
           It is a Go + React monorepo backed by MongoDB and object storage, deployed on ordinary AWS
           primitives.
         </p>
-        <pre className="doc-diagram">{`  Scanner host                         Web host (EC2)                Managed services
- ┌────────────┐  1. random IPv4 →      ┌─────────────────────────┐    ┌──────────────┐
- │  Go agent  │     nmap discovery     │  Caddy (auto-HTTPS,      │    │ MongoDB      │
- │  nmap +    │ ────────────────────▶  │        security headers) │──▶ │ Atlas (M0)   │
- │  Chromium  │  2. HMAC-signed,       │        │                 │    └──────────────┘
- │  (chromedp)│     gzipped submit     │        ▼                 │    ┌──────────────┐
- └────────────┘ ─────────────────────▶ │  Go collector           │──▶ │ S3 / R2 +    │
-                                        │   ingest · v2 JSON APIs  │    │ CloudFront   │
-   visitor ── https://… ─────────────▶ │   · embedded React UI    │    │ (screenshots)│
-                                        │   · enrichment · rollups │    └──────────────┘
-                                        └─────────────────────────┘`}</pre>
+        <figure className="arch-flow" aria-labelledby="arch-flow-caption">
+          <div className="arch-node">
+            <strong>Scanner host</strong>
+            <span>Go agent · nmap · Chromium</span>
+          </div>
+          <div className="arch-arrow" aria-hidden="true">signed observations →</div>
+          <div className="arch-node">
+            <strong>Collector</strong>
+            <span>Caddy · ingest · JSON API · embedded React UI</span>
+          </div>
+          <div className="arch-arrow" aria-hidden="true">records and media →</div>
+          <div className="arch-node">
+            <strong>Managed services</strong>
+            <span>MongoDB Atlas · S3/R2 · CloudFront</span>
+          </div>
+          <figcaption id="arch-flow-caption">
+            Visitors connect only to the collector. The scanner submits signed observations from
+            separate infrastructure; structured records and screenshots are stored in managed services.
+          </figcaption>
+        </figure>
         <p>
           Keeping the scanner on <em>separate infrastructure</em> from the collector is deliberate: it
           isolates the risky work (running unknown, potentially hostile pages in a browser, and emitting
@@ -78,7 +87,7 @@ export default function Architecture() {
           the browser needs no CORS in production). Routing uses Go's standard-library
           method-pattern mux; there is no web framework.
         </p>
-        <p>Design choices that a reviewer will care about:</p>
+        <p>Operational properties of the collector:</p>
         <ul className="doc-list">
           <li><strong>Designed for failure.</strong> If MongoDB is unreachable, accepted submissions are spooled to disk as BSON and flushed when it recovers — ingest never drops data because the database blinked.</li>
           <li><strong>Idempotent by construction.</strong> Each service's <code>_id</code> is derived deterministically from <code>ip:port</code>, so re-observing a host updates one document instead of duplicating it — essential for a continuously re-sampling census.</li>
@@ -107,7 +116,7 @@ export default function Architecture() {
       <section className="doc-sec" id="frontend">
         <h2 className="doc-h">The frontend (React + TypeScript)</h2>
         <ul className="doc-list">
-          <li><strong>React 19 + TypeScript, built with Vite 8</strong>; client-side routing with React Router. A single typed API client wraps the collector's JSON endpoints and surfaces a clean "collector unreachable" state instead of a false "no results".</li>
+          <li><strong>React 19 + TypeScript, built with Vite 8</strong>; client-side routing with React Router. A single typed API client wraps the collector's JSON endpoints and surfaces a clear <q>collector unreachable</q> state instead of a false <q>no results</q>.</li>
           <li><strong>Bespoke SVG visualizations.</strong> The time series and bar charts are hand-built SVG tuned to the design system; the world map projects TopoJSON with <code>d3-geo</code>. This keeps the bundle lean and the charts exactly on-theme.</li>
           <li><strong>Self-contained assets.</strong> Fonts are self-hosted (no external CDN requests); per-route metadata, a sitemap, a web manifest, and <code>Dataset</code> JSON-LD are generated for SEO and dataset discoverability.</li>
           <li><strong>Embedded in production.</strong> The built <code>dist/</code> is compiled <em>into</em> the Go binary with <code>go:embed</code>, so there is no separate static host, no second deploy, and no CORS — the UI and API are the same origin.</li>
@@ -130,12 +139,13 @@ export default function Architecture() {
       <section className="doc-sec" id="enrichment">
         <h2 className="doc-h">The enrichment pipeline</h2>
         <p>
-          Enrichment is the meatiest part of the system. Each host is cross-referenced, server-side,
+          Each host is cross-referenced server-side
           against Shodan's keyless InternetDB and — on demand — roughly ten independent
           threat-intelligence and reputation sources (VirusTotal, AbuseIPDB, GreyNoise, AlienVault OTX,
           ThreatFox, IPQualityScore, Pulsedive, IPinfo, ip-api, RIPEstat), <em>fanned out
-          concurrently</em> and reconciled into a single coarse verdict. Results are cached (in memory and
-          in MongoDB) and throttled by a shared outbound rate limiter, and a background worker keeps
+          concurrently</em>. A conservative derived summary supports browsing and filtering, while the
+          individual provider results remain visible. Results are cached (in memory and in MongoDB) and
+          throttled by a shared outbound rate limiter, and a background worker keeps
           recent hosts enriched. Every API key stays server-side and never reaches the browser. The
           contributing sources and last-enrichment time are recorded on each result, so the UI can label
           reputation and CVE data as third-party associations rather than verified facts.
@@ -194,7 +204,7 @@ export default function Architecture() {
           <li><strong>One binary, same origin</strong> — fewer moving parts to deploy, secure, and reason about; no CORS.</li>
           <li><strong>Fail soft</strong> — disk buffering, idempotent writes, bounded concurrency, and rate limits mean transient failures degrade gracefully instead of losing data or falling over.</li>
           <li><strong>Isolate the risky work</strong> — hostile pages are rendered in a browser on a separate scanner host, away from the public API and the database.</li>
-          <li><strong>Keep secrets server-side</strong> — every third-party key stays in the collector; the browser only ever sees derived results.</li>
+          <li><strong>Keep secrets server-side</strong> — every third-party key stays in the collector; the browser receives provider results and derived summaries, never credentials.</li>
           <li><strong>Deploy without standing attack surface</strong> — no inbound SSH, no static cloud credentials, test-gated, and self-rolling-back.</li>
         </ul>
       </section>

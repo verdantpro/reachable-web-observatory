@@ -11,9 +11,9 @@ export default function NotFound() {
     <div className="notfound">
       <div className="page wrap notfound-inner">
         <div className="nf-code mono">404</div>
-        <h1 className="nf-title display">Signal lost</h1>
+        <h1 className="nf-title display">Page not found</h1>
         <p className="nf-lede">
-          No record answers at this address. It may have been removed, or the link is wrong.
+          The requested page does not exist, may have moved, or may have been removed.
         </p>
         <div className="nf-actions">
           <Link className="btn" to="/">

@@ -190,6 +190,14 @@ func (ing *Ingestor) buildEntry(h host, svc service, ipInt int64, ipStr string, 
 		"fulltext":     strPtrToAny(fulltext),
 		"error":        rawToAny(svc.Error),
 	}
+	product := media.NormalizeProduct(svc.Banner)
+	if product.Family != "" {
+		doc["product_family"] = product.Family
+	}
+	if product.Version != "" {
+		doc["product_version"] = product.Version
+		doc["product_major_version"] = product.MajorVersion
+	}
 	if geoPayload != nil {
 		doc["geoip"] = *geoPayload
 	}
@@ -211,9 +219,9 @@ func (ing *Ingestor) buildEntry(h host, svc service, ipInt int64, ipStr string, 
 		doc["dom_hash"] = *dom
 	}
 	if capOK && !secured && svc.HTTPStatus != nil && *svc.HTTPStatus == 200 {
-		product := media.ExtractProduct(svc.Banner)
-		if product == "" {
-			product = "Unknown"
+		productName := product.Family
+		if productName == "" {
+			productName = "Unknown"
 		}
 		doc["landing_image"] = map[string]any{
 			"port":         strconv.Itoa(port),
@@ -221,7 +229,7 @@ func (ing *Ingestor) buildEntry(h host, svc service, ipInt int64, ipStr string, 
 			"capture_ext":  capExt,
 			"http_status":  200,
 			"secured":      false,
-			"product":      product,
+			"product":      productName,
 		}
 	}
 

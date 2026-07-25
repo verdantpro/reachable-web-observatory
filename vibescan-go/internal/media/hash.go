@@ -39,6 +39,7 @@ var (
 	domStyleRE   = regexp.MustCompile(`(?is)<style\b[^>]*>.*?</style>`)
 	domTagRE     = regexp.MustCompile(`</?([a-zA-Z0-9:_-]+)(?:\s+[^>]*)?>`)
 	phashChunkRE = regexp.MustCompile(`^[0-9a-f]{16}$`)
+	versionRE    = regexp.MustCompile(`(?i)(?:^|[/\s])(?:version:\s*)?v?(\d+(?:\.\d+){0,3}(?:[-+._][a-z0-9.-]+)?)`)
 )
 
 // DomStructureHash computes a stable hash of the HTML tag structure,
@@ -86,23 +87,60 @@ func SplitPhashChunks(phashHex string) map[string]string {
 // but intentionally cleaner for UI: strips nmap "version:" / "extrainfo:"
 // tails and returns a concise token (e.g. "nginx", "Squid", "Apache").
 func ExtractProduct(banner string) string {
+	return NormalizeProduct(banner).Family
+}
+
+// ProductIdentity is the normalized, explicitly-granular server identity used
+// by statistics and cards. Family never includes a version.
+type ProductIdentity struct {
+	Family       string
+	Version      string
+	MajorVersion string
+}
+
+// NormalizeProduct separates a banner into product family and version fields.
+// Protocol/service placeholders are bucketed as Unknown instead of being
+// presented as server products.
+func NormalizeProduct(banner string) ProductIdentity {
 	banner = strings.TrimSpace(banner)
 	if banner == "" {
-		return ""
+		return ProductIdentity{}
 	}
+	candidate := ""
 	lines := strings.Split(banner, "\n")
 	for _, line := range lines {
 		line = strings.TrimRight(line, "\r")
 		lower := strings.ToLower(line)
 		if strings.HasPrefix(lower, "product:") {
-			return cleanProduct(strings.TrimSpace(line[len("product:"):]))
+			candidate = strings.TrimSpace(line[len("product:"):])
+			break
 		}
 		if strings.HasPrefix(lower, "server:") {
-			return cleanProduct(strings.TrimSpace(line[len("server:"):]))
+			candidate = strings.TrimSpace(line[len("server:"):])
+			break
 		}
 	}
-	first := strings.TrimRight(lines[0], "\r")
-	return cleanProduct(first)
+	if candidate == "" {
+		candidate = strings.TrimRight(lines[0], "\r")
+	}
+	family := cleanProduct(candidate)
+	switch strings.ToLower(family) {
+	case "", "http", "https", "http-alt", "https-alt", "ssl/http", "tcpwrapped", "unknown":
+		return ProductIdentity{}
+	case "apache", "httpd":
+		family = "Apache HTTP Server"
+	case "microsoft-iis":
+		family = "Microsoft IIS"
+	}
+	version := ""
+	if m := versionRE.FindStringSubmatch(candidate); len(m) == 2 {
+		version = m[1]
+	}
+	major := version
+	if i := strings.IndexByte(major, '.'); i >= 0 {
+		major = major[:i]
+	}
+	return ProductIdentity{Family: family, Version: version, MajorVersion: major}
 }
 
 // cleanProduct normalizes nmap-ish product strings into a short label.

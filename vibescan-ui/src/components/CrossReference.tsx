@@ -38,17 +38,22 @@ function Chips({ items, kind, href }: { items: string[]; kind?: "vuln" | "flag";
 }
 
 function SubHead({ children }: { children: ReactNode }) {
-  return <div className="fr-xref-sub mono">{children}</div>;
+  return <h3 className="fr-xref-sub mono">{children}</h3>;
 }
 
 function Verdict({ v }: { v: string }) {
   const cls = v === "malicious" ? "mal" : v === "suspicious" ? "sus" : "clean";
-  const label = v === "malicious" ? "Potentially malicious" : v === "suspicious" ? "Suspicious" : "Clean";
+  const label =
+    v === "malicious"
+      ? "Derived summary: multiple adverse signals"
+      : v === "suspicious"
+        ? "Derived summary: limited adverse evidence"
+        : "Derived summary: no adverse signals observed";
   return (
     <div className={`fr-verdict ${cls}`}>
       <b></b>
-      <span className="fr-verdict-label">{label.toUpperCase()}</span>
-      <span className="fr-verdict-note mono">per third-party feeds — may be inaccurate</span>
+      <span className="fr-verdict-label">{label}</span>
+      <span className="fr-verdict-note mono">Review the provider evidence and dates below</span>
     </div>
   );
 }
@@ -104,7 +109,11 @@ export default function CrossReference({ ip }: { ip: string }) {
 
   return (
     <section className="fr-sec fr-xref">
-      <div className="fr-sec-h">Cross-reference · via Shodan / InternetDB / threat feeds</div>
+      <h2 className="fr-sec-h">Host-level third-party associations</h2>
+      <p className="fr-xref-scope mono">
+        Shodan, InternetDB, and reputation feeds describe the IP as a whole. CVEs, products, CPEs,
+        hostnames, and additional ports are not necessarily attributable to the web service above.
+      </p>
 
       {state === "loading" ? (
         <div className="fr-xref-msg mono">◌ cross-referencing…</div>
@@ -119,7 +128,7 @@ export default function CrossReference({ ip }: { ip: string }) {
           {/* ---------------- Exposure ---------------- */}
           {hasExposure ? (
             <>
-              <SubHead>◇ Exposure</SubHead>
+              <SubHead>Host exposure associations</SubHead>
               <dl className="fr-xref-grid">
                 {enr!.ports?.length ? (
                   <Row label="Open ports">

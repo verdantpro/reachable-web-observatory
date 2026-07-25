@@ -8,7 +8,7 @@ export default function ScanInfo() {
   useMeta({
     title: "You've been scanned — Reachable Web Observatory",
     description:
-      "Traffic from this project is part of an academic-style internet measurement study. Who we are, why we scan, our scanner IP ranges, and how to opt out.",
+      "Traffic from this project is part of an academic-style internet measurement study. Who we are, why we scan, how to identify HTTP fetches, and how to opt out.",
     path: "/scan-info",
   });
   return (
@@ -56,7 +56,9 @@ export default function ScanInfo() {
             {ABUSE}
           </a>
           . We add it to the exclusion list and agents stop capturing it within about an hour,
-          permanently. You can also simply drop traffic from the ranges above at your firewall.
+          permanently. Because the scanner address is not currently published, the exclusion list is
+          the reliable way to stop future traffic; the User-Agent above can be used to filter HTTP
+          fetches in the meantime.
         </p>
         <div className="doc-actions">
           <a className="btn" href={`mailto:${ABUSE}?subject=${encodeURIComponent("Opt-out request (IP / CIDR)")}`}>

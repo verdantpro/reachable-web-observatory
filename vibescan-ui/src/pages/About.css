@@ -110,6 +110,12 @@
 /* Vertical action list: each request type spans the full width — label +
    description on the left, its button on the right — separated by hairlines. */
 .about-actions { margin-top: 18px; display: flex; flex-direction: column; }
+.about-nav-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
 .about-action {
   display: grid;
   grid-template-columns: 1fr auto;

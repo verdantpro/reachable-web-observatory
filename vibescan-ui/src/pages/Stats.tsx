@@ -52,7 +52,7 @@ function BarRow({ label, value, max, color, suffix = "", href }: { label: string
 }
 
 function BarList({ data, color = "var(--cyan)", limit = 10, suffix = "", hrefFor }: { data: Record<string, number>; color?: string; limit?: number; suffix?: string; hrefFor?: (label: string) => string | undefined }) {
-  const rows = Object.entries(data).sort((a, b) => b[1] - a[1]).slice(0, limit);
+  const rows = Object.entries(data).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, limit);
   const max = rows.length ? rows[0][1] : 0;
   if (!rows.length) return <div className="bar-empty mono dim">no data</div>;
   return (
@@ -65,7 +65,7 @@ function BarList({ data, color = "var(--cyan)", limit = 10, suffix = "", hrefFor
 }
 
 // Turn flagged-by-X + total-by-X into a % rate per bucket, dropping tiny samples.
-function rateMap(flagged: Record<string, number>, total: Record<string, number>, minSample = 5): Record<string, number> {
+function rateMap(flagged: Record<string, number>, total: Record<string, number>, minSample = 20): Record<string, number> {
   const out: Record<string, number> = {};
   for (const [k, f] of Object.entries(flagged)) {
     const t = total[k];
@@ -146,9 +146,11 @@ export default function StatsPage() {
     .map((p) => ({ ip: "", port: 0, lat: p.lat, lon: p.lon, insecure: p.insecure }));
 
   // Notable findings, computed from the aggregates.
-  const topCve = s ? Object.entries(s.top_cves).sort((a, b) => b[1] - a[1])[0] : undefined;
-  const riskiestOrg = s ? Object.entries(rateMap(s.flagged_by_org, s.total_by_org)).sort((a, b) => b[1] - a[1])[0] : undefined;
-  const topProduct = s ? Object.entries(s.flagged_by_product).sort((a, b) => b[1] - a[1])[0] : undefined;
+  const stableRank = (data: Record<string, number>) =>
+    Object.entries(data).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+  const topCve = s ? stableRank(s.top_cves)[0] : undefined;
+  const highestShareOrg = s ? stableRank(rateMap(s.flagged_by_org, s.total_by_org))[0] : undefined;
+  const topProduct = s ? stableRank(s.flagged_by_product)[0] : undefined;
   const cleartextTrend = (() => {
     const pts = Object.entries(cleartextSeries).sort((a, b) => a[0].localeCompare(b[0]));
     return pts.length >= 2 ? pts[pts.length - 1][1] - pts[0][1] : 0;
@@ -193,9 +195,9 @@ export default function StatsPage() {
         <div className="empty">TELEMETRY OFFLINE</div>
       ) : (
         <>
-          {(topCve || riskiestOrg || topProduct) && (
+          {(topCve || highestShareOrg || topProduct) && (
             <section className="highlights">
-              <div className="eyebrow highlights-h">◊ Notable findings</div>
+              <h2 className="eyebrow highlights-h">◊ Notable findings</h2>
               <div className="highlights-grid">
                 {topCve && (
                   <a className="highlight" href={cveHref(topCve[0])} target="_blank" rel="noopener noreferrer">
@@ -204,11 +206,13 @@ export default function StatsPage() {
                     <div className="highlight-s mono dim">{topCve[1].toLocaleString()} hosts</div>
                   </a>
                 )}
-                {riskiestOrg && (
+                {highestShareOrg && (
                   <div className="highlight">
-                    <div className="highlight-k mono">Riskiest network</div>
-                    <div className="highlight-v" title={riskiestOrg[0]}>{riskiestOrg[0]}</div>
-                    <div className="highlight-s mono dim">{riskiestOrg[1]}% of its services flagged</div>
+                    <div className="highlight-k mono">Highest observed flagged share</div>
+                    <div className="highlight-v" title={highestShareOrg[0]}>{highestShareOrg[0]}</div>
+                    <div className="highlight-s mono dim">
+                      {highestShareOrg[1]}% · n={s.total_by_org[highestShareOrg[0]].toLocaleString()}
+                    </div>
                   </div>
                 )}
                 {topProduct && (
@@ -224,7 +228,7 @@ export default function StatsPage() {
                   <div className="highlight-s mono dim">
                     {cleartextTrend === 0
                       ? "of services this window"
-                      : `${cleartextTrend > 0 ? "▲" : "▼"} ${Math.abs(cleartextTrend)} pts over ${trends.length}d`}
+                      : `${cleartextTrend > 0 ? "▲" : "▼"} ${Math.abs(cleartextTrend)} ${Math.abs(cleartextTrend) === 1 ? "pt" : "pts"} over ${trends.length}d`}
                   </div>
                 </div>
               </div>
@@ -262,7 +266,7 @@ export default function StatsPage() {
 
           <section className="panel panel-pad concentration">
             <div className="row spread concentration-head">
-              <div className="eyebrow chart-head">◊ Concentration — where risk clusters</div>
+              <h2 className="eyebrow chart-head">◊ Concentration — where risk clusters</h2>
               <div className="chips" aria-label="Concentration measure">
                 <button className={`chip mono${!density ? " on" : ""}`} onClick={() => setDensity(false)}>count</button>
                 <button className={`chip mono${density ? " on" : ""}`} onClick={() => setDensity(true)}>% flagged</button>
@@ -270,31 +274,31 @@ export default function StatsPage() {
             </div>
             <p className="concentration-note mono dim">
               {density
-                ? "Share of each group's services that are at-risk (min. 5 services per group) — where risk is densest, not just most numerous."
+                ? "Share of each group's services that are at-risk (minimum sample: 20 services per group). Percentages are descriptive, not population estimates."
                 : `Among the ${s.flagged_services.toLocaleString()} at-risk services in this window (CVE-associated or reputation-flagged), where they concentrate:`}
             </p>
             <div className="concentration-grid">
               <div className="concentration-cell">
-                <div className="concentration-h mono">By port</div>
+                <h3 className="concentration-h mono">By port</h3>
                 <BarList data={conc.port} color="var(--alert)" limit={8} suffix={concSuffix} hrefFor={portHref} />
               </div>
               <div className="concentration-cell">
-                <div className="concentration-h mono">By product</div>
+                <h3 className="concentration-h mono">By product</h3>
                 <BarList data={conc.product} color="var(--alert)" limit={8} suffix={concSuffix} hrefFor={productHref} />
               </div>
               <div className="concentration-cell">
-                <div className="concentration-h mono">By organization / network</div>
+                <h3 className="concentration-h mono">By organization / network</h3>
                 <BarList data={conc.org} color="var(--amber)" limit={8} suffix={concSuffix} hrefFor={countryHref} />
               </div>
               <div className="concentration-cell">
-                <div className="concentration-h mono">By country</div>
+                <h3 className="concentration-h mono">By country</h3>
                 <BarList data={conc.country} color="var(--amber)" limit={8} suffix={concSuffix} hrefFor={countryHref} />
               </div>
             </div>
           </section>
 
           <section className="panel panel-pad">
-            <div className="eyebrow chart-head">◊ Most prevalent CVEs</div>
+            <h2 className="eyebrow chart-head">◊ Most prevalent host-associated CVEs</h2>
             <p className="concentration-note mono dim">
               The specific vulnerabilities most often associated with hosts in this window — third-party,
               provider-reported associations, not confirmed exploitability.
@@ -303,7 +307,7 @@ export default function StatsPage() {
           </section>
 
           <section className="panel panel-pad geo">
-            <div className="eyebrow chart-head">◊ Geography</div>
+            <h2 className="eyebrow chart-head">◊ Geography</h2>
             <div className="geo-grid">
               <div className="geo-map">
                 {flaggedMapPoints.length ? (
@@ -313,24 +317,24 @@ export default function StatsPage() {
                 )}
               </div>
               <div className="geo-rank">
-                <div className="concentration-h mono">Services by country</div>
+                <h3 className="concentration-h mono">Services by country</h3>
                 <BarList data={s.services_by_country} color="var(--violet)" limit={10} hrefFor={countryHref} />
               </div>
             </div>
           </section>
 
           <section className="panel panel-pad trend">
-            <div className="eyebrow chart-head">
+            <h2 className="eyebrow chart-head">
               ◊ Exposure over time{trends.length >= 2 ? ` · last ${trends.length} days` : ""}
-            </div>
+            </h2>
             {trends.length >= 2 ? (
               <div className="trend-grid">
                 <div className="trend-cell">
-                  <div className="concentration-h mono">At-risk services</div>
+                  <h3 className="concentration-h mono">At-risk services</h3>
                   <TimeSeries data={atRiskSeries} unit="at-risk services" />
                 </div>
                 <div className="trend-cell">
-                  <div className="concentration-h mono">Cleartext share (%)</div>
+                  <h3 className="concentration-h mono">Cleartext share (%)</h3>
                   <TimeSeries data={cleartextSeries} unit="% cleartext" />
                 </div>
               </div>
@@ -344,12 +348,12 @@ export default function StatsPage() {
 
           <div className="stats-grid">
             <section className="panel panel-pad">
-              <div className="eyebrow chart-head">◊ Services by port</div>
+              <h2 className="eyebrow chart-head">◊ Services by port</h2>
               <BarList data={s.services_by_port} hrefFor={portHref} />
             </section>
 
             <section className="panel panel-pad">
-              <div className="eyebrow chart-head">◊ Response status</div>
+              <h2 className="eyebrow chart-head">◊ Response status</h2>
               <div className="bar-list">
                 {Object.entries(statusData).map(([k, v]) => (
                   <BarRow
@@ -364,17 +368,17 @@ export default function StatsPage() {
             </section>
 
             <section className="panel panel-pad">
-              <div className="eyebrow chart-head">◊ Top servers</div>
+              <h2 className="eyebrow chart-head">◊ Observed server banners</h2>
               <BarList data={s.top_banners} color="var(--violet)" limit={8} hrefFor={productHref} />
             </section>
 
             <section className="panel panel-pad">
-              <div className="eyebrow chart-head">◊ Shodan tags</div>
+              <h2 className="eyebrow chart-head">◊ Shodan tags</h2>
               <BarList data={s.top_tags} color="var(--accent-soft)" limit={8} hrefFor={tagHref} />
             </section>
 
             <section className="panel panel-pad">
-              <div className="eyebrow chart-head">◊ Reputation</div>
+              <h2 className="eyebrow chart-head">◊ Derived reputation summaries</h2>
               {Object.keys(s.verdicts || {}).length ? (
                 <div className="bar-list">
                   {(["malicious", "suspicious", "clean"] as const).map((k) => (
@@ -394,7 +398,7 @@ export default function StatsPage() {
             </section>
 
             <section className="panel panel-pad stats-time">
-              <div className="eyebrow chart-head">◊ Submissions over time</div>
+              <h2 className="eyebrow chart-head">◊ Observations over time</h2>
               <TimeSeries data={s.submissions_over_time} />
             </section>
           </div>

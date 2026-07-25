@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router";
 import { useMeta } from "../lib/meta";
 import "./About.css";
 
-const ABUSE = "abuse@verdantprotocol.com";
+const RESEARCH = "research@verdantprotocol.com";
 
 export default function About() {
   useMeta({
@@ -57,19 +57,16 @@ export default function About() {
             by an institutional review board — conducted in line with the field's established ethics
             norms (see <Link className="about-mail" to="/ethics">ethics</Link>). Collaboration with
             academic or nonprofit partners is welcome; reach out at{" "}
-            <a className="about-mail" href={`mailto:${ABUSE}`}>{ABUSE}</a>.
+            <a className="about-mail" href={`mailto:${RESEARCH}`}>{RESEARCH}</a>.
           </p>
           <p>
             On the engineering side it is a Go + React monorepo: a single Go binary runs the ingest
             pipeline, the public JSON APIs, and the embedded UI, fed by a scanner agent that pairs nmap
-            discovery with headless-Chromium capture. The hardest — and most rewarding — parts were the{" "}
-            <em>concurrent enrichment pipeline</em> that reconciles each host's signals across roughly
-            ten independent threat-intelligence and reputation feeds into a single verdict, and the
-            resilience work that keeps ingest running (disk-buffering submissions when the database is
-            unavailable, deterministic record IDs for idempotent upserts) through a strangler migration
-            from an earlier Python prototype to Go. The full stack and hosting are documented on the{" "}
+            discovery with headless-Chromium capture. A concurrent enrichment pipeline records evidence
+            from multiple threat-intelligence and reputation feeds, while disk-buffered submissions and
+            deterministic record IDs keep ingest resilient through the migration from an earlier Python
+            prototype to Go. The full stack and hosting are documented on the{" "}
             <Link className="about-mail" to="/architecture">architecture</Link> page.
-            {/* Optional: add 1–2 lines of personal background / resume tie-in here. */}
           </p>
         </section>
 
@@ -112,15 +109,15 @@ export default function About() {
             Walters, J. (2026). <em>Reachable Web Observatory: a continuous census of the public-IPv4
             web.</em> Verdant Protocol. https://observatory.verdantprotocol.com/
           </div>
-          <div className="about-actions">
-            <Link className="btn" to="/data">↓ data &amp; access</Link>
-            <Link className="btn" to="/methodology">methodology</Link>
-            <Link className="btn" to="/ethics">ethics</Link>
-            <a className="btn" href="https://github.com/verdantpro/vibescan_rework" target="_blank" rel="noopener noreferrer">
-              source
-            </a>
-          </div>
         </section>
+        <nav className="about-nav-actions" aria-label="Study resources">
+          <Link className="btn" to="/data">↓ data &amp; access</Link>
+          <Link className="btn" to="/methodology">methodology</Link>
+          <Link className="btn" to="/ethics">ethics</Link>
+          <a className="btn" href="https://github.com/verdantpro/vibescan_rework" target="_blank" rel="noopener noreferrer">
+            source
+          </a>
+        </nav>
       </div>
     </div>
   );

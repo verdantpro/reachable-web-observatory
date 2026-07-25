@@ -18,7 +18,7 @@ export default function Search() {
     path: "/search",
   });
   // Seed filters from the URL so deep-links (e.g. from Stats) land pre-filtered.
-  const [params] = useSearchParams();
+  const [params, setParams] = useSearchParams();
   const [q, setQ] = useState(() => params.get("q") ?? "");
   const [debounced, setDebounced] = useState(() => (params.get("q") ?? "").trim());
   const [port, setPort] = useState(() => params.get("port") ?? "");
@@ -40,6 +40,7 @@ export default function Search() {
   const [tiles, setTiles] = useState<Tile[]>([]);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(false);
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [touched, setTouched] = useState(false);
   const [error, setError] = useState(false);
@@ -49,6 +50,19 @@ export default function Search() {
     const id = setTimeout(() => setDebounced(q.trim()), 250);
     return () => clearTimeout(id);
   }, [q]);
+
+  // Keep the complete query state in the URL so a result set can be cited,
+  // bookmarked, and restored with browser back/forward navigation.
+  useEffect(() => {
+    const next = new URLSearchParams();
+    if (debounced) next.set("q", debounced);
+    if (port) next.set("port", port);
+    if (sec !== "any") next.set("secured", sec);
+    if (status !== null) next.set("status", String(status));
+    if (hasVulns) next.set("has_vulns", "1");
+    if (verdict) next.set("verdict", verdict);
+    setParams(next, { replace: true });
+  }, [debounced, port, sec, status, hasVulns, verdict, setParams]);
 
   const active = useMemo(
     () => debounced !== "" || port !== "" || sec !== "any" || status !== null || hasVulns || verdict !== "",
@@ -64,6 +78,7 @@ export default function Search() {
     if (!active) {
       setTiles([]);
       setHasMore(false);
+      setTotal(0);
       setError(false);
       return;
     }
@@ -87,6 +102,7 @@ export default function Search() {
         // page 0 replaces (fresh query); later pages append (load more).
         setTiles((prev) => (page === 0 ? r.entries : [...prev, ...r.entries]));
         setHasMore(r.has_more);
+        setTotal(r.total ?? r.entries.length);
       })
       .catch(() => {
         if (!alive) return;
@@ -199,7 +215,16 @@ export default function Search() {
       </div>
 
       {!active ? (
-        <div className="empty">ENTER A QUERY OR PICK A FILTER</div>
+        <div className="search-empty">
+          <h2>Search observed services</h2>
+          <p>Search exact or partial IPs, banners, products, locations, network ownership, certificate names, or captured page text.</p>
+          <div className="search-examples mono">
+            <button onClick={() => setQ("nginx")}>nginx</button>
+            <button onClick={() => setQ("Shanghai")}>Shanghai</button>
+            <button onClick={() => setQ("192.0.")}>192.0.</button>
+          </div>
+          <p className="mono dim">Filters combine with the text query. The URL updates automatically for sharing and citation.</p>
+        </div>
       ) : error && tiles.length === 0 ? (
         <ErrorState onRetry={() => setReloadKey((k) => k + 1)} />
       ) : loading && page === 0 ? (
@@ -209,8 +234,7 @@ export default function Search() {
       ) : (
         <>
           <div className="page-sub mono search-count">
-            {tiles.length}
-            {hasMore ? "+" : ""} matches
+            {total.toLocaleString()} {total === 1 ? "match" : "matches"}
           </div>
           <div className="signal-grid">
             {tiles.map((t) => (
