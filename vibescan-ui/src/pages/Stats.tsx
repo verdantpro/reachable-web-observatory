@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { api, type Stats, type DailyRollup } from "../api";
 import TimeSeries from "../components/TimeSeries";
 import WorldMap, { type MapPoint } from "../components/WorldMap";

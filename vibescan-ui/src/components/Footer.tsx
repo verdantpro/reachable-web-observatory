@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import "./Footer.css";
 
 const REPO = "https://github.com/verdantpro/vibescan_rework";

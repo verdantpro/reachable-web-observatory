@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { imageURL, type SignalDetail } from "../api";
 import StatusBadge from "./StatusBadge";
 import "./Viewport.css";

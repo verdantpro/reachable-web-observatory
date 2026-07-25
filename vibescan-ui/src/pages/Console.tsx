@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { api, type SignalDetail, type Stats, type Tile } from "../api";
 import Viewport from "../components/Viewport";
 import WorldMap, { type MapPoint } from "../components/WorldMap";

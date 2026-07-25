@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Route, Routes, useLocation } from "react-router-dom";
+import { Route, Routes, useLocation } from "react-router";
 import TopBar from "./components/TopBar";
 import Footer from "./components/Footer";
 import Console from "./pages/Console";
