@@ -88,24 +88,40 @@ export default function Console() {
   const hosts = stats?.totals.hosts ?? null;
   const services = stats?.totals.services ?? null;
   const insecureShare = insecure != null && services ? Math.round((insecure / services) * 100) : null;
-  const latestObserved = latest[0]?.updated_at
-    ? new Date(latest[0].updated_at).toISOString().replace("T", " ").replace(".000Z", " UTC")
-    : null;
+  const latestObserved = latest[0]?.updated_at ? new Date(latest[0].updated_at) : null;
+  const latestTime = latestObserved
+    ? latestObserved.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "UTC" })
+    : "—";
+  const latestDate = latestObserved
+    ? latestObserved.toLocaleDateString("en-US", { day: "numeric", month: "short", timeZone: "UTC" })
+    : "not available";
 
   return (
     <div className="console wrap">
       <div className="console-head">
         <div className="eyebrow">◊ Continuous random-sample observatory</div>
         <h1 className="console-title display">Reachable Web Observatory</h1>
-        <div className="console-h1 display" title="Cumulative total of every cleartext HTTP service the Observatory has recorded since it began (the Stats page shows a recent window instead).">
-          {insecure != null ? insecure.toLocaleString() : "—"}{" "}
-          <span className="console-h1-sub">cleartext HTTP services recorded to date</span>
-        </div>
-        <p className="console-browse mono">
-          {hosts?.toLocaleString() ?? "—"} distinct hosts · {services?.toLocaleString() ?? "—"} retained
-          service records · {insecureShare ?? "—"}% cleartext
-          {latestObserved ? ` · latest observation ${latestObserved}` : ""}
-        </p>
+        <dl className="console-metrics" aria-label="All-time Observatory summary">
+          <div className="console-metric">
+            <dd className="display">{hosts?.toLocaleString() ?? "—"}</dd>
+            <dt className="mono">distinct hosts</dt>
+          </div>
+          <div className="console-metric">
+            <dd className="display">{services?.toLocaleString() ?? "—"}</dd>
+            <dt className="mono">service records</dt>
+          </div>
+          <div className="console-metric">
+            <dd className="display insecure">{insecureShare ?? "—"}%</dd>
+            <dt className="mono">cleartext · {insecure?.toLocaleString() ?? "—"} services</dt>
+          </div>
+          <div
+            className="console-metric"
+            title={latestObserved?.toISOString() ?? "Latest observation time unavailable"}
+          >
+            <dd className="display">{latestTime}</dd>
+            <dt className="mono">latest · {latestDate} UTC</dt>
+          </div>
+        </dl>
         <p className="console-lede dim">
           A continuously updated random sample of the reachable public-IPv4 web. Stored observations
           cover five common web ports; this is not a full internet inventory or a vulnerability scan.
