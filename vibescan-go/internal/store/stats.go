@@ -117,9 +117,9 @@ var statsMemo = &statsCache{data: map[int]statsEntry{}}
 
 const statsTTL = 60 * time.Second
 
-// StatsAggregate computes windowed stats over the last timeRangeHours hours in a
-// single $facet pass, with a short in-process cache. The shapes mirror the
-// Python /stats composite (services_by_port, status_code_counts, etc.).
+// StatsAggregate computes stats in a single $facet pass with a short in-process
+// cache. A positive timeRangeHours selects records updated within that window;
+// zero selects the complete retained service collection.
 func (m *Mongo) StatsAggregate(ctx context.Context, timeRangeHours, maxTimeMS int) (Stats, error) {
 	statsMemo.mu.Lock()
 	if cached, ok := statsMemo.data[timeRangeHours]; ok && time.Since(cached.at) < statsTTL {
@@ -128,13 +128,20 @@ func (m *Mongo) StatsAggregate(ctx context.Context, timeRangeHours, maxTimeMS in
 	}
 	statsMemo.mu.Unlock()
 
-	cutoff := time.Now().UTC().Add(-time.Duration(timeRangeHours) * time.Hour)
-	match := bson.D{{Key: "updated_at", Value: bson.D{{Key: "$gte", Value: cutoff}}}}
+	var match bson.D
+	if timeRangeHours > 0 {
+		cutoff := time.Now().UTC().Add(-time.Duration(timeRangeHours) * time.Hour)
+		match = bson.D{{Key: "updated_at", Value: bson.D{{Key: "$gte", Value: cutoff}}}}
+	}
 
-	// Bucket submissions by 5 minutes for the 1h view, else hourly.
+	// Bucket submissions by 5 minutes for the 1h view, hourly for bounded
+	// windows, and daily for the unbounded all-time view.
 	timeUnit, binSize := "hour", 1
 	if timeRangeHours <= 1 {
 		timeUnit, binSize = "minute", 5
+	}
+	if timeRangeHours == 0 {
+		timeUnit, binSize = "day", 1
 	}
 
 	// Prefer the explicit normalized product family written at ingest. Legacy
@@ -273,7 +280,16 @@ func (m *Mongo) StatsAggregate(ctx context.Context, timeRangeHours, maxTimeMS in
 		// --- Findings: top CVEs, geography totals, density denominators, risk map ---
 		{Key: "top_cves", Value: bson.A{
 			bson.D{{Key: "$unwind", Value: "$cves"}},
-			bson.D{{Key: "$group", Value: bson.D{{Key: "_id", Value: "$cves"}, {Key: "count", Value: bson.D{{Key: "$sum", Value: 1}}}}}},
+			// A host can have several recorded web ports. Count a CVE once
+			// per host, not once per ip:port service document.
+			bson.D{{Key: "$group", Value: bson.D{{Key: "_id", Value: bson.D{
+				{Key: "cve", Value: "$cves"},
+				{Key: "ip", Value: "$ip"},
+			}}}}},
+			bson.D{{Key: "$group", Value: bson.D{
+				{Key: "_id", Value: "$_id.cve"},
+				{Key: "count", Value: bson.D{{Key: "$sum", Value: 1}}},
+			}}},
 			bson.D{{Key: "$sort", Value: bson.D{{Key: "count", Value: -1}, {Key: "_id", Value: 1}}}},
 			bson.D{{Key: "$limit", Value: 15}},
 		}},
@@ -305,10 +321,11 @@ func (m *Mongo) StatsAggregate(ctx context.Context, timeRangeHours, maxTimeMS in
 		}},
 	}
 
-	pipeline := mongo.Pipeline{
-		bson.D{{Key: "$match", Value: match}},
-		bson.D{{Key: "$facet", Value: facet}},
+	pipeline := mongo.Pipeline{}
+	if len(match) > 0 {
+		pipeline = append(pipeline, bson.D{{Key: "$match", Value: match}})
 	}
+	pipeline = append(pipeline, bson.D{{Key: "$facet", Value: facet}})
 
 	opts := options.Aggregate().SetAllowDiskUse(true)
 	if maxTimeMS > 0 {
@@ -430,6 +447,9 @@ func (m *Mongo) StatsAggregate(ctx context.Context, timeRangeHours, maxTimeMS in
 }
 
 func formatBucket(t time.Time, timeRangeHours int) string {
+	if timeRangeHours == 0 {
+		return t.UTC().Format("2006-01-02")
+	}
 	if timeRangeHours <= 1 {
 		return t.UTC().Format("2006-01-02 15:04")
 	}

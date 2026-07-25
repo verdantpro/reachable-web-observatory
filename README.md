@@ -24,13 +24,14 @@ open data, a documented methodology, and an ethical opt-out/disclosure posture.
 
 Rather than searching for known domains, the observatory samples public IPv4 space, captures
 what an anonymous browser can see on common web ports, enriches each host with public security
-data, and treats every capture as one observation in a continuing time series. Conduct follows
+data, keeps the latest record for each observed service, and stores daily aggregate snapshots
+for longitudinal analysis. Conduct follows
 the field's ethics norms — the [Menlo Report](https://www.dhs.gov/sites/default/files/publications/CSD-MenloPrinciplesCORE-20120803_1.pdf)
 and the [ZMap scanning best practices](https://github.com/zmap/zmap/wiki/Scanning-Best-Practices):
 slow rate, a self-identifying HTTP User-Agent, opt-out, and coordinated disclosure. The
 scanner address is not currently published; the project says so plainly on its operator-facing
-pages and will update them when scanning moves to dedicated infrastructure. Data is open
-(CC-BY-4.0).
+pages and will update them when scanning moves to dedicated infrastructure. Original Observatory
+metadata and applicable database rights are open under CC-BY-4.0; third-party material is excluded.
 
 **Independent project** — not affiliated with a university and not IRB-reviewed; collaboration
 welcome. Maintained by an independent researcher under **Verdant Protocol**.
@@ -153,8 +154,10 @@ runbook: [`vibescan-go/deploy/DEPLOY.md`](vibescan-go/deploy/DEPLOY.md).
 
 ## License
 
-Source code is **open source under the [MIT license](LICENSE)**. The published **dataset** is
-licensed separately under **Creative Commons Attribution 4.0 (CC-BY-4.0)**.
+Source code is **open source under the [MIT license](LICENSE)**. Original Observatory metadata,
+annotations, and applicable database rights are licensed under **Creative Commons Attribution
+4.0 (CC-BY-4.0)**. Captured screenshots/page content, provider-supplied data, trademarks, and
+other third-party material remain subject to their respective owners' rights and terms.
 
 ---
 

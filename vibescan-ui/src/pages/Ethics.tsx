@@ -83,7 +83,7 @@ export default function Ethics() {
             <tbody>
               <tr><td>Minimize scan rate &amp; footprint</td><td>Commitment — slow, continuous sampling on five ports only.</td></tr>
               <tr><td>Signal intent (rDNS, WHOIS, a webpage)</td><td>Partial — every HTTP fetch uses a self-identifying <Link className="doc-link" to="/scan-info">User-Agent</Link> and links here. The scanner address is not currently published.</td></tr>
-              <tr><td>Provide an opt-out mechanism</td><td>Commitment — CIDR exclusion list, honored within about an hour (<Link className="doc-link" to="/ethics#opt-out">below</Link>).</td></tr>
+              <tr><td>Provide an opt-out mechanism</td><td>Commitment — CIDR exclusion list, honored within two days (<Link className="doc-link" to="/ethics#opt-out">below</Link>).</td></tr>
               <tr><td>Test new scanning code locally first</td><td>Commitment — changes are exercised against our own systems before release.</td></tr>
               <tr><td>Coordinate with local network operators</td><td>Commitment — scanning runs from infrastructure whose operator is aware of it.</td></tr>
               <tr><td>Responsibly disclose findings</td><td>Commitment — see the <Link className="doc-link" to="/disclosure">disclosure policy</Link>.</td></tr>
@@ -97,7 +97,7 @@ export default function Ethics() {
         <p>
           Operators who do not want their addresses observed can be excluded permanently. Send the IP
           or CIDR range you control to the abuse contact; it is added to the exclusion list and agents
-          stop capturing it within about an hour. Existing records for those addresses can be removed
+          stop capturing it within two days. Existing records for those addresses can be removed
           on request — there is no automatic expiry. Full instructions and the current traffic
           identification method are on the <Link className="doc-link" to="/scan-info">scan-info</Link>{" "}
           page.

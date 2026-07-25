@@ -14,7 +14,7 @@ const STACK: Row[] = [
   ["Data viz", "Bespoke SVG charts · d3-geo world map", "Theme-consistent, dependency-light, exactly the shapes needed."],
   ["Reverse proxy", "Caddy (automatic HTTPS)", "Let's Encrypt certs + security headers with near-zero config."],
   ["Hosting", "AWS EC2 t3.micro · MongoDB Atlas · S3/CloudFront", "Small, cheap, standard cloud primitives."],
-  ["CI/CD", "GitHub Actions → ECR → EC2 via AWS SSM", "Test-gated builds; deploy with no inbound SSH and no static keys (OIDC)."],
+  ["CI/CD", "GitHub Actions → ECR → EC2 via AWS SSM", "Test-gated builds; OIDC deployment auth and SSM rollouts."],
 ];
 
 export default function Architecture() {
@@ -56,14 +56,15 @@ export default function Architecture() {
             <span>MongoDB Atlas · S3/R2 · CloudFront</span>
           </div>
           <figcaption id="arch-flow-caption">
-            Visitors connect only to the collector. The scanner submits signed observations from
-            separate infrastructure; structured records and screenshots are stored in managed services.
+            Visitors connect only to the collector. A separately deployable scanner agent submits signed
+            observations; structured records and screenshots are stored in managed services.
           </figcaption>
         </figure>
         <p>
-          Keeping the scanner on <em>separate infrastructure</em> from the collector is deliberate: it
-          isolates the risky work (running unknown, potentially hostile pages in a browser, and emitting
-          scan traffic) from the public web service and its database.
+          Scanning currently runs from one low-rate host on an ordinary connection. Moving it to a
+          dedicated VPS is planned; until that happens, this page does not claim dedicated scanner
+          infrastructure or publish a scanner IP. The agent is packaged separately so it can ultimately
+          isolate browser rendering and scan traffic from the public service and database.
         </p>
       </section>
 
@@ -139,15 +140,15 @@ export default function Architecture() {
       <section className="doc-sec" id="enrichment">
         <h2 className="doc-h">The enrichment pipeline</h2>
         <p>
-          Each host is cross-referenced server-side
-          against Shodan's keyless InternetDB and — on demand — roughly ten independent
+          When enrichment is enabled and providers are reachable, eligible hosts are cross-referenced
+          server-side against Shodan's keyless InternetDB. On demand, any configured
           threat-intelligence and reputation sources (VirusTotal, AbuseIPDB, GreyNoise, AlienVault OTX,
           ThreatFox, IPQualityScore, Pulsedive, IPinfo, ip-api, RIPEstat), <em>fanned out
-          concurrently</em>. A conservative derived summary supports browsing and filtering, while the
-          individual provider results remain visible. Results are cached (in memory and in MongoDB) and
-          throttled by a shared outbound rate limiter, and a background worker keeps
-          recent hosts enriched. Every API key stays server-side and never reaches the browser. The
-          contributing sources and last-enrichment time are recorded on each result, so the UI can label
+          concurrently</em>. Missing credentials, provider errors, rate limits, and disabled enrichment
+          can produce partial or absent results. Returned evidence is cached (in memory and in MongoDB)
+          and throttled by a shared outbound rate limiter; a background worker attempts to refresh recent
+          hosts through available keyless sources. Every API key stays server-side and never reaches the
+          browser. Contributing sources and the last-enrichment time are recorded so the UI can label
           reputation and CVE data as third-party associations rather than verified facts.
         </p>
       </section>
@@ -172,7 +173,7 @@ export default function Architecture() {
           <li><strong>Reverse proxy:</strong> <strong>Caddy</strong> fronts the Go app, terminating TLS with automatic Let's Encrypt certificates and applying the security headers (HSTS, a Content-Security-Policy, frame-ancestor and MIME-sniffing protection, a strict referrer policy, and a restrictive permissions policy).</li>
           <li><strong>Database:</strong> <strong>MongoDB Atlas M0</strong> in the same region to keep latency low.</li>
           <li><strong>Screenshots:</strong> a private <strong>S3</strong> bucket served publicly through <strong>CloudFront</strong> (or Cloudflare R2), so image bytes never transit the app.</li>
-          <li><strong>Scanner:</strong> a separate host, isolated from the web service.</li>
+          <li><strong>Scanner:</strong> one low-rate host on an ordinary connection; migration to a dedicated VPS is planned.</li>
         </ul>
       </section>
 
@@ -184,8 +185,8 @@ export default function Architecture() {
           scan. Deployment is deliberately locked down:
         </p>
         <ul className="doc-list">
-          <li>Build the image, push it to <strong>ECR</strong>, then roll the EC2 host via <strong>AWS SSM</strong> Run Command — <em>no inbound SSH</em> is ever opened.</li>
-          <li>Authentication uses <strong>GitHub OIDC</strong> to assume a scoped IAM role — <em>no long-lived AWS keys</em> are stored anywhere.</li>
+          <li>Build the image, push it to <strong>ECR</strong>, then roll the EC2 host via <strong>AWS SSM</strong> Run Command. Automated deployments do not require SSH; separately allowlisted administrator SSH may be used for initial setup or maintenance.</li>
+          <li>GitHub Actions uses <strong>OIDC</strong> to assume a scoped IAM role, so no long-lived AWS <em>deployment</em> key is stored in GitHub. The collector still uses narrowly scoped object-storage credentials from its protected server environment.</li>
           <li>A fast test job gates the deploy; a failed database migration fails the deploy (rather than being swallowed); and a failed post-deploy health check <strong>automatically rolls back</strong> to the previous image.</li>
         </ul>
         <p>
@@ -203,9 +204,9 @@ export default function Architecture() {
         <ul className="doc-list">
           <li><strong>One binary, same origin</strong> — fewer moving parts to deploy, secure, and reason about; no CORS.</li>
           <li><strong>Fail soft</strong> — disk buffering, idempotent writes, bounded concurrency, and rate limits mean transient failures degrade gracefully instead of losing data or falling over.</li>
-          <li><strong>Isolate the risky work</strong> — hostile pages are rendered in a browser on a separate scanner host, away from the public API and the database.</li>
+          <li><strong>Make isolation deployable</strong> — the scanner ships independently from the collector so browser rendering and scan traffic can move to a dedicated VPS without changing the public service.</li>
           <li><strong>Keep secrets server-side</strong> — every third-party key stays in the collector; the browser receives provider results and derived summaries, never credentials.</li>
-          <li><strong>Deploy without standing attack surface</strong> — no inbound SSH, no static cloud credentials, test-gated, and self-rolling-back.</li>
+          <li><strong>Reduce deployment exposure</strong> — automated rollouts use SSM and short-lived OIDC credentials, are test-gated, and roll back after a failed health check.</li>
         </ul>
       </section>
 

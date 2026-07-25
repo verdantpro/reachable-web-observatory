@@ -65,7 +65,7 @@ export default function Console() {
   useEffect(() => {
     acquire();
     loadRails();
-    api.stats(8760).then(setStats).catch(() => {});
+    api.stats(0).then(setStats).catch(() => {});
   }, [acquire, loadRails]);
 
   useEffect(() => {
@@ -98,7 +98,7 @@ export default function Console() {
         </div>
         <p className="console-lede dim">
           An open, continuously-running measurement study of the <em>ordinary</em> reachable web — and
-          where risk quietly accumulates across it.
+          where observable exposure and third-party security signals concentrate across it.
         </p>
 
         <div className="console-purpose">
@@ -107,14 +107,16 @@ export default function Console() {
             different: it draws a uniform-random sample of public-IPv4 addresses, captures what an
             anonymous visitor would see on a handful of common web ports, and enriches each host with
             public CVE and reputation data. It is a research instrument, not a search engine — a
-            continuing time series of observations rather than a directory of the internet.
+            current-state service census paired with daily aggregate snapshots, rather than a directory
+            or a retained history of every capture.
           </p>
           <p>
-            The point is to understand where exposure <em>concentrates</em>. Cleartext services,
-            software carrying known CVEs, and addresses flagged by threat-intelligence feeds are not
-            spread evenly — they cluster in particular networks, regions, and products, and that
-            clustering shifts over time. Measuring it is how a randomly-sampled census turns into a
-            picture of systemic risk on the everyday web.
+            The point is to understand where observable signals <em>concentrate</em>. Cleartext
+            services, hosts associated by InternetDB with known CVEs, and addresses flagged by
+            reputation providers are not spread evenly — they cluster in particular networks, regions,
+            and products, and that clustering shifts over time. Measuring those distributions shows
+            patterns in the sampled, reachable web without treating provider associations as verified
+            findings.
           </p>
           <p>
             Everything here is open: the live census below, the aggregate{" "}

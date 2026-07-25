@@ -21,14 +21,14 @@ export default function Data() {
   useMeta({
     title: "Open data — Reachable Web Observatory",
     description:
-      "Download the Reachable Web Observatory dataset (JSON/CSV) and query the API. Documented schema, CC-BY-4.0 license, and citation.",
+      "Download the Reachable Web Observatory dataset (JSON/CSV) and query the API. Documented schema, rights-aware licensing, and citation.",
     path: "/data",
   });
   return (
     <DocPage
       eyebrow="◊ Open data"
       title="Data &amp; access"
-      lede="The observations behind this study are open. Query them live, or export a snapshot for offline analysis — under a permissive data license."
+      lede="The observations behind this study are open. Query them live or export a snapshot for offline analysis, with original Observatory metadata licensed separately from third-party material."
     >
       <section className="doc-sec" id="access">
         <h2 className="doc-h">How to get the data</h2>
@@ -89,12 +89,15 @@ export default function Data() {
       <section className="doc-sec" id="license">
         <h2 className="doc-h">License</h2>
         <p>
-          The dataset is released under{" "}
+          Original Observatory metadata, annotations, and applicable database rights are released under{" "}
           <a className="doc-link" href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">
             Creative Commons Attribution 4.0 (CC-BY-4.0)
           </a>{" "}
-          — free to use, share, and build on with attribution. (The source code is separately
-          open-source under the <span className="mono">MIT</span> license.)
+          — free to use, share, and build on with attribution. That license does not grant rights the
+          Observatory does not hold. Captured screenshots and page content, provider-supplied data,
+          trademarks, privacy or publicity rights, and other third-party material remain subject to
+          their respective owners' rights and provider terms. The source code is separately open-source
+          under the <span className="mono">MIT</span> license.
         </p>
       </section>
 
