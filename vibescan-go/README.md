@@ -161,7 +161,7 @@ the collector). Keyed by `ip/port` rather than Mongo `_id`.
 | `GET /api/v2/search?q=&port=&status=&secured=&product=&limit=&offset=` | Filtered / `$text` free-text search |
 | `GET /api/v2/services/{ip}/{port}?brief=` | Single service detail (incl. `fulltext`); `brief=1` omits `fulltext` |
 | `GET /api/v2/enrich/{ip}` | Shodan / InternetDB cross-reference (ports, CVEs, tags, org); cached |
-| `GET /api/v2/stats?time_range=<hours>` | Windowed aggregate snapshot (one `$facet` pass, 60s cached): includes **concentration** of at-risk services by port/product/org/country, **top CVEs**, geography (`services_by_country`, flagged-host points), and per-dimension totals for density (% flagged) views |
+| `GET /api/v2/stats?time_range=<hours>` | Aggregate snapshot (`0` = all retained services; positive values = records updated within that many hours; one `$facet` pass, 60s cached): includes **concentration** by port/product/org/country, host-deduplicated **top CVEs**, geography (`services_by_country`, flagged-host points), and per-dimension totals for density views |
 | `GET /api/v2/trends?days=<n>` | Daily census snapshots (longitudinal exposure series) from the rollup worker |
 | `GET /api/v2/export?format=json\|csv&…` | Open dataset export (same filters as search); rate-limited, paginated |
 | `GET /api/v2/random-capture` | One random landing-page tile (`$sample`) |
@@ -198,10 +198,12 @@ disabled, so the UI falls back to the full image).
 - The public `/api/v2/*` endpoints are rate-limited per client IP (in-process
   token bucket; `VIBESCAN_READ_RATE_RPS` / `VIBESCAN_READ_RATE_BURST`, RPS ≤ 0
   disables).
-- **Host enrichment** (`internal/enrich`): each captured IP is cross-referenced
-  against Shodan's free/keyless **InternetDB** (ports/CVEs/tags/hostnames) and,
-  on the Signal view only when `SHODAN_API_KEY` is set, the paid **Host API**
-  (org/ISP/ASN/product). Results are cached (in-memory + the `enrichment`
+- **Host enrichment** (`internal/enrich`): when enrichment is enabled and the
+  provider is reachable, eligible captured IPs are cross-referenced against
+  Shodan's free/keyless **InternetDB** (ports/CVEs/tags/hostnames) and, on the
+  Signal view only when `SHODAN_API_KEY` is set, the paid **Host API**
+  (org/ISP/ASN/product). Missing credentials, provider errors, and rate limits
+  can produce partial or absent results. Returned results are cached (in-memory + the `enrichment`
   collection, `VIBESCAN_ENRICH_TTL_HOURS`) and throttled by a shared outbound
   limiter. A background worker (`VIBESCAN_ENRICH_WORKER`) keeps recent hosts
   enriched via InternetDB (free), denormalizing `vuln_count`/`shodan_tags`/
@@ -210,7 +212,7 @@ disabled, so the UI falls back to the full image).
   unverified") work census-wide. The API key never reaches the browser.
 - **Threat intelligence** (`internal/enrich/threat.go`, ported from
   [scope-recon](https://github.com/nethoundsh/scope-recon)): on the on-demand
-  Signal view, each IP is cross-referenced against ip-api, RIPEstat, VirusTotal,
+  Signal view, configured providers may cross-reference an IP through ip-api, RIPEstat, VirusTotal,
   AbuseIPDB, GreyNoise, AlienVault OTX, ThreatFox, IPQualityScore, Pulsedive, and
   IPinfo (fanned out concurrently), yielding a CLEAN/SUSPICIOUS/MALICIOUS
   `verdict`. Each source is gated by its own optional key (missing = skipped);

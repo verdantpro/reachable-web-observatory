@@ -380,7 +380,14 @@ func (s *Server) handleEnrich(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleStats(w http.ResponseWriter, r *http.Request) {
-	tr := clampInt(queryInt(r, "time_range", 1), 1, 8760)
+	// time_range=0 means the complete retained service collection. Positive
+	// windows are capped at one year to keep accidental queries bounded.
+	tr := queryInt(r, "time_range", 24)
+	if tr < 0 {
+		tr = 24
+	} else if tr > 8760 {
+		tr = 8760
+	}
 	stats, err := s.store.StatsAggregate(r.Context(), tr, s.cfg.AggMaxTimeMS)
 	if err != nil {
 		s.readError(w, err)

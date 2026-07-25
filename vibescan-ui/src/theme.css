@@ -62,9 +62,7 @@ body {
   font-size: 14px;
   line-height: 1.5;
   color: var(--ink);
-  background:
-    radial-gradient(1100px 620px at 100% -6%, rgba(47, 111, 79, 0.10), transparent 58%),
-    var(--void);
+  background: var(--void);
   -webkit-font-smoothing: antialiased;
 }
 

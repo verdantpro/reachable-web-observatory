@@ -35,7 +35,7 @@ export default function TopBar() {
 
   useEffect(() => {
     api
-      .stats(8760)
+      .stats(0)
       .then((s) => {
         setInsecure(s.secure_capture_counts.insecure ?? 0);
         setHosts(s.totals.hosts ?? 0);

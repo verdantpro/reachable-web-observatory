@@ -28,8 +28,8 @@ export default function About() {
         <h1 className="about-title display">The Reachable Web Observatory</h1>
         <p className="about-tagline mono">A continuous census of the public-IPv4 web</p>
         <p className="about-lede">
-          An open measurement study of the ordinary, reachable web — and where exposure and risk
-          quietly concentrate across it.
+          An open measurement study of the ordinary, reachable web — and where observable exposure
+          and third-party security signals concentrate across it.
         </p>
 
         <section className="about-sec">
@@ -38,8 +38,8 @@ export default function About() {
             Across a uniform random sample of the reachable public-IPv4 web, <em>where do
             CVE-associated and reputation-flagged services concentrate</em> — by network, geography,
             product, and port — and how does that exposure change over time? Rather than searching for
-            known domains, the observatory samples public IPv4 space and treats each captured service
-            as one observation in a continuing time series. See the{" "}
+            known domains, the observatory samples public IPv4 space, keeps the latest record for each
+            observed service, and stores daily aggregate snapshots for longitudinal analysis. See the{" "}
             <Link className="about-mail" to="/methodology">methodology</Link> for how the measurement
             works and its limitations.
           </p>
@@ -76,12 +76,13 @@ export default function About() {
             Agents generate random public IPv4 addresses, check a few common web ports
             (<span className="mono">80, 443, 8000, 8080, 8443</span>), and — for hosts answering HTTP or
             HTTPS — record what an anonymous visitor would see: a screenshot, the banner, HTTP status,
-            the TLS certificate name, coarse geolocation, and structural hashes. Each host is enriched
-            with public CVE and reputation data. Scanning runs continuously at a deliberately slow rate
-            and honors an operator <Link className="about-mail" to="/scan-info">exclusion list</Link>.
+            the TLS certificate name, coarse geolocation, and structural hashes. Eligible hosts can be
+            enriched with attributed public CVE and reputation data when providers are available;
+            coverage is not universal. Scanning runs continuously at a deliberately slow rate and honors
+            an operator <Link className="about-mail" to="/scan-info">exclusion list</Link>.
             The console is a live view of <em>captured records</em> — a point-in-time snapshot, not a
-            real-time scan of the host you are looking at. To be explicit: this is <em>passive
-            observation of information that is already public</em> — never authentication, exploitation,
+            real-time scan of the host you are looking at. To be explicit: this is <em>non-invasive
+            active measurement of publicly reachable services</em> — never authentication, exploitation,
             or "hacking back." The boundary is spelled out in the{" "}
             <Link className="about-mail" to="/ethics">ethics</Link> and{" "}
             <Link className="about-mail" to="/methodology">methodology</Link>.

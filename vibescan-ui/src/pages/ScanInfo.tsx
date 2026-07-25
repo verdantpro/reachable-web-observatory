@@ -23,8 +23,9 @@ export default function ScanInfo() {
           The Reachable Web Observatory is an open, continuously-running measurement study of the
           reachable public-IPv4 web. It generates random IP addresses, checks a handful of common web
           ports (<span className="mono">80, 443, 8000, 8080, 8443</span>), and — for hosts answering
-          HTTP/HTTPS — records what an anonymous visitor would see, to study where exposure and risk
-          concentrate. It <em>does not</em> log in, exploit, fuzz, or probe non-web services. Full
+          HTTP/HTTPS — records what an anonymous visitor would see, to study where observable exposure
+          and third-party security signals concentrate. It <em>does not</em> log in, exploit, fuzz, or
+          probe non-web services. Full
           details are in the <Link className="doc-link" to="/methodology">methodology</Link> and{" "}
           <Link className="doc-link" to="/ethics">ethics</Link>.
         </p>
@@ -55,7 +56,7 @@ export default function ScanInfo() {
           <a className="doc-link" href={`mailto:${ABUSE}?subject=${encodeURIComponent("Opt-out request (IP / CIDR)")}`}>
             {ABUSE}
           </a>
-          . We add it to the exclusion list and agents stop capturing it within about an hour,
+          . We add it to the exclusion list and agents stop capturing it within two days,
           permanently. Because the scanner address is not currently published, the exclusion list is
           the reliable way to stop future traffic; the User-Agent above can be used to filter HTTP
           fetches in the meantime.

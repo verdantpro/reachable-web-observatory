@@ -47,15 +47,26 @@ func (b *Blacklist) Contains(addr netip.Addr) bool {
 	return false
 }
 
-// RandomIP returns a random public IPv4 string not in the blacklist. The first
-// octet is 1..254 excluding 127; the rest are 0..254 — matching the Python agent.
+// addrFromUint32 maps every possible 32-bit value to exactly one IPv4 address.
+// Keeping this conversion explicit makes it easy to verify that .255 octets and
+// the top of the address space are not accidentally omitted.
+func addrFromUint32(v uint32) netip.Addr {
+	return netip.AddrFrom4([4]byte{byte(v >> 24), byte(v >> 16), byte(v >> 8), byte(v)})
+}
+
+// RandomIP returns a uniformly sampled IPv4 address not in the blacklist.
+// Production agents seed the blacklist with private, reserved, documentation,
+// multicast, and other special-use ranges before generating their first batch.
 func (b *Blacklist) RandomIP() string {
 	for {
-		a := byte(rand.IntN(255))
-		for a == 0 || a == 127 {
-			a = byte(rand.IntN(254) + 1)
+		addr := addrFromUint32(rand.Uint32())
+		first := addr.As4()[0]
+		// These two /8s are never public targets. Keep the guard independent
+		// of the remotely managed exclusion list, matching the prior safety
+		// invariant while sampling every remaining 32-bit address uniformly.
+		if first == 0 || first == 127 {
+			continue
 		}
-		addr := netip.AddrFrom4([4]byte{a, byte(rand.IntN(255)), byte(rand.IntN(255)), byte(rand.IntN(255))})
 		if !b.Contains(addr) {
 			return addr.String()
 		}

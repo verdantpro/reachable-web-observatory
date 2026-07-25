@@ -73,6 +73,19 @@ func TestBlacklistContainsAndRandom(t *testing.T) {
 	}
 }
 
+func TestAddrFromUint32CoversFullIPv4Range(t *testing.T) {
+	tests := map[uint32]string{
+		0x00000000: "0.0.0.0",
+		0x010203ff: "1.2.3.255",
+		0xffffffff: "255.255.255.255",
+	}
+	for raw, want := range tests {
+		if got := addrFromUint32(raw).String(); got != want {
+			t.Errorf("addrFromUint32(%#08x) = %s, want %s", raw, got, want)
+		}
+	}
+}
+
 func TestRandomBatchDistinct(t *testing.T) {
 	bl := NewBlacklist(nil)
 	batch := bl.RandomBatch(50)

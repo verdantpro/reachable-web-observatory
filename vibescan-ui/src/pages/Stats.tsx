@@ -12,7 +12,7 @@ const RANGES: [string, number][] = [
   ["1H", 1],
   ["24H", 24],
   ["7D", 168],
-  ["ALL", 8760],
+  ["ALL", 0],
 ];
 
 // Status codes carry reserved state colors (never reused as categorical hues).
@@ -219,7 +219,7 @@ export default function StatsPage() {
                   <Link className="highlight" to={productHref(topProduct[0])}>
                     <div className="highlight-k mono">Most-flagged software</div>
                     <div className="highlight-v" title={topProduct[0]}>{topProduct[0]}</div>
-                    <div className="highlight-s mono dim">{topProduct[1].toLocaleString()} at-risk services</div>
+                    <div className="highlight-s mono dim">{topProduct[1].toLocaleString()} flagged services</div>
                   </Link>
                 )}
                 <div className="highlight">
@@ -266,7 +266,7 @@ export default function StatsPage() {
 
           <section className="panel panel-pad concentration">
             <div className="row spread concentration-head">
-              <h2 className="eyebrow chart-head">◊ Concentration — where risk clusters</h2>
+              <h2 className="eyebrow chart-head">◊ Concentration — where provider signals cluster</h2>
               <div className="chips" aria-label="Concentration measure">
                 <button className={`chip mono${!density ? " on" : ""}`} onClick={() => setDensity(false)}>count</button>
                 <button className={`chip mono${density ? " on" : ""}`} onClick={() => setDensity(true)}>% flagged</button>
@@ -274,8 +274,8 @@ export default function StatsPage() {
             </div>
             <p className="concentration-note mono dim">
               {density
-                ? "Share of each group's services that are at-risk (minimum sample: 20 services per group). Percentages are descriptive, not population estimates."
-                : `Among the ${s.flagged_services.toLocaleString()} at-risk services in this window (CVE-associated or reputation-flagged), where they concentrate:`}
+                ? "Share of each group's services that carry a CVE association or reputation flag (minimum sample: 20 services per group). Percentages are descriptive, not population estimates."
+                : `Among the ${s.flagged_services.toLocaleString()} services in this window carrying a CVE association or reputation flag, where they concentrate:`}
             </p>
             <div className="concentration-grid">
               <div className="concentration-cell">
@@ -330,8 +330,8 @@ export default function StatsPage() {
             {trends.length >= 2 ? (
               <div className="trend-grid">
                 <div className="trend-cell">
-                  <h3 className="concentration-h mono">At-risk services</h3>
-                  <TimeSeries data={atRiskSeries} unit="at-risk services" />
+                  <h3 className="concentration-h mono">CVE- or reputation-flagged services</h3>
+                  <TimeSeries data={atRiskSeries} unit="flagged services" />
                 </div>
                 <div className="trend-cell">
                   <h3 className="concentration-h mono">Cleartext share (%)</h3>

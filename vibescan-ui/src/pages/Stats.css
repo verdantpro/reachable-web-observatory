@@ -1,4 +1,4 @@
-/* Concentration — where at-risk services cluster (the study's core question). */
+/* Concentration — where CVE associations and reputation flags cluster. */
 .concentration { margin-bottom: 16px; border-left: 2px solid var(--alert); }
 .concentration-note { font-size: 12px; margin: 0 0 18px; max-width: 70ch; line-height: 1.5; }
 .concentration-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px 32px; }

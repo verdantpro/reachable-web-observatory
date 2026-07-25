@@ -25,8 +25,9 @@ export default function Methodology() {
         </p>
         <p>
           The observatory is organized around measuring that concentration, rather than building an
-          exhaustive index of every host. It samples the ordinary, reachable web and treats each
-          captured service as one observation in a continuing time series.
+          exhaustive index of every host. It samples the ordinary, reachable web, keeps the latest
+          record for each observed <span className="mono">ip:port</span> service, and stores daily
+          aggregate snapshots for longitudinal analysis.
         </p>
       </section>
 
@@ -66,14 +67,15 @@ export default function Methodology() {
       <section className="doc-sec" id="enrichment">
         <h2 className="doc-h">Enrichment</h2>
         <p>
-          Each captured host is cross-referenced, server-side, against public security data. Shodan's
-          keyless <span className="mono">InternetDB</span> supplies associated CVEs, tags, and other
-          open ports; on the record view, additional threat-intelligence feeds (VirusTotal, AbuseIPDB,
-          GreyNoise, AlienVault OTX, ThreatFox, IPQualityScore, Pulsedive, IPinfo, plus ip-api and
-          RIPEstat) are queried. The record preserves the returned evidence, including disagreements,
-          absence of reports, and provider timestamps where available. Every enrichment record carries
-          its contributing <em>sources</em> and a <em>last-enriched</em> timestamp; these are provider
-          associations, not independently verified findings.
+          When enrichment is enabled and the provider is reachable, eligible captured hosts are
+          cross-referenced server-side against public security data. Shodan's keyless{" "}
+          <span className="mono">InternetDB</span> can supply associated CVEs, tags, and other open
+          ports; on the record view, additional configured feeds may be queried (VirusTotal, AbuseIPDB,
+          GreyNoise, AlienVault OTX, ThreatFox, IPQualityScore, Pulsedive, IPinfo, ip-api, and RIPEstat).
+          Missing credentials, provider errors, rate limits, or disabled enrichment can produce partial
+          or absent results. Returned records preserve contributing <em>sources</em> and a{" "}
+          <em>last-enriched</em> timestamp where available; these are provider associations, not
+          independently verified findings.
         </p>
         <div className="doc-callout">
           A CVE association means a third party has linked the host's software or network to a known
@@ -91,8 +93,9 @@ export default function Methodology() {
           cleartext vs. TLS services, the distribution of CVE-associated hosts across ASNs and
           organizations, geographic concentration, which products and versions recur among flagged
           hosts, and how those distributions drift over time. The live <Link className="doc-link" to="/stats">statistics</Link>{" "}
-          view is a window into these aggregates; periodic <Link className="doc-link" to="/data">data
-          snapshots</Link> support reproducible offline analysis.
+          view is a window into these aggregates. Researchers can save a timestamped{" "}
+          <Link className="doc-link" to="/data">live export</Link> for reproducible offline analysis;
+          first-party dated archival exports are planned but are not yet published.
         </p>
       </section>
 
@@ -116,7 +119,9 @@ export default function Methodology() {
           </li>
           <li>
             <strong>Point-in-time.</strong> A record reflects one moment; the host may have changed,
-            moved, or gone away since.
+            moved, or gone away since. Re-observation replaces the prior service record; individual
+            capture history is not retained, while daily aggregate snapshots preserve census-level
+            trends.
           </li>
           <li>
             <strong>Third-party enrichment.</strong> CVE and reputation data inherit the coverage,

@@ -60,9 +60,7 @@ export default function Footer() {
               Code: MIT
             </a>
             <span className="footer-dot">·</span>
-            <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">
-              Data: CC-BY-4.0
-            </a>
+            <Link to="/data#license">Original metadata: CC-BY-4.0</Link>
           </span>
         </div>
       </div>
