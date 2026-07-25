@@ -30,22 +30,26 @@ export default function SignalCard({ t }: { t: Tile }) {
         <span className="card-callsign mono">
           {t.ip}:{t.port}
         </span>
-        {t.vuln_count ? (
-          <span
-            className="card-vuln mono"
-            title={`${t.vuln_count} CVE${t.vuln_count > 1 ? "s" : ""} associated with this host by ${srcLabel} — provider-reported, not independently verified`}
-          >
-            ⚠ {t.vuln_count} CVE{t.vuln_count > 1 ? "s" : ""}
-          </span>
-        ) : null}
-        {flagged ? (
-          <span
-            className={`card-verdict mono ${t.verdict}`}
-            title={`Reputation match from ${srcLabel}${enriched ? ` (${enriched})` : ""} — not independently verified, may be inaccurate`}
-          >
-            {t.verdict === "malicious" ? "⚑ poss. malicious" : "⚑ suspect"}
-          </span>
-        ) : null}
+        {(flagged || t.vuln_count) && (
+          <div className="card-badges">
+            {flagged ? (
+              <span
+                className={`card-verdict mono ${t.verdict}`}
+                title={`Reputation match from ${srcLabel}${enriched ? ` (${enriched})` : ""} — not independently verified, may be inaccurate`}
+              >
+                {t.verdict === "malicious" ? "⚑ poss. malicious" : "⚑ suspect"}
+              </span>
+            ) : null}
+            {t.vuln_count ? (
+              <span
+                className="card-vuln mono"
+                title={`${t.vuln_count} CVE${t.vuln_count > 1 ? "s" : ""} associated with this host by ${srcLabel} — provider-reported, not independently verified`}
+              >
+                ⚠ {t.vuln_count} CVE{t.vuln_count > 1 ? "s" : ""}
+              </span>
+            ) : null}
+          </div>
+        )}
       </div>
       <div className="card-meta">
         <div className="row spread">

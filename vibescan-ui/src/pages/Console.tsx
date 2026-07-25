@@ -170,7 +170,7 @@ export default function Console() {
             <span className="mono dim">newest first · any status</span>
           </div>
           <div className="console-strip">
-            {latest.slice(0, 6).map((t) => (
+            {latest.slice(0, 4).map((t) => (
               <SignalCard key={`latest-${t.ip}:${t.port}`} t={t} />
             ))}
           </div>
@@ -193,7 +193,7 @@ export default function Console() {
           </Link>
         </div>
         <div className="console-strip">
-          {recent.slice(0, 6).map((t) => (
+          {recent.slice(0, 4).map((t) => (
             <SignalCard key={`${t.ip}:${t.port}`} t={t} />
           ))}
         </div>
