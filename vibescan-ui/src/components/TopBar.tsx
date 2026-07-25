@@ -23,6 +23,7 @@ function useClock() {
 export default function TopBar() {
   const clock = useClock();
   const [insecure, setInsecure] = useState<number | null>(null);
+  const [hosts, setHosts] = useState<number | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
 
@@ -34,8 +35,14 @@ export default function TopBar() {
   useEffect(() => {
     api
       .stats(8760)
-      .then((s) => setInsecure(s.secure_capture_counts.insecure ?? 0))
-      .catch(() => setInsecure(null));
+      .then((s) => {
+        setInsecure(s.secure_capture_counts.insecure ?? 0);
+        setHosts(s.totals.hosts ?? 0);
+      })
+      .catch(() => {
+        setInsecure(null);
+        setHosts(null);
+      });
   }, []);
 
   return (
@@ -63,9 +70,9 @@ export default function TopBar() {
         </nav>
 
         <div className="topbar-meta mono">
-          {insecure != null && (
-            <span className="insecure-count" title="Cleartext HTTP services captured across all time">
-              <span className="insecure">▲</span> {insecure.toLocaleString()} cleartext · all time
+          {hosts != null && insecure != null && (
+            <span className="insecure-count" title="Distinct hosts observed and cleartext HTTP services captured, across all time">
+              ◇ {hosts.toLocaleString()} hosts · <span className="insecure">▲</span> {insecure.toLocaleString()} cleartext
             </span>
           )}
           <span className="clock">
