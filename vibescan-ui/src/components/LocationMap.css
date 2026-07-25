@@ -1,0 +1,16 @@
+.locmap { width: 100%; max-width: 300px; }
+.locmap svg { width: 100%; height: auto; display: block; }
+
+.locmap-ocean { fill: var(--void-2); stroke: var(--line); stroke-width: 1; }
+.locmap-grat { fill: none; stroke: var(--line); stroke-width: 0.4; opacity: 0.55; }
+.locmap-land { fill: var(--panel-2); stroke: var(--line-2); stroke-width: 0.5; }
+
+.locmap-dot { fill: var(--red); }
+.locmap-pulse { fill: var(--red); animation: locpulse 2.2s ease-out infinite; }
+@keyframes locpulse {
+  0% { transform: scale(0.4); opacity: 0.5; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .locmap-pulse { animation: none; opacity: 0.3; }
+}

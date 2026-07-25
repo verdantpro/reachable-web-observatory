@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router";
 import { api, imageURL, type SignalDetail } from "../api";
 import CrossReference from "../components/CrossReference";
+import LocationMap from "../components/LocationMap";
 import { useMeta } from "../lib/meta";
 import "./Signal.css";
 
@@ -132,6 +133,25 @@ export default function Signal() {
             </dl>
           </aside>
         </div>
+
+        {geo && (geo.lat !== 0 || geo.lon !== 0) && (
+          <section className="fr-sec fr-location">
+            <div className="fr-sec-h">Approximate location</div>
+            <div className="fr-loc-body">
+              <LocationMap lat={geo.lat} lon={geo.lon} />
+              <dl className="fr-loc-facts">
+                <Note label="Place" value={[geo.city, geo.region, geo.country].filter(Boolean).join(", ")} hideEmpty />
+                <Note label="Coordinates" value={`${geo.lat.toFixed(4)}, ${geo.lon.toFixed(4)}`} mono />
+                <Note label="Accuracy" value={geo.accuracy_radius_km ? `~${geo.accuracy_radius_km.toLocaleString()} km radius` : null} hideEmpty />
+                <Note label="Country" value={geo.country_iso} hideEmpty />
+                <Note label="Network" value={s.whois} hideEmpty />
+              </dl>
+            </div>
+            <p className="fr-loc-caveat mono">
+              Coarse, IP-based geolocation — an approximate region, not the server's precise position.
+            </p>
+          </section>
+        )}
 
         <CrossReference ip={s.ip} />
 
