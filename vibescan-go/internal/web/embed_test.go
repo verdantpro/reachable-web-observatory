@@ -25,6 +25,16 @@ func TestServesRobotsTxt(t *testing.T) {
 	}
 }
 
+func TestServesSecurityTxt(t *testing.T) {
+	res := get(t, Handler(), "/.well-known/security.txt")
+	if res.StatusCode != http.StatusOK {
+		t.Fatalf("status = %d, want 200", res.StatusCode)
+	}
+	if ct := res.Header.Get("Content-Type"); !strings.HasPrefix(ct, "text/plain") {
+		t.Errorf("content-type = %q, want text/plain", ct)
+	}
+}
+
 func TestSitemapAndManifestHaveCorrectContentType(t *testing.T) {
 	// These ship in the embedded dist; they must be served with an explicit
 	// non-HTML content type — never the SPA index.html shell.
@@ -45,14 +55,25 @@ func TestSitemapAndManifestHaveCorrectContentType(t *testing.T) {
 	}
 }
 
-func TestUnknownRouteFallsBackToSPA(t *testing.T) {
-	// Client-side routes must resolve to index.html (HTML) on a hard refresh.
+func TestUnknownRouteRendersSPAWithReal404(t *testing.T) {
+	// Unknown routes still render the branded SPA error page, but crawlers and
+	// clients must receive a truthful HTTP status.
 	res := get(t, Handler(), "/some/client/route")
-	if res.StatusCode != http.StatusOK {
-		t.Fatalf("status = %d, want 200", res.StatusCode)
+	if res.StatusCode != http.StatusNotFound {
+		t.Fatalf("status = %d, want 404", res.StatusCode)
 	}
 	if ct := res.Header.Get("Content-Type"); !strings.HasPrefix(ct, "text/html") {
 		t.Errorf("content-type = %q, want text/html (SPA shell)", ct)
+	}
+	if got := res.Header.Get("X-Robots-Tag"); got != "noindex, follow" {
+		t.Errorf("X-Robots-Tag = %q", got)
+	}
+}
+
+func TestKnownClientRouteFallsBackToSPA(t *testing.T) {
+	res := get(t, Handler(), "/methodology")
+	if res.StatusCode != http.StatusOK {
+		t.Fatalf("status = %d, want 200", res.StatusCode)
 	}
 }
 

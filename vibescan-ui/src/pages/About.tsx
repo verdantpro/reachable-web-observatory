@@ -26,7 +26,7 @@ export default function About() {
       <div className="page wrap about">
         <div className="eyebrow">◊ About the study</div>
         <h1 className="about-title display">The Reachable Web Observatory</h1>
-        <p className="about-tagline mono">A continuous census of the public-IPv4 web</p>
+        <p className="about-tagline mono">A continuous random sample of the reachable public-IPv4 web</p>
         <p className="about-lede">
           An open measurement study of the ordinary, reachable web — and where observable exposure
           and third-party security signals concentrate across it.
@@ -60,12 +60,10 @@ export default function About() {
             <a className="about-mail" href={`mailto:${RESEARCH}`}>{RESEARCH}</a>.
           </p>
           <p>
-            On the engineering side it is a Go + React monorepo: a single Go binary runs the ingest
-            pipeline, the public JSON APIs, and the embedded UI, fed by a scanner agent that pairs nmap
-            discovery with headless-Chromium capture. A concurrent enrichment pipeline records evidence
-            from multiple threat-intelligence and reputation feeds, while disk-buffered submissions and
-            deterministic record IDs keep ingest resilient through the migration from an earlier Python
-            prototype to Go. The full stack and hosting are documented on the{" "}
+            Governance, funding, and conflicts are currently simple: Justin operates the project
+            independently through Verdant Protocol, with no university, institutional sponsor, or
+            external funder. Material collaborators or funding relationships will be disclosed here.
+            Technical implementation belongs on the{" "}
             <Link className="about-mail" to="/architecture">architecture</Link> page.
           </p>
         </section>

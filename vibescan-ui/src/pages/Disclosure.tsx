@@ -79,6 +79,19 @@ export default function Disclosure() {
           For research collaboration, dataset questions, and citation help, contact{" "}
           <a className="doc-link" href={`mailto:${RESEARCH}`}>{RESEARCH}</a>.
         </p>
+        <h3>Response targets</h3>
+        <ul className="doc-list">
+          <li><strong>Acknowledgement:</strong> within two days.</li>
+          <li><strong>Initial triage:</strong> within seven days when the report concerns the Observatory itself.</li>
+          <li><strong>Updates:</strong> when material status changes, or at least every 14 days for an active investigation.</li>
+          <li><strong>Record correction/removal:</strong> handled separately through the operator workflow and targeted within two days.</li>
+        </ul>
+        <p>
+          Please do not send secrets by ordinary email. An encrypted reporting channel and published
+          PGP key are not currently available; this limitation will be updated when one is deployed.
+          Reports about third-party hosts should ordinarily go to that host's operator rather than to
+          the Observatory.
+        </p>
       </section>
     </DocPage>
   );

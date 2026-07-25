@@ -39,12 +39,13 @@ type tile struct {
 	UpdatedAt       string     `json:"updated_at"`
 	Geo             *geo.GeoIP `json:"geo,omitempty"`
 	// Enrichment summary (present once the host has been enriched).
-	VulnCount  int      `json:"vuln_count"`
-	Tags       []string `json:"tags,omitempty"`
-	ExtraPorts []int    `json:"extra_ports,omitempty"`
-	Verdict    string   `json:"verdict,omitempty"`
-	Sources    []string `json:"sources,omitempty"`     // enrichment feeds that contributed
-	EnrichedAt string   `json:"enriched_at,omitempty"` // RFC3339, last enrichment time
+	VulnCount   int      `json:"vuln_count"`
+	Tags        []string `json:"tags,omitempty"`
+	ExtraPorts  []int    `json:"extra_ports,omitempty"`
+	Verdict     string   `json:"verdict,omitempty"`
+	Sources     []string `json:"sources,omitempty"`     // enrichment feeds that contributed
+	EnrichedAt  string   `json:"enriched_at,omitempty"` // RFC3339, last enrichment time
+	MatchReason string   `json:"match_reason,omitempty"`
 }
 
 // resolveImageURL returns the best image URL for a capture: the R2 public URL
@@ -194,12 +195,45 @@ func (s *Server) handleSearch(w http.ResponseWriter, r *http.Request) {
 		s.readError(w, err)
 		return
 	}
+	totalHosts, err := s.store.CountSearchHosts(r.Context(), opts)
+	if err != nil {
+		s.readError(w, err)
+		return
+	}
+	tiles := s.toTiles(docs)
+	for i := range tiles {
+		tiles[i].MatchReason = matchReason(docs[i], opts.Query)
+	}
 	writeJSON(w, http.StatusOK, map[string]any{
-		"entries":  s.toTiles(docs),
-		"has_more": hasMore,
-		"query":    opts.Query,
-		"total":    total,
+		"entries":     tiles,
+		"has_more":    hasMore,
+		"query":       opts.Query,
+		"total":       total,
+		"total_hosts": totalHosts,
 	})
+}
+
+func matchReason(d store.ServiceDoc, query string) string {
+	q := strings.ToLower(strings.TrimSpace(query))
+	if q == "" {
+		return "filters"
+	}
+	contains := func(s string) bool { return strings.Contains(strings.ToLower(s), q) }
+	switch {
+	case contains(d.IPStr):
+		return "IP address"
+	case contains(d.ProductFamily), contains(d.ProductVersion), contains(d.Banner):
+		return "product or banner"
+	case contains(d.CertCN):
+		return "certificate name"
+	case contains(d.Whois):
+		return "network ownership"
+	case d.GeoIP != nil && (contains(d.GeoIP.City) || contains(d.GeoIP.Region) ||
+		contains(d.GeoIP.Country) || contains(d.GeoIP.CountryISO)):
+		return "location"
+	default:
+		return "captured page text or indexed metadata"
+	}
 }
 
 // searchFilters parses the shared search/export filter parameters (everything
@@ -210,6 +244,7 @@ func searchFilters(r *http.Request) store.ListOpts {
 		Product: strings.TrimSpace(r.URL.Query().Get("product")),
 		Tag:     strings.TrimSpace(r.URL.Query().Get("tag")),
 		Verdict: strings.TrimSpace(r.URL.Query().Get("verdict")),
+		Sort:    strings.ToLower(strings.TrimSpace(r.URL.Query().Get("sort"))),
 	}
 	if v := r.URL.Query().Get("port"); v != "" {
 		if n, err := strconv.Atoi(v); err == nil {
@@ -238,6 +273,11 @@ const maxExportLimit = 2000
 // handleExport serves the open dataset as JSON (default) or CSV, using the same
 // filters as /search. It is rate-limited and paginated like the other read APIs.
 func (s *Server) handleExport(w http.ResponseWriter, r *http.Request) {
+	format := strings.ToLower(strings.TrimSpace(r.URL.Query().Get("format")))
+	if format != "" && format != "json" && format != "csv" {
+		http.Error(w, `invalid format: use "json" or "csv"`, http.StatusBadRequest)
+		return
+	}
 	limit := clampInt(queryInt(r, "limit", 1000), 1, maxExportLimit)
 	offset := clampInt(queryInt(r, "offset", 0), 0, 1_000_000)
 
@@ -252,8 +292,10 @@ func (s *Server) handleExport(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	tiles := s.toTiles(docs)
+	w.Header().Set("X-RWO-Schema-Version", "rwo-summary-v1")
+	w.Header().Set("X-RWO-Generated-At", time.Now().UTC().Format(time.RFC3339))
 
-	switch strings.ToLower(strings.TrimSpace(r.URL.Query().Get("format"))) {
+	switch format {
 	case "csv":
 		writeTilesCSV(w, tiles)
 	default:
@@ -269,7 +311,7 @@ func writeTilesCSV(w http.ResponseWriter, tiles []tile) {
 	w.Header().Set("Content-Disposition", `attachment; filename="rwo-export.csv"`)
 	cw := csv.NewWriter(w)
 	_ = cw.Write([]string{
-		"ip", "port", "secured", "http_status", "product", "banner", "cert_cn", "whois",
+		"ip", "port", "secured", "http_status", "product", "product_version", "banner", "cert_cn", "whois",
 		"country_iso", "city", "lat", "lon", "vuln_count", "verdict", "sources", "enriched_at", "updated_at",
 	})
 	for _, t := range tiles {
@@ -285,7 +327,7 @@ func writeTilesCSV(w http.ResponseWriter, tiles []tile) {
 		}
 		_ = cw.Write([]string{
 			t.IP, strconv.Itoa(t.Port), strconv.FormatBool(t.Secured), status,
-			t.Product, t.Banner, t.CertCN, t.Whois,
+			t.Product, t.ProductVersion, t.Banner, t.CertCN, t.Whois,
 			countryISO, city, lat, lon,
 			strconv.Itoa(t.VulnCount), t.Verdict, strings.Join(t.Sources, "|"),
 			t.EnrichedAt, t.UpdatedAt,

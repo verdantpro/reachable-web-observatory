@@ -41,6 +41,14 @@ export default function Methodology() {
           before it is touched. Discovery runs continuously at a deliberately slow rate; this is a
           random sample over time, not a synchronized full-census sweep.
         </p>
+        <p>
+          The sampling unit is one IPv4 address. Go's standard <span className="mono">math/rand/v2</span>{" "}
+          generator draws uniformly from all 32-bit values; candidates in the maintained special-use,
+          private, documentation, multicast, loopback, and operator-exclusion CIDRs are rejected and
+          redrawn. Addresses are unique within each batch of 10 but can be drawn again in later batches.
+          Conditional on not being excluded, every eligible address has the same probability of being
+          selected on each draw. The current agent runs at most two host workers concurrently.
+        </p>
       </section>
 
       <section className="doc-sec" id="capture">
@@ -53,6 +61,23 @@ export default function Methodology() {
           Each record is a <em>point-in-time</em> snapshot keyed deterministically by{" "}
           <span className="mono">ip:port</span>, so re-observations update the same record rather than
           duplicating it.
+        </p>
+        <p>
+          Discovery runs <span className="mono">nmap -sV -n -T3</span> by default and is bounded to five
+          minutes per 10-address batch. A responding service is loaded in Chromium at a 1280×720
+          viewport with a 15-second navigation budget, followed by a configurable settling delay
+          (currently two seconds) before DOM text and a screenshot are captured. Ports 443 and 8443
+          start with HTTPS; other ports start with HTTP and retry once with HTTPS only after an SSL
+          protocol error. Redirects follow Chromium's normal behavior, and the recorded{" "}
+          <span className="mono">secured</span> value reflects the final URL. Certificate errors are
+          ignored so publicly reachable misconfigured TLS services remain observable. Captured page
+          text is truncated to 32,760 bytes.
+        </p>
+        <p>
+          The agent does not consult page-level robots directives before the initial public-page load:
+          those directives govern automated content indexing, while this project performs a
+          measurement of service reachability. It does honor the project exclusion list before any
+          network contact and publishes a permanent opt-out process.
         </p>
         <p>
           The agents do not sign in, submit credentials, exploit or fuzz anything. Network discovery
@@ -96,6 +121,22 @@ export default function Methodology() {
           view is a window into these aggregates. Researchers can save a timestamped{" "}
           <Link className="doc-link" to="/data">live export</Link> for reproducible offline analysis;
           first-party dated archival exports are planned but are not yet published.
+        </p>
+        <h3 className="doc-sub-h">Operational definitions</h3>
+        <ul className="doc-list">
+          <li><strong>Candidate address:</strong> an eligible IPv4 address returned by the rejection sampler.</li>
+          <li><strong>Reachable service:</strong> one of the five configured ports that nmap reports open and whose page Chromium captures successfully.</li>
+          <li><strong>Host:</strong> one distinct IPv4 address; a host can contribute multiple service records.</li>
+          <li><strong>Service:</strong> the latest retained observation for one <span className="mono">ip:port</span>.</li>
+          <li><strong>Cleartext:</strong> the final captured page URL used HTTP rather than HTTPS.</li>
+          <li><strong>CVE-associated:</strong> InternetDB returned at least one host-level CVE identifier.</li>
+          <li><strong>Provider-flagged:</strong> a configured reputation provider contributed evidence summarized as suspicious or malicious.</li>
+        </ul>
+        <p>
+          Dashboard percentages are descriptive ratios within the selected retained-service window:
+          count meeting the displayed condition divided by the displayed service denominator.
+          Concentration percentages require at least 20 services in a displayed group. They are not
+          presently weighted population estimates and do not include confidence intervals.
         </p>
       </section>
 

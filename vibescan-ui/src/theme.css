@@ -55,6 +55,29 @@ html, body { height: 100%; }
    fill, so the footer anchors to the bottom even on short pages. */
 #root { min-height: 100%; display: flex; flex-direction: column; }
 main { flex: 1 0 auto; }
+.skip-link {
+  position: fixed;
+  z-index: 1000;
+  top: 8px;
+  left: 8px;
+  padding: 10px 14px;
+  color: var(--void);
+  background: var(--accent);
+  border-radius: var(--radius);
+  transform: translateY(-150%);
+}
+.skip-link:focus { transform: translateY(0); }
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
 
 body {
   margin: 0;
@@ -76,7 +99,7 @@ img { max-width: 100%; display: block; }
 .eyebrow {
   margin: 0;
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: 12px;
   letter-spacing: 0.28em;
   text-transform: uppercase;
   color: var(--muted);

@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { NavLink, useLocation } from "react-router";
 import { api } from "../api";
 import "./TopBar.css";
 
 const NAV = [
-  { to: "/", label: "LIVE", end: true },
+  { to: "/", label: "OVERVIEW", end: true },
   { to: "/feed", label: "FEED" },
   { to: "/search", label: "SEARCH" },
   { to: "/stats", label: "STATS" },
@@ -26,12 +26,35 @@ export default function TopBar() {
   const [insecure, setInsecure] = useState<number | null>(null);
   const [hosts, setHosts] = useState<number | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const menuButton = useRef<HTMLButtonElement>(null);
+  const menu = useRef<HTMLElement>(null);
   const location = useLocation();
 
   // Collapse the mobile menu whenever the route changes.
   useEffect(() => {
     setMenuOpen(false);
   }, [location.pathname]);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const close = (restoreFocus: boolean) => {
+      setMenuOpen(false);
+      if (restoreFocus) window.requestAnimationFrame(() => menuButton.current?.focus());
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") close(true);
+    };
+    const onPointerDown = (event: PointerEvent) => {
+      const target = event.target as Node;
+      if (!menu.current?.contains(target) && !menuButton.current?.contains(target)) close(false);
+    };
+    document.addEventListener("keydown", onKeyDown);
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.removeEventListener("pointerdown", onPointerDown);
+    };
+  }, [menuOpen]);
 
   useEffect(() => {
     api
@@ -54,15 +77,17 @@ export default function TopBar() {
         </NavLink>
 
         <button
+          ref={menuButton}
           className="nav-toggle mono"
           aria-label={menuOpen ? "Close menu" : "Open menu"}
           aria-expanded={menuOpen}
+          aria-controls="primary-navigation"
           onClick={() => setMenuOpen((o) => !o)}
         >
           {menuOpen ? "✕" : "☰"}
         </button>
 
-        <nav className={`nav${menuOpen ? " open" : ""}`}>
+        <nav ref={menu} id="primary-navigation" className={`nav${menuOpen ? " open" : ""}`}>
           {NAV.map((n) => (
             <NavLink key={n.to} to={n.to} end={n.end} className="nav-link mono">
               {n.label}

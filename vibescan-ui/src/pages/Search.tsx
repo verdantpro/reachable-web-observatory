@@ -4,17 +4,19 @@ import { api, type Tile } from "../api";
 import SignalCard from "../components/SignalCard";
 import ErrorState from "../components/ErrorState";
 import { useMeta } from "../lib/meta";
+import { groupSearchTiles } from "../lib/searchGrouping";
 import "./grid.css";
 import "./Search.css";
 
 type SecFilter = "any" | "https" | "http";
+type SortMode = "newest" | "relevance" | "vulns" | "ip";
 
-const PAGE = 60;
+const PAGE = 24;
 
 export default function Search() {
   useMeta({
-    title: "Search the Census — Reachable Web Observatory",
-    description: "Search captured web services by banner, product, port, status, location, CVEs, and reputation.",
+    title: "Search observations — Reachable Web Observatory",
+    description: "Search stored web-service observations and host-level provider associations.",
     path: "/search",
   });
   // Seed filters from the URL so deep-links (e.g. from Stats) land pre-filtered.
@@ -37,10 +39,17 @@ export default function Search() {
     return v === "1" || v === "true";
   });
   const [verdict, setVerdict] = useState(() => params.get("verdict") ?? "");
+  const [sort, setSort] = useState<SortMode>(() => {
+    const value = params.get("sort");
+    return value === "relevance" || value === "vulns" || value === "ip" ? value : "newest";
+  });
+  const [groupHosts, setGroupHosts] = useState(false);
   const [tiles, setTiles] = useState<Tile[]>([]);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(false);
   const [total, setTotal] = useState(0);
+  const [totalHosts, setTotalHosts] = useState(0);
+  const [loadAnnouncement, setLoadAnnouncement] = useState("");
   const [loading, setLoading] = useState(false);
   const [touched, setTouched] = useState(false);
   const [error, setError] = useState(false);
@@ -61,8 +70,9 @@ export default function Search() {
     if (status !== null) next.set("status", String(status));
     if (hasVulns) next.set("has_vulns", "1");
     if (verdict) next.set("verdict", verdict);
+    if (sort !== "newest") next.set("sort", sort);
     setParams(next, { replace: true });
-  }, [debounced, port, sec, status, hasVulns, verdict, setParams]);
+  }, [debounced, port, sec, status, hasVulns, verdict, sort, setParams]);
 
   const active = useMemo(
     () => debounced !== "" || port !== "" || sec !== "any" || status !== null || hasVulns || verdict !== "",
@@ -72,13 +82,14 @@ export default function Search() {
   // Any query/filter change restarts pagination from the first page.
   useEffect(() => {
     setPage(0);
-  }, [debounced, port, sec, status, hasVulns, verdict]);
+  }, [debounced, port, sec, status, hasVulns, verdict, sort]);
 
   useEffect(() => {
     if (!active) {
       setTiles([]);
       setHasMore(false);
       setTotal(0);
+      setTotalHosts(0);
       setError(false);
       return;
     }
@@ -94,6 +105,7 @@ export default function Search() {
         secured: sec === "any" ? undefined : sec === "https",
         hasVulns: hasVulns || undefined,
         verdict: verdict || undefined,
+        sort,
         limit: PAGE,
         offset: page * PAGE,
       })
@@ -103,6 +115,8 @@ export default function Search() {
         setTiles((prev) => (page === 0 ? r.entries : [...prev, ...r.entries]));
         setHasMore(r.has_more);
         setTotal(r.total ?? r.entries.length);
+        setTotalHosts(r.total_hosts ?? new Set(r.entries.map((entry) => entry.ip)).size);
+        if (page > 0) setLoadAnnouncement(`${r.entries.length} additional observations loaded.`);
       })
       .catch(() => {
         if (!alive) return;
@@ -113,7 +127,7 @@ export default function Search() {
     return () => {
       alive = false;
     };
-  }, [debounced, port, sec, status, hasVulns, verdict, active, page, reloadKey]);
+  }, [debounced, port, sec, status, hasVulns, verdict, sort, active, page, reloadKey]);
 
   const statuses: [string, number | null][] = [
     ["any", null],
@@ -123,12 +137,25 @@ export default function Search() {
     ["404", 404],
     ["500", 500],
   ];
+  const reset = () => {
+    setQ("");
+    setDebounced("");
+    setPort("");
+    setSec("any");
+    setStatus(null);
+    setHasVulns(false);
+    setVerdict("");
+    setSort("newest");
+  };
+  const groupedTiles = useMemo(() => {
+    return groupSearchTiles(tiles, groupHosts);
+  }, [tiles, groupHosts]);
 
   return (
     <div className="page wrap">
       <div className="page-head">
         <div className="eyebrow">◊ Search</div>
-        <h1 className="page-title display">Query the census</h1>
+        <h1 className="page-title display">Search observations</h1>
       </div>
 
       <div className="search-bar hud">
@@ -136,7 +163,7 @@ export default function Search() {
         <input
           className="search-input mono"
           autoFocus
-          aria-label="Search the census by banner, product, location, whois, IP, or page text"
+          aria-label="Search observations by banner, product, location, whois, IP, or page text"
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="banner, product, location, whois, IP, or page text…"
@@ -193,7 +220,7 @@ export default function Search() {
               aria-pressed={hasVulns}
               onClick={() => setHasVulns((v) => !v)}
             >
-              has CVEs
+              host-associated CVEs
             </button>
           </div>
         </div>
@@ -212,7 +239,32 @@ export default function Search() {
             ))}
           </div>
         </div>
+        <div className="filter-group">
+          <label className="filter-label mono" htmlFor="search-sort">Sort</label>
+          <select
+            id="search-sort"
+            className="filter-select mono"
+            value={sort}
+            onChange={(e) => setSort(e.target.value as SortMode)}
+          >
+            <option value="newest">newest</option>
+            <option value="relevance">relevance</option>
+            <option value="vulns">CVE count</option>
+            <option value="ip">IP address</option>
+          </select>
+        </div>
+        <div className="filter-group">
+          <button className={`chip mono${groupHosts ? " on" : ""}`} aria-pressed={groupHosts} onClick={() => setGroupHosts((value) => !value)}>
+            group by host
+          </button>
+        </div>
       </div>
+      {active && (
+        <div className="page-hint mono">
+          Filters describe stored service observations; CVE and reputation fields apply to the host.
+          {" "}<button className="chip mono" onClick={reset}>reset all</button>
+        </div>
+      )}
 
       {!active ? (
         <div className="search-empty">
@@ -228,20 +280,22 @@ export default function Search() {
       ) : error && tiles.length === 0 ? (
         <ErrorState onRetry={() => setReloadKey((k) => k + 1)} />
       ) : loading && page === 0 ? (
-        <div className="empty">◌ SCANNING…</div>
+        <div className="empty" role="status" aria-live="polite">◌ SEARCHING…</div>
       ) : tiles.length === 0 && touched ? (
         <div className="empty">NO MATCHING SIGNALS</div>
       ) : (
         <>
-          <div className="page-sub mono search-count">
-            {total.toLocaleString()} {total === 1 ? "match" : "matches"}
+          <div className="page-sub mono search-count" aria-live="polite" aria-atomic="true">
+            {total.toLocaleString()} matching {total === 1 ? "service observation" : "service observations"} across{" "}
+            {totalHosts.toLocaleString()} {totalHosts === 1 ? "host" : "hosts"} · sorted by {sort}
           </div>
-          <div className="signal-grid">
-            {tiles.map((t) => (
-              <SignalCard key={`${t.ip}:${t.port}`} t={t} />
+          <div className="sr-only" aria-live="polite">{loadAnnouncement}</div>
+          <div className="signal-grid" aria-busy={loading}>
+            {groupedTiles.map(({ tile, ports }) => (
+              <SignalCard key={`${tile.ip}:${tile.port}`} t={tile} relatedPorts={ports} />
             ))}
           </div>
-          <div className="page-more">
+          <div className="page-more" aria-live="polite">
             {loading ? (
               <span className="mono dim">◌ scanning…</span>
             ) : error ? (
@@ -253,7 +307,7 @@ export default function Search() {
                 load more ↓
               </button>
             ) : (
-              tiles.length > 0 && <span className="mono dim">— end of results —</span>
+              tiles.length > 0 && <button className="btn" disabled>— end of results —</button>
             )}
           </div>
         </>

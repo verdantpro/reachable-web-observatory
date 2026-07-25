@@ -6,27 +6,29 @@ import ErrorState from "../components/ErrorState";
 import { useMeta } from "../lib/meta";
 import "./grid.css";
 
-const PAGE = 60;
+const PAGE = 24;
 
 type Mode = "ranked" | "latest";
 
 export default function Feed() {
   useMeta({
     title: "Feed — Reachable Web Observatory",
-    description: "A live feed of recently captured web services discovered across the public internet.",
+    description: "Explore stored observations from a random sample of reachable public-IPv4 web services.",
     path: "/feed",
   });
   const [mode, setMode] = useState<Mode>("ranked");
+  const [groupHosts, setGroupHosts] = useState(false);
   const [tiles, setTiles] = useState<Tile[]>([]);
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
+  const [loadAnnouncement, setLoadAnnouncement] = useState("");
   const groupedTiles = useMemo(() => {
     const groups = new Map<string, { tile: Tile; ports: number[] }>();
     for (const tile of tiles) {
-      const identity = tile.dom_hash || tile.capture_hash || `${tile.port}`;
+      const identity = groupHosts ? "host" : (tile.dom_hash || tile.capture_hash || `${tile.port}`);
       const key = `${tile.ip}:${identity}`;
       const existing = groups.get(key);
       if (existing) {
@@ -39,7 +41,7 @@ export default function Feed() {
       ...group,
       ports: group.ports.sort((a, b) => a - b),
     }));
-  }, [tiles]);
+  }, [tiles, groupHosts]);
   const collapsedCount = tiles.length - groupedTiles.length;
 
   // Switching mode restarts pagination from the top.
@@ -57,6 +59,7 @@ export default function Feed() {
         if (!alive) return;
         setTiles((prev) => (offset === 0 ? r.entries : [...prev, ...r.entries]));
         setHasMore(r.has_more);
+        if (offset > 0) setLoadAnnouncement(`${r.entries.length} additional observations loaded.`);
       })
       .catch(() => alive && setError(true))
       .finally(() => alive && setLoading(false));
@@ -70,29 +73,33 @@ export default function Feed() {
       <div className="page-head row spread">
         <div>
           <div className="eyebrow">◊ Feed</div>
-          <h1 className="page-title display">Signal feed</h1>
+          <h1 className="page-title display">Observation feed</h1>
           <div className="page-sub mono">
             {mode === "latest"
-              ? "Newest captured services first — any status, as the agents find them."
-              : "Curated across the census — HTTP 200 and clear screenshots first."}
+              ? "Newest stored observations first — any response status."
+              : "Algorithmically ranked for viewability — HTTP 200 responses and clear screenshots first. This order is not representative of the sample."}
           </div>
           <p className="page-hint">
-            Cards carry third-party CVE &amp; reputation signals (not verified findings) —{" "}
+            Cards may carry host-level CVE associations and provider reputation labels, not verified service findings —{" "}
             <Link className="hint-link" to="/methodology">how to read them →</Link>
           </p>
           {collapsedCount > 0 && (
             <p className="page-hint mono">
-              {collapsedCount} visually duplicate same-host {collapsedCount === 1 ? "service is" : "services are"} grouped
-              into port chips below; every service remains available in search.
+              {collapsedCount} same-host {collapsedCount === 1 ? "service is" : "services are"} grouped
+              into port chips below{groupHosts ? "" : " because the stored captures are visually equivalent"};
+              every service remains available in search.
             </p>
           )}
         </div>
         <div className="chips">
-          <button className={`chip mono${mode === "ranked" ? " on" : ""}`} onClick={() => setMode("ranked")}>
+          <button className={`chip mono${mode === "ranked" ? " on" : ""}`} aria-pressed={mode === "ranked"} onClick={() => setMode("ranked")}>
             ranked
           </button>
-          <button className={`chip mono${mode === "latest" ? " on" : ""}`} onClick={() => setMode("latest")}>
+          <button className={`chip mono${mode === "latest" ? " on" : ""}`} aria-pressed={mode === "latest"} onClick={() => setMode("latest")}>
             latest
+          </button>
+          <button className={`chip mono${groupHosts ? " on" : ""}`} aria-pressed={groupHosts} onClick={() => setGroupHosts((value) => !value)}>
+            group by host
           </button>
         </div>
       </div>
@@ -102,14 +109,17 @@ export default function Feed() {
       ) : tiles.length === 0 && !loading ? (
         <div className="empty">NO SIGNALS ON RECORD</div>
       ) : (
-        <div className="signal-grid">
+        <>
+        <div className="sr-only" aria-live="polite">{loadAnnouncement}</div>
+        <div className="signal-grid" aria-busy={loading}>
           {groupedTiles.map(({ tile, ports }) => (
             <SignalCard key={`${tile.ip}:${tile.port}`} t={tile} relatedPorts={ports} />
           ))}
         </div>
+        </>
       )}
 
-      <div className="page-more">
+      <div className="page-more" aria-live="polite">
         {loading ? (
           <span className="mono dim">◌ scanning…</span>
         ) : error && tiles.length > 0 ? (
@@ -121,7 +131,7 @@ export default function Feed() {
             load more ↓
           </button>
         ) : (
-          tiles.length > 0 && <span className="mono dim">— end of feed —</span>
+          tiles.length > 0 && <button className="btn" disabled>— end of feed —</button>
         )}
       </div>
     </div>

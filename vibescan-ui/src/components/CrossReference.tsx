@@ -50,10 +50,42 @@ function Verdict({ v }: { v: string }) {
         ? "Derived summary: limited adverse evidence"
         : "Derived summary: no adverse signals observed";
   return (
-    <div className={`fr-verdict ${cls}`}>
-      <b></b>
-      <span className="fr-verdict-label">{label}</span>
-      <span className="fr-verdict-note mono">Review the provider evidence and dates below</span>
+    <>
+      <div className={`fr-verdict ${cls}`}>
+        <b></b>
+        <span className="fr-verdict-label">{label}</span>
+        <span className="fr-verdict-note mono">Review the provider evidence and dates below</span>
+      </div>
+      <details className="fr-rubric">
+        <summary className="mono">How this derived summary is assigned</summary>
+        <p>
+          <strong>Malicious</strong> requires strong adverse evidence from at least two configured
+          providers. <strong>Suspicious</strong> means one strong result or any weaker adverse evidence.
+          <strong>Clean</strong> means
+          queried providers returned no adverse evidence; it does not prove the host is safe. Missing
+          and unavailable providers do not count as clean evidence.
+        </p>
+      </details>
+    </>
+  );
+}
+
+function CVEGroups({ items }: { items: string[] }) {
+  const groups = new Map<string, string[]>();
+  for (const cve of items) {
+    const year = /^CVE-(\d{4})-/i.exec(cve)?.[1] ?? "Other";
+    groups.set(year, [...(groups.get(year) ?? []), cve]);
+  }
+  return (
+    <div className="fr-cve-groups">
+      {[...groups.entries()]
+        .sort(([a], [b]) => b.localeCompare(a))
+        .map(([year, cves]) => (
+          <details key={year} open={items.length <= 12}>
+            <summary className="mono">{year} · {cves.length} record{cves.length === 1 ? "" : "s"}</summary>
+            <Chips items={cves} kind="vuln" href={(v) => `https://nvd.nist.gov/vuln/detail/${encodeURIComponent(v)}`} />
+          </details>
+        ))}
     </div>
   );
 }
@@ -143,8 +175,8 @@ export default function CrossReference({ ip }: { ip: string }) {
                   </Row>
                 ) : null}
                 {enr!.vulns?.length ? (
-                  <Row label={`CVEs · ${enr!.vulns.length}`}>
-                    <Chips items={enr!.vulns} kind="vuln" href={(v) => `https://nvd.nist.gov/vuln/detail/${encodeURIComponent(v)}`} />
+                  <Row label={`Host CVE records · ${enr!.vulns.length}`}>
+                    <CVEGroups items={enr!.vulns} />
                   </Row>
                 ) : null}
                 {enr!.products?.length ? <Row label="Products">{enr!.products.join(" · ")}</Row> : null}

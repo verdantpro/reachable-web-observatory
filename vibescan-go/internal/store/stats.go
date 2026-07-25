@@ -10,6 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"github.com/vibescan/vibescan-go/internal/geo"
+	"github.com/vibescan/vibescan-go/internal/media"
 )
 
 // Stats is the aggregate snapshot returned by the /api/v2/stats endpoint. All
@@ -372,7 +373,7 @@ func (m *Mongo) StatsAggregate(ctx context.Context, timeRangeHours, maxTimeMS in
 			}
 		}
 		for _, s := range f.Banners {
-			out.TopBanners[s.ID] = s.Count
+			out.TopBanners[normalizedProductLabel(s.ID)] += s.Count
 		}
 		for _, s := range f.Secure {
 			if s.Secured {
@@ -413,7 +414,7 @@ func (m *Mongo) StatsAggregate(ctx context.Context, timeRangeHours, maxTimeMS in
 			out.FlaggedByPort[p.ID] = p.Count
 		}
 		for _, p := range f.FlaggedProducts {
-			out.FlaggedByProduct[p.ID] = p.Count
+			out.FlaggedByProduct[normalizedProductLabel(p.ID)] += p.Count
 		}
 		for _, o := range f.FlaggedOrgs {
 			if o.ID != "" {
@@ -444,6 +445,13 @@ func (m *Mongo) StatsAggregate(ctx context.Context, timeRangeHours, maxTimeMS in
 	statsMemo.mu.Unlock()
 
 	return out, nil
+}
+
+func normalizedProductLabel(raw string) string {
+	if normalized := media.NormalizeProduct(raw).Family; normalized != "" {
+		return normalized
+	}
+	return "Unknown"
 }
 
 func formatBucket(t time.Time, timeRangeHours int) string {

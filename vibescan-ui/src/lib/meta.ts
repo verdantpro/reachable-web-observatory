@@ -13,6 +13,8 @@ export type RouteMeta = {
   path?: string;
   /** Prevent indexing for public-but-sensitive routes such as individual records. */
   noIndex?: boolean;
+  /** Allow links to be followed on ordinary error pages while excluding the page itself. */
+  followWhenNoIndex?: boolean;
 };
 
 function upsertMeta(attr: "name" | "property", key: string, content: string) {
@@ -40,14 +42,16 @@ function upsertLink(rel: string, href: string) {
  * A single static baseline lives in index.html; this keeps it in sync per route
  * for in-app navigation and JS-capable crawlers.
  */
-export function useMeta({ title, description, path, noIndex = false }: RouteMeta) {
+export function useMeta({ title, description, path, noIndex = false, followWhenNoIndex = false }: RouteMeta) {
   useEffect(() => {
     document.title = title;
     const url = ORIGIN + (path ?? window.location.pathname);
     upsertLink("canonical", url);
 
     if (description) upsertMeta("name", "description", description);
-    upsertMeta("name", "robots", noIndex ? "noindex, nofollow, noarchive" : "index, follow");
+    upsertMeta("name", "robots", noIndex
+      ? `noindex, ${followWhenNoIndex ? "follow" : "nofollow"}${followWhenNoIndex ? "" : ", noarchive"}`
+      : "index, follow");
 
     upsertMeta("property", "og:title", title);
     upsertMeta("property", "og:type", "website");
@@ -60,5 +64,5 @@ export function useMeta({ title, description, path, noIndex = false }: RouteMeta
     upsertMeta("name", "twitter:title", title);
     upsertMeta("name", "twitter:image", OG_IMAGE);
     if (description) upsertMeta("name", "twitter:description", description);
-  }, [title, description, path, noIndex]);
+  }, [title, description, path, noIndex, followWhenNoIndex]);
 }

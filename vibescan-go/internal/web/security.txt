@@ -1,0 +1,6 @@
+Contact: mailto:abuse@verdantprotocol.com
+Contact: mailto:research@verdantprotocol.com
+Canonical: https://observatory.verdantprotocol.com/.well-known/security.txt
+Policy: https://observatory.verdantprotocol.com/disclosure
+Preferred-Languages: en
+Expires: 2027-07-25T23:59:59Z

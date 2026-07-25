@@ -17,6 +17,9 @@ var distFS embed.FS
 //go:embed robots.txt
 var robotsTXT []byte
 
+//go:embed security.txt
+var securityTXT []byte
+
 // Handler serves the embedded SPA. Real asset requests are served from dist/;
 // any other path falls back to index.html so client routes (/feed, /signal/…)
 // resolve on a hard refresh.
@@ -45,6 +48,11 @@ func Handler() http.Handler {
 			w.Header().Set("Cache-Control", "public, max-age=3600")
 			_, _ = w.Write(robotsTXT)
 			return
+		case "/.well-known/security.txt":
+			w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+			w.Header().Set("Cache-Control", "public, max-age=3600")
+			_, _ = w.Write(securityTXT)
+			return
 		case "/sitemap.xml":
 			serveDistFile(w, sub, "sitemap.xml", "application/xml; charset=utf-8")
 			return
@@ -64,8 +72,26 @@ func Handler() http.Handler {
 				return
 			}
 		}
-		serveIndex(w, index)
+		if !isClientRoute(r.URL.Path) {
+			w.Header().Set("X-Robots-Tag", "noindex, follow")
+			serveIndexStatus(w, index, http.StatusNotFound)
+			return
+		}
+		serveIndexStatus(w, index, http.StatusOK)
 	})
+}
+
+// isClientRoute mirrors the public React routes. Unknown paths still receive
+// the SPA shell so the branded not-found screen renders, but with HTTP 404.
+func isClientRoute(p string) bool {
+	switch strings.TrimSuffix(p, "/") {
+	case "", "/", "/feed", "/search", "/stats", "/about", "/methodology",
+		"/architecture", "/ethics", "/data", "/disclosure", "/scan-info":
+		return true
+	}
+	parts := strings.Split(strings.Trim(p, "/"), "/")
+	return len(parts) == 3 && (parts[0] == "signal" || parts[0] == "external") &&
+		parts[1] != "" && parts[2] != ""
 }
 
 // serveDistFile serves a build artifact from dist/ with an explicit Content-Type,
@@ -81,12 +107,13 @@ func serveDistFile(w http.ResponseWriter, sub fs.FS, name, contentType string) {
 	_, _ = w.Write(b)
 }
 
-func serveIndex(w http.ResponseWriter, index []byte) {
+func serveIndexStatus(w http.ResponseWriter, index []byte, status int) {
 	if index == nil {
 		http.Error(w, "UI not built", http.StatusNotFound)
 		return
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Cache-Control", "no-cache")
+	w.WriteHeader(status)
 	_, _ = w.Write(index)
 }

@@ -32,6 +32,7 @@ export default function Signal() {
   const { ip = "", port = "" } = useParams();
   const [d, setD] = useState<SignalDetail | null>(null);
   const [state, setState] = useState<"loading" | "ok" | "error">("loading");
+  const [sourceCopied, setSourceCopied] = useState(false);
 
   useMeta({
     title: ip && port ? `${ip}:${port} — Reachable Web Observatory record` : "Record — Reachable Web Observatory",
@@ -56,7 +57,20 @@ export default function Signal() {
   }, [ip, port]);
 
   if (state === "loading") return <div className="record"><div className="page wrap empty"><h1>Loading observation…</h1></div></div>;
-  if (state === "error" || !d) return <div className="record"><div className="page wrap empty"><h1>Observation not found</h1></div></div>;
+  if (state === "error" || !d) {
+    return (
+      <div className="record">
+        <div className="page wrap empty">
+          <h1>Observation not found</h1>
+          <p>The record may have been removed, or this address and port may never have been retained.</p>
+          <div className="nf-actions">
+            <Link className="btn" to="/feed">Browse observations</Link>
+            <Link className="btn" to="/search">Search records</Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const s = d.service;
   const geo = s.geo;
@@ -80,17 +94,15 @@ export default function Signal() {
             <h1 className="fr-callsign">
               {s.ip}<span className="port">:{s.port}</span>
             </h1>
-            <a
+            <Link
               className="fr-live-link mono"
-              href={`${s.secured ? "https" : "http"}://${s.ip}:${s.port}`}
-              target="_blank"
-              rel="noopener noreferrer nofollow"
-              title="Leaves the observatory and contacts the current third-party service directly."
+              to={`/external/${s.ip}/${s.port}?protocol=${s.secured ? "https" : "http"}`}
+              title="Leaves the Observatory, reveals your IP address to the current third-party host, and may expose you to unsafe content."
             >
-              Open current live service ↗
-            </a>
+              Visit current host (external) ↗
+            </Link>
             <span className="fr-live-warning mono">
-              External host · may have changed since capture · open with appropriate caution
+              Not the stored observation · may be unsafe · destination receives your IP address
             </span>
           </div>
           <div className="fr-caseright">
@@ -183,19 +195,79 @@ export default function Signal() {
         <CrossReference ip={s.ip} />
 
         <section className="fr-sec">
+          <h2 className="fr-sec-h">Record actions</h2>
+          <p>
+            This public record is a timestamped observation, not a current verification. If it is
+            inaccurate, sensitive, or should be removed, use the operator workflow below.
+          </p>
+          <div className="doc-actions">
+            <Link className="btn" to="/scan-info#removal">Report, correct, or remove this record</Link>
+            <Link className="btn btn-ghost" to="/data#cite">Cite or export Observatory data</Link>
+            <button
+              className="btn btn-ghost"
+              onClick={() => {
+                const payload = JSON.stringify({
+                  schema_version: "rwo-record-v1",
+                  exported_at: new Date().toISOString(),
+                  ...d,
+                }, null, 2);
+                const url = URL.createObjectURL(new Blob([payload], { type: "application/json" }));
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `rwo-${s.ip}-${s.port}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+              }}
+            >
+              Download this record (JSON)
+            </button>
+          </div>
+        </section>
+
+        <section className="fr-sec">
           <h2 className="fr-sec-h">Service banner</h2>
           <pre className="fr-pre">{s.banner || "— no banner —"}</pre>
         </section>
 
         {d.fulltext && (
-          <section className="fr-sec">
-            <h2 className="fr-sec-h">Page source · {d.fulltext.length.toLocaleString()} chars</h2>
+          <details className="fr-sec">
+            <summary className="fr-sec-h">Captured page text · {d.fulltext.length.toLocaleString()} chars</summary>
             <p className="fr-source-note mono">
               Captured from this service at observation time; public page content can contain version,
-              endpoint, or personal information and may no longer match the live host.
+              endpoint, or personal information and may no longer match the current host. Review and
+              copy it with care.
             </p>
+            <div className="doc-actions">
+              <button
+                className="btn btn-ghost"
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(d.fulltext);
+                    setSourceCopied(true);
+                    window.setTimeout(() => setSourceCopied(false), 2000);
+                  } catch {
+                    setSourceCopied(false);
+                  }
+                }}
+              >
+                {sourceCopied ? "Copied" : "Copy captured text"}
+              </button>
+              <button
+                className="btn btn-ghost"
+                onClick={() => {
+                  const url = URL.createObjectURL(new Blob([d.fulltext], { type: "text/plain;charset=utf-8" }));
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = `rwo-${s.ip}-${s.port}-captured-text.txt`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                }}
+              >
+                Download captured text
+              </button>
+            </div>
             <pre className="fr-pre fr-scroll">{d.fulltext}</pre>
-          </section>
+          </details>
         )}
       </div>
     </div>

@@ -15,12 +15,12 @@ export default function ScanInfo() {
     <DocPage
       eyebrow="◊ For network operators"
       title="About the traffic from this project"
-      lede="If you found this page in your logs: the probe you saw is part of a research census of the public web. Here's who we are, why, and how to opt out."
+      lede="If you found this page in your logs: the probe you saw is part of a random-sample measurement study of the public web. Here's who we are, why, and how to opt out."
     >
       <section className="doc-sec" id="what">
         <h2 className="doc-h">What this is</h2>
         <p>
-          The Reachable Web Observatory is an open, continuously-running measurement study of the
+          The Reachable Web Observatory is an open, continuously-running random-sample study of the
           reachable public-IPv4 web. It generates random IP addresses, checks a handful of common web
           ports (<span className="mono">80, 443, 8000, 8080, 8443</span>), and — for hosts answering
           HTTP/HTTPS — records what an anonymous visitor would see, to study where observable exposure
@@ -75,8 +75,12 @@ export default function ScanInfo() {
         <h2 className="doc-h">Remove existing records</h2>
         <p>
           Send the host(s) or range you want removed and we will delete those records. There is no
-          automatic expiry — captures stay until removal is requested. Reports of abuse or content that
-          shouldn't be public anywhere are handled promptly; see the{" "}
+          automatic expiry — captures stay until removal is requested. Acknowledgement and completion
+          are targeted within two days. The request should identify the address or CIDR; we may ask for
+          a minimal demonstration of control when needed to prevent fraudulent requests. Specify
+          whether the request concerns the public record, stored screenshot/page text, future
+          observations, or all of them; our confirmation will state the completed scope. Reports of
+          abuse or content that shouldn't be public anywhere are prioritized; see the{" "}
           <Link className="doc-link" to="/disclosure">disclosure policy</Link>.
         </p>
       </section>

@@ -1,4 +1,5 @@
 import { Link } from "react-router";
+import { apiURL } from "../api";
 import DocPage from "../components/DocPage";
 import { useMeta } from "../lib/meta";
 
@@ -15,6 +16,12 @@ const FIELDS: [string, string][] = [
   ["sources", "Which enrichment feeds contributed to this record."],
   ["enriched_at", "When enrichment was last refreshed (RFC 3339)."],
   ["updated_at", "When the service was last observed (RFC 3339)."],
+];
+
+const CSV_FIELDS = [
+  "ip", "port", "secured", "http_status", "product", "product_version", "banner",
+  "cert_cn", "whois", "country_iso", "city", "lat", "lon", "vuln_count",
+  "verdict", "sources", "enriched_at", "updated_at",
 ];
 
 export default function Data() {
@@ -37,7 +44,13 @@ export default function Data() {
             <strong>Export API.</strong> <span className="mono">GET /api/v2/export?format=json|csv</span>{" "}
             returns records with the same filters as <Link className="doc-link" to="/search">search</Link>{" "}
             (<span className="mono">q, product, port, status, secured, has_vulns, tag, verdict, limit,
-            offset</span>). Rate-limited and paginated.
+            offset, sort</span>). Sort values are <span className="mono">newest, relevance, vulns,
+            ip</span>. Requests are rate-limited. Pagination is manual: request 1–2,000 records
+            at a time with <span className="mono">limit</span>, then increase{" "}
+            <span className="mono">offset</span> until an export contains fewer records than requested.
+            Export responses do not include a total or next-page link.
+            The response headers <span className="mono">X-RWO-Schema-Version</span> and{" "}
+            <span className="mono">X-RWO-Generated-At</span> identify the contract and export time.
           </li>
           <li>
             <strong>Live JSON API.</strong> The read endpoints under{" "}
@@ -47,6 +60,9 @@ export default function Data() {
               repository
             </a>
             .
+            {" "}Machine-readable contracts are available as{" "}
+            <a className="doc-link" href="/openapi.json">OpenAPI</a> and{" "}
+            <a className="doc-link" href="/rwo-record.schema.json">JSON Schema</a>.
           </li>
           <li>
             <strong>Snapshots.</strong> Dated archival dumps are planned but are not published yet.
@@ -54,18 +70,25 @@ export default function Data() {
           </li>
         </ul>
         <div className="doc-actions">
-          <a className="btn" href="/api/v2/export?format=json&limit=100" target="_blank" rel="noopener noreferrer">
+          <a className="btn" href={apiURL("/api/v2/export?format=json&limit=100")} target="_blank" rel="noopener noreferrer">
             ↓ sample export (JSON)
           </a>
-          <a className="btn" href="/api/v2/export?format=csv&limit=100" target="_blank" rel="noopener noreferrer">
+          <a className="btn" href={apiURL("/api/v2/export?format=csv&limit=100")} target="_blank" rel="noopener noreferrer">
             ↓ sample export (CSV)
           </a>
         </div>
+        <h3 className="doc-sub-h">Examples</h3>
+        <div className="doc-cite">curl 'https://observatory.verdantprotocol.com/api/v2/search?q=nginx&amp;sort=relevance&amp;limit=24'</div>
+        <div className="doc-cite">curl -OJ 'https://observatory.verdantprotocol.com/api/v2/export?format=csv&amp;secured=false&amp;limit=1000'</div>
       </section>
 
       <section className="doc-sec" id="schema">
         <h2 className="doc-h">Record schema</h2>
-        <p>Each record describes one observed service. Core fields:</p>
+        <p>
+          Each record describes one observed service. The JSON export uses the same summary-record
+          shape as gallery and search, including capture URLs and metadata when available. Its core
+          fields are:
+        </p>
         <div className="doc-table-wrap">
           <table className="doc-table">
             <thead><tr><th>Field</th><th>Meaning</th></tr></thead>
@@ -76,13 +99,21 @@ export default function Data() {
             </tbody>
           </table>
         </div>
+        <p>
+          The flat CSV export is intentionally smaller. Its columns are{" "}
+          <span className="mono">{CSV_FIELDS.join(", ")}</span>. In particular, CSV includes only
+          country code, city, and coordinates from the richer JSON{" "}
+          <span className="mono">geo</span> object.
+        </p>
         <div className="doc-callout">
           Individual records are public and can include exact addresses, screenshots, page source,
           service metadata, coarse geolocation, and host-level third-party enrichment. CVE and
           reputation fields are <em>third-party associations</em>, not verified findings — see{" "}
           <Link className="doc-link" to="/methodology#limitations">limitations</Link>. Host-level fields
           such as CVEs, CPEs, hostnames, and additional ports are not necessarily attributable to the
-          particular web service in the record.
+          particular web service in the record. Exports contain summary records: they do not embed
+          screenshot files or captured page source. JSON records can link to a screenshot and indicate
+          whether captured text exists; retrieve available detail through the per-service API.
         </div>
       </section>
 

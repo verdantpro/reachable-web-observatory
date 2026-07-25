@@ -31,10 +31,17 @@ export default function TimeSeries({ data, unit = "submissions" }: { data: Recor
   };
 
   const hp = hover != null ? points[hover] : null;
+  const minPoint = points.reduce((a, b) => b.value < a.value ? b : a);
+  const maxPoint = points.reduce((a, b) => b.value > a.value ? b : a);
+  const summary = `${points.length} observations from ${points[0].label} to ${points[points.length - 1].label}. ` +
+    `Minimum ${minPoint.value.toLocaleString()} ${unit} on ${minPoint.label}; ` +
+    `maximum ${maxPoint.value.toLocaleString()} ${unit} on ${maxPoint.label}; ` +
+    `latest ${points[points.length - 1].value.toLocaleString()} ${unit}.`;
 
   return (
     <div className="ts">
-      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" onMouseMove={onMove} onMouseLeave={() => setHover(null)}>
+      <p className="sr-only">{summary}</p>
+      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" role="img" aria-label={summary} onMouseMove={onMove} onMouseLeave={() => setHover(null)}>
         <defs>
           <linearGradient id="tsfill" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="rgba(88,169,124,0.35)" />

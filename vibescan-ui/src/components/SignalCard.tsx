@@ -18,6 +18,8 @@ export default function SignalCard({ t, relatedPorts = [] }: { t: Tile; relatedP
         {t.image_url ? (
           <img
             src={imageURL(t.thumb_url || t.image_url)}
+            srcSet={t.thumb_url ? `${imageURL(t.thumb_url)} 480w, ${imageURL(t.image_url)} 1147w` : undefined}
+            sizes="(max-width: 520px) 100vw, (max-width: 900px) 50vw, 300px"
             alt={`Capture of ${t.ip}:${t.port}${t.product ? ` — ${t.product}` : ""}${t.http_status ? `, HTTP ${t.http_status}` : ""}`}
             loading="lazy"
             decoding="async"
@@ -37,7 +39,7 @@ export default function SignalCard({ t, relatedPorts = [] }: { t: Tile; relatedP
                 className={`card-verdict mono ${t.verdict}`}
                 title={`Reputation match from ${srcLabel}${enriched ? ` (${enriched})` : ""} — not independently verified, may be inaccurate`}
               >
-                {t.verdict === "malicious" ? "⚑ corroborated signals" : "⚑ limited evidence"}
+                {t.verdict === "malicious" ? "provider reputation: malicious" : "provider reputation: suspicious"}
               </span>
             ) : null}
             {t.vuln_count ? (
@@ -45,7 +47,7 @@ export default function SignalCard({ t, relatedPorts = [] }: { t: Tile; relatedP
                 className="card-vuln mono"
                 title={`${t.vuln_count} CVE${t.vuln_count > 1 ? "s" : ""} associated with this host by ${srcLabel} — provider-reported, not independently verified`}
               >
-                ⚠ {t.vuln_count} CVE{t.vuln_count > 1 ? "s" : ""}
+                {t.vuln_count} host-associated CVE record{t.vuln_count > 1 ? "s" : ""}
               </span>
             ) : null}
           </div>
@@ -77,6 +79,12 @@ export default function SignalCard({ t, relatedPorts = [] }: { t: Tile; relatedP
             <span className="mono dim">{t.geo?.city || t.geo?.country || "—"}</span>
           )}
           {t.geo?.country_iso && <span className="mono dim">{t.geo.country_iso}</span>}
+        </div>
+        {t.match_reason && t.match_reason !== "filters" && (
+          <div className="card-match mono">Matched in: {t.match_reason}</div>
+        )}
+        <div className="card-provenance mono">
+          observed {timeAgo(t.updated_at) || t.updated_at || "at an unknown time"}
         </div>
         {provenance && (
           <div className="card-provenance mono" title="Reputation and CVE data come from third-party feeds and are not independently verified.">

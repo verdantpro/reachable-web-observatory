@@ -6,6 +6,8 @@ export default function NotFound() {
   useMeta({
     title: "Not found (404) — Reachable Web Observatory",
     description: "The requested page could not be found.",
+    noIndex: true,
+    followWhenNoIndex: true,
   });
   return (
     <div className="notfound">
@@ -20,7 +22,7 @@ export default function NotFound() {
             ← back to the console
           </Link>
           <Link className="btn" to="/search">
-            search the census
+            search observations
           </Link>
         </div>
       </div>

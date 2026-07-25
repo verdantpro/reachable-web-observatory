@@ -50,7 +50,7 @@ export default function Viewport({ detail, loading, auto, autoSeconds, error, on
             key={key}
             className="vp-img"
             src={imageURL(s.image_url)}
-            alt={s ? `Live capture of ${s.ip}:${s.port}` : ""}
+            alt={s ? `Stored observation of ${s.ip}:${s.port}` : ""}
             width={1147}
             height={720}
             decoding="async"
@@ -66,7 +66,7 @@ export default function Viewport({ detail, loading, auto, autoSeconds, error, on
         {/* OSD overlay */}
         <div className="vp-osd-top mono">
           <span className={`vp-rec${loading ? " scanning" : ""}`}>
-            <span className="live-dot" /> {loading ? "ACQUIRING" : "LIVE"}
+            <span className="live-dot" /> {loading ? "LOADING" : "STORED"}
           </span>
           <span className="vp-callsign">{s ? `${s.ip}:${s.port}` : "— — —"}</span>
         </div>
@@ -95,12 +95,12 @@ export default function Viewport({ detail, loading, auto, autoSeconds, error, on
 
         <div className="vp-controls">
           <button className="btn btn-primary" onClick={onAcquire} disabled={loading}>
-            {loading ? "◌ sampling" : error ? "↻ retry" : "▸ sample a host"}
+            {loading ? "◌ drawing" : error ? "↻ retry" : "▸ draw a random observation"}
           </button>
           <button
             className={`btn${auto ? " btn-primary" : " btn-ghost"}`}
             onClick={onToggleAuto}
-            title={`Automatically sample a new host every ${autoSeconds} seconds`}
+            title={`Automatically draw another stored observation every ${autoSeconds} seconds`}
             aria-pressed={auto}
           >
             {auto ? "❚❚ pause auto" : `▶ auto · ${autoSeconds}s`}
