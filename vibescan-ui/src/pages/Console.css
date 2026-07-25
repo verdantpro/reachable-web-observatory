@@ -7,20 +7,34 @@
   font-size: clamp(30px, 5vw, 52px);
   line-height: 1.02;
 }
-.console-h1 {
-  font-size: clamp(26px, 4vw, 44px);
-  line-height: 1.02;
-  margin: 18px 0 10px;
-  color: var(--ink);
+.console-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 22px 0 18px;
+  border-block: 1px solid var(--line);
 }
-.console-h1-sub {
-  display: block;
-  font-family: var(--font-body);
-  font-weight: 500;
-  font-size: clamp(15px, 1.6vw, 19px);
+.console-metric {
+  min-width: 0;
+  padding: 15px 16px;
+  border-right: 1px solid var(--line);
+}
+.console-metric:first-child { padding-left: 0; }
+.console-metric:last-child { border-right: 0; }
+.console-metric dd {
+  margin: 0;
+  color: var(--ink);
+  font-size: clamp(24px, 3.2vw, 34px);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.console-metric dd.insecure { color: var(--red); }
+.console-metric dt {
+  margin-top: 7px;
   color: var(--muted);
-  letter-spacing: 0;
-  margin-top: 6px;
+  font-size: 10px;
+  line-height: 1.4;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 .console-lede { max-width: 640px; font-size: 15px; }
 
@@ -64,6 +78,10 @@
 
 @media (max-width: 720px) {
   .console-frame { grid-template-columns: 1fr; gap: 16px; }
+  .console-metrics { grid-template-columns: 1fr 1fr; }
+  .console-metric:nth-child(2) { border-right: 0; }
+  .console-metric:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+  .console-metric:nth-child(3) { padding-left: 0; }
 }
 
 .console-section-head { margin-bottom: 14px; }

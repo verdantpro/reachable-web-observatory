@@ -230,8 +230,8 @@ export default function Signal() {
         </section>
 
         {d.fulltext && (
-          <details className="fr-sec">
-            <summary className="fr-sec-h">Captured page text · {d.fulltext.length.toLocaleString()} chars</summary>
+          <section className="fr-sec">
+            <h2 className="fr-sec-h">Captured page text · {d.fulltext.length.toLocaleString()} chars</h2>
             <p className="fr-source-note mono">
               Captured from this service at observation time; public page content can contain version,
               endpoint, or personal information and may no longer match the current host. Review and
@@ -267,7 +267,7 @@ export default function Signal() {
               </button>
             </div>
             <pre className="fr-pre fr-scroll">{d.fulltext}</pre>
-          </details>
+          </section>
         )}
       </div>
     </div>
