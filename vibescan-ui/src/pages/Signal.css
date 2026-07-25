@@ -186,6 +186,18 @@
 
 /* ---- transcript sections ---- */
 .fr-sec { margin-top: 28px; }
+
+/* Approximate-location section: self-hosted globe + geo facts. */
+.fr-location .fr-loc-body {
+  display: flex;
+  gap: 26px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+.fr-loc-facts { flex: 1 1 220px; min-width: 200px; margin: 0; }
+.fr-loc-caveat { margin: 14px 0 0; font-size: 11px; color: var(--muted); }
+
 .fr-sec-h {
   font-family: var(--font-mono);
   font-size: 10.5px;
