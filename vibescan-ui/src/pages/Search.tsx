@@ -262,6 +262,7 @@ export default function Search() {
       {active && (
         <div className="page-hint mono">
           Filters describe stored service observations; CVE and reputation fields apply to the host.
+          Text is tokenized at punctuation; wrap multiple words in quotes to search them as a phrase.
           {" "}<button className="chip mono" onClick={reset}>reset all</button>
         </div>
       )}
@@ -282,7 +283,15 @@ export default function Search() {
       ) : loading && page === 0 ? (
         <div className="empty" role="status" aria-live="polite">◌ SEARCHING…</div>
       ) : tiles.length === 0 && touched ? (
-        <div className="empty">NO MATCHING SIGNALS</div>
+        <div className="search-empty" role="status">
+          <h2>No matching observations</h2>
+          <p>Try removing a filter, shortening the query, or searching for a product, location, or IP prefix.</p>
+          <div className="search-examples mono">
+            <button onClick={reset}>clear search and filters</button>
+            <button onClick={() => setQ("nginx")}>try nginx</button>
+            <button onClick={() => setQ("Apache")}>try Apache</button>
+          </div>
+        </div>
       ) : (
         <>
           <div className="page-sub mono search-count" aria-live="polite" aria-atomic="true">

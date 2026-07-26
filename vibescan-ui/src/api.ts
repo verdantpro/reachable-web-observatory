@@ -269,7 +269,7 @@ export const api = {
 
   randomCapture: () => get<RandomCapture>(`/api/v2/random-capture`),
 
-  // brief omits the heavy page-source fulltext (the live console never shows it).
+  // brief omits the heavy page-source fulltext (list views never show it).
   signal: (ip: string, port: number | string, opts?: { brief?: boolean }) =>
     get<SignalDetail>(`/api/v2/services/${ip}/${port}${opts?.brief ? "?brief=1" : ""}`),
 

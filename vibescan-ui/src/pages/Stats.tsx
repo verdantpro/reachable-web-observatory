@@ -74,6 +74,10 @@ function rateMap(flagged: Record<string, number>, total: Record<string, number>,
   return out;
 }
 
+function countWithMinimumBase(flagged: Record<string, number>, total: Record<string, number>, minSample = 20): Record<string, number> {
+  return Object.fromEntries(Object.entries(flagged).filter(([key]) => (total[key] ?? 0) >= minSample));
+}
+
 function downloadStatsTables(s: Stats) {
   const rows: string[][] = [["table", "label", "value"]];
   const add = (table: string, values: Record<string, number>) => {
@@ -161,7 +165,12 @@ export default function StatsPage() {
           org: rateMap(s.flagged_by_org, s.total_by_org),
           country: rateMap(s.flagged_by_country, s.services_by_country),
         }
-      : { port: s.flagged_by_port, product: s.flagged_by_product, org: s.flagged_by_org, country: s.flagged_by_country }
+      : {
+          port: countWithMinimumBase(s.flagged_by_port, s.services_by_port),
+          product: countWithMinimumBase(s.flagged_by_product, s.top_banners),
+          org: countWithMinimumBase(s.flagged_by_org, s.total_by_org),
+          country: countWithMinimumBase(s.flagged_by_country, s.services_by_country),
+        }
     : { port: {}, product: {}, org: {}, country: {} };
   const concSuffix = density ? "%" : "";
 
@@ -173,6 +182,8 @@ export default function StatsPage() {
   const stableRank = (data: Record<string, number>) =>
     Object.entries(data).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
   const topCve = s ? stableRank(s.top_cves)[0] : undefined;
+  const topCveRows = s ? stableRank(s.top_cves) : [];
+  const equalCveCounts = topCveRows.length > 1 && new Set(topCveRows.map(([, count]) => count)).size === 1;
   const highestShareOrg = s ? stableRank(rateMap(s.flagged_by_org, s.total_by_org))[0] : undefined;
   const topProduct = s ? stableRank(s.flagged_by_product)[0] : undefined;
   const cleartextTrend = (() => {
@@ -194,7 +205,7 @@ export default function StatsPage() {
     <div className="page wrap">
       <div className="page-head row spread stats-head">
         <div>
-          <div className="eyebrow">◊ Telemetry</div>
+          <div className="eyebrow">◊ Analysis</div>
           <h1 className="page-title display">Study findings</h1>
           <p className="page-hint">
             Descriptive service-level results for {windowDescription}. These are sampled observations,
@@ -296,6 +307,12 @@ export default function StatsPage() {
               </div>
             </div>
           </div>
+          <div className="doc-callout">
+            <strong>Exploratory sample:</strong> this window contains {s.totals.hosts.toLocaleString()}{" "}
+            distinct {s.totals.hosts === 1 ? "host" : "hosts"}. Results describe retained observations,
+            not the entire public internet. Group charts suppress categories with fewer than 20 service
+            observations; small absolute differences should not be interpreted as stable concentration.
+          </div>
 
           <section className="panel panel-pad concentration">
             <div className="row spread concentration-head">
@@ -308,7 +325,7 @@ export default function StatsPage() {
             <p className="concentration-note mono dim">
               {density
                 ? "Share of each group's services that carry a CVE association or reputation flag (minimum sample: 20 services per group). Percentages are descriptive, not population estimates."
-                : `Among the ${s.flagged_services.toLocaleString()} services in this window carrying a CVE association or reputation flag, where they concentrate:`}
+                : `Among the ${s.flagged_services.toLocaleString()} services in this window carrying a CVE association or reputation flag, categories with at least 20 underlying service observations are shown:`}
             </p>
             <div className="concentration-grid">
               <div className="concentration-cell">
@@ -336,7 +353,23 @@ export default function StatsPage() {
               The specific vulnerabilities most often associated with hosts in this window — third-party,
               provider-reported associations, not confirmed exploitability.
             </p>
-            <BarList data={s.top_cves} color="var(--alert)" limit={12} hrefFor={cveHref} />
+            {equalCveCounts ? (
+              <div className="cve-summary">
+                <strong>{topCveRows.length} host-associated CVE identifiers share the same count.</strong>
+                <p>
+                  Each appears on {topCveRows[0][1].toLocaleString()} retained service records. Identical
+                  counts commonly reflect one repeated host/software fingerprint, so these identifiers
+                  are presented as a set rather than a misleading ranking.
+                </p>
+                <div className="fr-chips">
+                  {topCveRows.map(([cve]) => (
+                    <a key={cve} className="fr-chip vuln" href={cveHref(cve)} target="_blank" rel="noopener noreferrer">{cve}</a>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <BarList data={s.top_cves} color="var(--alert)" limit={12} hrefFor={cveHref} />
+            )}
           </section>
 
           <section className="panel panel-pad geo">
@@ -361,6 +394,10 @@ export default function StatsPage() {
               ◊ Exposure over time{trends.length >= 2 ? ` · last ${trends.length} days` : ""}
             </h2>
             {trends.length >= 3 ? (
+              <>
+              <p className="concentration-note mono dim">
+                Daily rollups are independent of the selected snapshot window above.
+              </p>
               <div className="trend-grid">
                 <div className="trend-cell">
                   <h3 className="concentration-h mono">CVE- or reputation-flagged services</h3>
@@ -371,6 +408,7 @@ export default function StatsPage() {
                   <TimeSeries data={cleartextSeries} unit="% cleartext" />
                 </div>
               </div>
+              </>
             ) : (
               <p className="concentration-note mono dim">
                 Collecting daily snapshots — a trend is shown after at least three daily observations.

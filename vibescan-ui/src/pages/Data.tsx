@@ -135,7 +135,7 @@ export default function Data() {
       <section className="doc-sec" id="cite">
         <h2 className="doc-h">How to cite</h2>
         <div className="doc-cite">
-          Walters, J. (2026). <em>Reachable Web Observatory: a continuous census of the public-IPv4
+          Walters, J. (2026). <em>Reachable Web Observatory: a continuous random sample of the public-IPv4
           web.</em> Verdant Protocol. https://observatory.verdantprotocol.com/
         </div>
         <p>

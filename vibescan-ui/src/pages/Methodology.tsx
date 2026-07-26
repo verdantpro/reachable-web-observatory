@@ -14,6 +14,15 @@ export default function Methodology() {
       eyebrow="◊ Methods"
       title="Methodology"
       lede="How the measurement works — sampling, capture, enrichment, analysis — and, just as importantly, where it is biased and what it cannot tell you."
+      toc={[
+        { id: "question", label: "Research question" },
+        { id: "sampling", label: "Sampling" },
+        { id: "capture", label: "Capture" },
+        { id: "enrichment", label: "Enrichment" },
+        { id: "analysis", label: "Analysis" },
+        { id: "limitations", label: "Limitations & biases" },
+        { id: "reproducibility", label: "Reproducibility" },
+      ]}
     >
       <section className="doc-sec" id="question">
         <h2 className="doc-h">Research question</h2>
@@ -39,7 +48,7 @@ export default function Methodology() {
           nmap. Reserved, private, and special-use ranges are excluded, and every candidate address is
           checked against an operator <Link className="doc-link" to="/scan-info">exclusion list</Link>{" "}
           before it is touched. Discovery runs continuously at a deliberately slow rate; this is a
-          random sample over time, not a synchronized full-census sweep.
+          random sample over time, not a synchronized exhaustive sweep.
         </p>
         <p>
           The sampling unit is one IPv4 address. Go's standard <span className="mono">math/rand/v2</span>{" "}
@@ -150,7 +159,7 @@ export default function Methodology() {
             mis-represented.
           </li>
           <li>
-            <strong>Sampled, not a full census.</strong> Unlike exhaustive scanners (Rapid7 Project
+            <strong>Sampled, not exhaustive.</strong> Unlike exhaustive scanners (Rapid7 Project
             Sonar, Censys), this is a random sample. It estimates <em>distributions</em>, not complete
             inventories, and rare phenomena may be missed.
           </li>
@@ -161,7 +170,7 @@ export default function Methodology() {
           <li>
             <strong>Point-in-time.</strong> A record reflects one moment; the host may have changed,
             moved, or gone away since. Re-observation replaces the prior service record; individual
-            capture history is not retained, while daily aggregate snapshots preserve census-level
+            capture history is not retained, while daily aggregate snapshots preserve sample-level
             trends.
           </li>
           <li>

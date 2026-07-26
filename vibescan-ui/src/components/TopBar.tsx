@@ -13,12 +13,13 @@ const NAV = [
 ];
 
 function useClock() {
-  const [t, setT] = useState(() => new Date());
+  const [t, setT] = useState<Date | null>(null);
   useEffect(() => {
+    setT(new Date());
     const id = setInterval(() => setT(new Date()), 1000);
     return () => clearInterval(id);
   }, []);
-  return t.toISOString().slice(11, 19);
+  return t ? t.toISOString().slice(11, 19) : "--:--:--";
 }
 
 export default function TopBar() {
@@ -98,7 +99,10 @@ export default function TopBar() {
         <div className="topbar-meta mono">
           {hosts != null && insecure != null && (
             <span className="insecure-count" title="Distinct hosts observed and cleartext HTTP services captured, across all time">
-              ◇ {hosts.toLocaleString()} hosts · <span className="insecure">▲</span> {insecure.toLocaleString()} cleartext
+              <span className="status-desktop">◇ {hosts.toLocaleString()} hosts · <span className="insecure">▲</span> {insecure.toLocaleString()} cleartext</span>
+              <span className="status-mobile" aria-label={`${hosts.toLocaleString()} hosts, ${insecure.toLocaleString()} cleartext services`}>
+                {hosts.toLocaleString()}H · {insecure.toLocaleString()} HTTP
+              </span>
             </span>
           )}
           <span className="clock">

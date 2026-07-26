@@ -29,6 +29,20 @@ export default function Architecture() {
       eyebrow="◊ Engineering"
       title="Architecture"
       lede="How the observatory is built, wired together, and hosted — including its data flow, operational boundaries, and deployment model."
+      toc={[
+        { id: "overview", label: "System overview" },
+        { id: "dataflow", label: "Data flow" },
+        { id: "backend", label: "Collector" },
+        { id: "agent", label: "Scanner agent" },
+        { id: "frontend", label: "Frontend" },
+        { id: "storage", label: "Storage" },
+        { id: "enrichment", label: "Enrichment" },
+        { id: "build", label: "Build & packaging" },
+        { id: "hosting", label: "Hosting" },
+        { id: "cicd", label: "CI/CD" },
+        { id: "decisions", label: "Design decisions" },
+        { id: "summary", label: "Stack summary" },
+      ]}
     >
       <section className="doc-sec" id="overview">
         <h2 className="doc-h">The shape of the system</h2>
@@ -76,7 +90,7 @@ export default function Architecture() {
           <li><strong>Submit.</strong> Results are packed into an HMAC-SHA256-signed, gzip-compressed envelope and POSTed to the collector — the same wire format the earlier Python agents used.</li>
           <li><strong>Ingest.</strong> The collector verifies the signature, decodes, computes a deterministic ID per <code>ip:port</code>, uploads the screenshot to object storage, and upserts the record into MongoDB (buffering to disk if the database is momentarily unavailable).</li>
           <li><strong>Enrich.</strong> A background worker cross-references each host against public CVE and reputation feeds, denormalizing the summary back onto the record.</li>
-          <li><strong>Serve.</strong> Clean JSON APIs power the embedded React UI, which renders the live console, search, statistics, and the record pages.</li>
+          <li><strong>Serve.</strong> Clean JSON APIs power the embedded React UI, which renders the Overview, observation feed, search, statistics, and record pages.</li>
         </ul>
       </section>
 
@@ -119,17 +133,17 @@ export default function Architecture() {
         <ul className="doc-list">
           <li><strong>React 19 + TypeScript, built with Vite 8</strong>; client-side routing with React Router. A single typed API client wraps the collector's JSON endpoints and surfaces a clear <q>collector unreachable</q> state instead of a false <q>no results</q>.</li>
           <li><strong>Bespoke SVG visualizations.</strong> The time series and bar charts are hand-built SVG tuned to the design system; the world map projects TopoJSON with <code>d3-geo</code>. This keeps the bundle lean and the charts exactly on-theme.</li>
-          <li><strong>Self-contained assets.</strong> Fonts are self-hosted (no external CDN requests); per-route metadata, a sitemap, a web manifest, and <code>Dataset</code> JSON-LD are generated for SEO and dataset discoverability.</li>
-          <li><strong>Embedded in production.</strong> The built <code>dist/</code> is compiled <em>into</em> the Go binary with <code>go:embed</code>, so there is no separate static host, no second deploy, and no CORS — the UI and API are the same origin.</li>
+          <li><strong>Prerendered public routes.</strong> The production build renders complete HTML for public routes and then hydrates the same React application in the browser. Titles, descriptions, canonical/social metadata, a sitemap, a web manifest, and <code>Dataset</code> JSON-LD are available without executing JavaScript.</li>
+          <li><strong>Embedded in production.</strong> Prerendering happens at build time only; the generated <code>dist/</code> is compiled <em>into</em> the Go binary with <code>go:embed</code>. Production needs no Node process, separate static host, second deploy, or CORS configuration.</li>
         </ul>
       </section>
 
       <section className="doc-sec" id="storage">
         <h2 className="doc-h">Storage &amp; the data model</h2>
         <p>
-          Structured records live in <strong>MongoDB</strong> (one document per <code>ip:port</code>
+          Structured records live in <strong>MongoDB</strong> (one document per <code>ip:port</code>{" "}
           service, plus separate collections for enrichment cache, the CIDR blacklist, and daily
-          rollups). Screenshots — the bulk of the bytes — live in <strong>object storage</strong>
+          rollups). Screenshots — the bulk of the bytes — live in <strong>object storage</strong>{" "}
           (Cloudflare R2 or Amazon S3 served through CloudFront), referenced from the record by key, with
           a base64-in-MongoDB fallback when object storage is disabled. A small server-generated JPEG
           thumbnail is stored alongside each capture so the card grid loads roughly a tenth of the bytes
@@ -141,10 +155,10 @@ export default function Architecture() {
         <h2 className="doc-h">The enrichment pipeline</h2>
         <p>
           When enrichment is enabled and providers are reachable, eligible hosts are cross-referenced
-          server-side against Shodan's keyless InternetDB. On demand, any configured
+          server-side against Shodan's keyless InternetDB. On demand, the collector queries any configured
           threat-intelligence and reputation sources (VirusTotal, AbuseIPDB, GreyNoise, AlienVault OTX,
-          ThreatFox, IPQualityScore, Pulsedive, IPinfo, ip-api, RIPEstat), <em>fanned out
-          concurrently</em>. Missing credentials, provider errors, rate limits, and disabled enrichment
+          ThreatFox, IPQualityScore, Pulsedive, IPinfo, ip-api, RIPEstat) concurrently. Missing
+          credentials, provider errors, rate limits, and disabled enrichment
           can produce partial or absent results. Returned evidence is cached (in memory and in MongoDB)
           and throttled by a shared outbound rate limiter; a background worker attempts to refresh recent
           hosts through available keyless sources. Every API key stays server-side and never reaches the
@@ -157,7 +171,7 @@ export default function Architecture() {
         <h2 className="doc-h">Build &amp; packaging</h2>
         <p>
           The product ships as a small container built with a <strong>multi-stage Dockerfile</strong>:
-          stage one uses <code>node:22-alpine</code> to install and build the UI; stage two uses
+          stage one uses <code>node:22-alpine</code> to build the browser bundle, SSR bundle, and route-specific HTML; stage two uses{" "}
           <code>golang:1.26-alpine</code> to embed that build and compile the <code>vibescan</code> and
           <code>migrate</code> binaries (<code>CGO_ENABLED=0 -trimpath</code>); the final stage is a
           minimal <code>alpine</code> image (~60 MB) that runs as a non-root user. The scanner agent has
@@ -180,7 +194,7 @@ export default function Architecture() {
       <section className="doc-sec" id="cicd">
         <h2 className="doc-h">CI/CD &amp; operations</h2>
         <p>
-          Continuous integration (GitHub Actions) gates every change on <code>go vet</code>,
+          Continuous integration (GitHub Actions) gates every change on <code>go vet</code>,{" "}
           <code>go test</code>, <code>govulncheck</code>, the UI lint and build, and a Trivy dependency
           scan. Deployment is deliberately locked down:
         </p>

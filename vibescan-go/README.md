@@ -70,7 +70,9 @@ produces a small Alpine image (~60 MB) containing:
 | `migrate` | one-shot indexes + CIDR blacklist seed |
 
 `internal/web/dist/` is **generated** by the UI build (`vibescan-ui`,
-`VITE_API_BASE=""`); a placeholder ships so the module always builds. Indexes
+`VITE_API_BASE=""`), including build-time-prerendered route HTML and a separate
+SPA shell for query-dependent and dynamic routes. A placeholder ships so the
+module always builds. Indexes
 are created on startup and via `cmd/migrate` (`internal/store/indexes.go`).
 The migration command also supports opt-in, idempotent historical backfills:
 

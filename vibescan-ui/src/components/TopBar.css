@@ -33,9 +33,10 @@
 
 .topbar-meta { display: flex; align-items: center; gap: 18px; font-size: 12px; flex-shrink: 0; }
 .insecure-count { color: var(--muted); white-space: nowrap; }
+.status-mobile { display: none; }
 .clock { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); white-space: nowrap; }
 
-/* Hide the census counter before the bar would overflow on medium widths
+/* Hide the observation counter before the bar would overflow on medium widths
    (the wordmark + full nav are wide); the clock stays. */
 @media (max-width: 980px) { .insecure-count { display: none; } }
 
@@ -55,13 +56,14 @@
 }
 .nav-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-@media (max-width: 720px) {
+@media (max-width: 900px) {
   .topbar-inner { gap: 12px; }
   .brand-mark, .brand-accent { font-size: 14px; }
-  /* Collapse the clock/counter and the inline nav into a hamburger dropdown so the
-     bar never overflows the viewport width. */
-  .topbar-meta { display: none; }
-  .nav-toggle { display: inline-flex; margin-left: auto; }
+  .topbar-meta { display: flex; margin-left: auto; font-size: 10px; }
+  .insecure-count { display: inline; }
+  .status-desktop, .clock { display: none; }
+  .status-mobile { display: inline; }
+  .nav-toggle { display: inline-flex; }
 
   .nav {
     position: absolute;
@@ -79,4 +81,10 @@
   }
   .nav.open { display: flex; }
   .nav-link { padding: 12px 10px; letter-spacing: 0.12em; font-size: 13px; }
+}
+
+@media (max-width: 390px) {
+  .brand-mark, .brand-accent { font-size: 13px; }
+  .topbar-inner { gap: 8px; }
+  .topbar-meta { font-size: 9px; }
 }

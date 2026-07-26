@@ -82,6 +82,7 @@ export default function Signal() {
     ((Math.abs(geo.lat - 37.751) < 0.001 && Math.abs(geo.lon + 97.822) < 0.001) ||
       (geo.accuracy_radius_km ?? 0) >= 500);
   const showCoordinates = !!geo && !isFallbackGeo && (geo.lat !== 0 || geo.lon !== 0);
+  const protocolTransition = s.secured && [80, 8000, 8080].includes(s.port);
 
   return (
     <div className="record">
@@ -107,7 +108,12 @@ export default function Signal() {
           </div>
           <div className="fr-caseright">
             <span className={`fr-class ${s.secured ? "ok" : "alert"}`}>
-              <b></b> {s.secured ? "Secured · TLS" : "Cleartext · No TLS"}
+              <b></b>{" "}
+              {s.secured
+                ? protocolTransition
+                  ? `Final HTTPS · observed on :${s.port}`
+                  : "Final protocol · HTTPS/TLS"
+                : "Final protocol · cleartext HTTP"}
             </span>
             {seen && (
               <div className="fr-filed">

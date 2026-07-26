@@ -58,7 +58,7 @@ export default function Viewport({ detail, loading, auto, autoSeconds, error, on
           />
         ) : (
           <div className="vp-empty mono">
-            {loading ? "SCANNING…" : error ? "COULDN'T REACH THE COLLECTOR" : "NO SIGNAL"}
+            {loading ? "LOADING…" : error ? "COULDN'T REACH THE COLLECTOR" : "NO OBSERVATION"}
           </div>
         )}
         <div className="vp-vignette" />
@@ -82,9 +82,12 @@ export default function Viewport({ detail, loading, auto, autoSeconds, error, on
       </div>
 
       <aside className="vp-telemetry">
-        <div className="eyebrow">◊ Telemetry</div>
+        <div className="eyebrow">◊ Observation details</div>
         <Line label="HOST" value={s ? `${s.ip}:${s.port}` : null} accent />
-        <Line label="PROTOCOL" value={s ? (s.secured ? "HTTPS" : "HTTP") : null} />
+        <Line
+          label="FINAL PROTOCOL"
+          value={s ? (s.secured ? ([80, 8000, 8080].includes(s.port) ? `:${s.port} → HTTPS` : "HTTPS") : "HTTP") : null}
+        />
         <Line label="STATUS" value={s?.http_status} />
         <Line label="SERVER" value={s?.product} hideEmpty />
         <Line label="OPERATOR" value={s?.whois} hideEmpty />

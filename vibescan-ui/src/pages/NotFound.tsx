@@ -19,7 +19,7 @@ export default function NotFound() {
         </p>
         <div className="nf-actions">
           <Link className="btn" to="/">
-            ← back to the console
+            ← back to overview
           </Link>
           <Link className="btn" to="/search">
             search observations

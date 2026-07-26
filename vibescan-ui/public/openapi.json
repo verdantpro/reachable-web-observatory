@@ -13,7 +13,7 @@
         "parameters": [
           { "$ref": "#/components/parameters/limit" },
           { "$ref": "#/components/parameters/offset" },
-          { "name": "sort", "in": "query", "schema": { "type": "string", "enum": ["recent"] } }
+          { "name": "sort", "in": "query", "description": "Omit or use ranked for viewability ranking; recent selects strict recency.", "schema": { "type": "string", "enum": ["ranked", "recent"], "default": "ranked" } }
         ],
         "responses": { "200": { "$ref": "#/components/responses/List" }, "429": { "$ref": "#/components/responses/RateLimited" } }
       }
@@ -42,6 +42,15 @@
         "summary": "Download a manually paginated JSON or CSV snapshot",
         "parameters": [
           { "name": "format", "in": "query", "required": true, "schema": { "type": "string", "enum": ["json", "csv"] } },
+          { "name": "q", "in": "query", "schema": { "type": "string", "maxLength": 128 } },
+          { "name": "product", "in": "query", "schema": { "type": "string" } },
+          { "name": "port", "in": "query", "schema": { "type": "integer" } },
+          { "name": "status", "in": "query", "schema": { "type": "integer" } },
+          { "name": "secured", "in": "query", "schema": { "type": "boolean" } },
+          { "name": "has_vulns", "in": "query", "schema": { "type": "boolean" } },
+          { "name": "tag", "in": "query", "schema": { "type": "string" } },
+          { "name": "verdict", "in": "query", "schema": { "type": "string", "enum": ["clean", "suspicious", "malicious"] } },
+          { "name": "sort", "in": "query", "schema": { "type": "string", "enum": ["newest", "relevance", "vulns", "ip"] } },
           { "$ref": "#/components/parameters/exportLimit" },
           { "$ref": "#/components/parameters/offset" }
         ],

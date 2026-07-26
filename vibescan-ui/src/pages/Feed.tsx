@@ -107,7 +107,7 @@ export default function Feed() {
       {error && tiles.length === 0 ? (
         <ErrorState onRetry={() => setReloadKey((k) => k + 1)} />
       ) : tiles.length === 0 && !loading ? (
-        <div className="empty">NO SIGNALS ON RECORD</div>
+        <div className="empty">NO OBSERVATIONS ON RECORD</div>
       ) : (
         <>
         <div className="sr-only" aria-live="polite">{loadAnnouncement}</div>

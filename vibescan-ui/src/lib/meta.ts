@@ -6,7 +6,7 @@ const ORIGIN = "https://observatory.verdantprotocol.com";
 const OG_IMAGE = `${ORIGIN}/og.png`;
 
 export type RouteMeta = {
-  /** Full document title, e.g. "Search the Census — VibeScan". */
+  /** Full document title, e.g. "Search observations — Reachable Web Observatory". */
   title: string;
   description?: string;
   /** Canonical path, e.g. "/search". Defaults to the current pathname. */
@@ -16,6 +16,17 @@ export type RouteMeta = {
   /** Allow links to be followed on ordinary error pages while excluding the page itself. */
   followWhenNoIndex?: boolean;
 };
+
+let renderedMeta: RouteMeta | null = null;
+
+/** Build-time SSR collector. Browser callers only use the effect below. */
+export function resetRenderedMeta() {
+  renderedMeta = null;
+}
+
+export function takeRenderedMeta() {
+  return renderedMeta;
+}
 
 function upsertMeta(attr: "name" | "property", key: string, content: string) {
   let el = document.head.querySelector<HTMLMetaElement>(`meta[${attr}="${key}"]`);
@@ -43,6 +54,9 @@ function upsertLink(rel: string, href: string) {
  * for in-app navigation and JS-capable crawlers.
  */
 export function useMeta({ title, description, path, noIndex = false, followWhenNoIndex = false }: RouteMeta) {
+  if (typeof document === "undefined") {
+    renderedMeta = { title, description, path, noIndex, followWhenNoIndex };
+  }
   useEffect(() => {
     document.title = title;
     const url = ORIGIN + (path ?? window.location.pathname);
