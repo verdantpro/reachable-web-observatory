@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-// Golden envelope produced by vibescan_v2/common/transport.py:encode_submission
+// Golden envelope produced by the archived Python prototype's encode_submission
 // with secret "testkey". The Go decoder must accept it, proving HMAC + gzip +
 // base64 compatibility with the legacy v1 agent protocol.
 const (

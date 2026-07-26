@@ -1,7 +1,5 @@
 # Reachable Web Observatory
 
-*(codename: VibeScan)*
-
 An **open internet-measurement study** of the reachable public-IPv4 web, built with **Go**
 and **React**: random-sample scanning, HTTP capture, attributed third-party enrichment,
 open data, a documented methodology, and an ethical opt-out/disclosure posture.
@@ -76,7 +74,10 @@ object storage → concurrent threat-intel enrichment → embedded React UI.
   full-resolution captures load only on the detail page.
 - **Deploy without inbound SSH or static keys** — image → ECR → EC2 rolled via AWS SSM,
   authenticated with **GitHub OIDC** (assumed role), gated on tests, with automatic rollback
-  to the previous image when a post-deploy health check fails.
+  to the previous image when the deployed commit or prerendered UI fails verification.
+
+The rationale behind the compatibility, same-origin deployment, and durable
+buffering choices is recorded in [`docs/adr/`](docs/adr/).
 
 ## Security & ethics
 
@@ -99,8 +100,9 @@ correspondence goes to `research@verdantprotocol.com`. Full policy:
 | [`vibescan-go/`](vibescan-go/) | Collector, v2 APIs, scanner agent, migrate, Docker/Caddy deploy — [README](vibescan-go/README.md) |
 | [`vibescan-ui/`](vibescan-ui/) | React/Vite console (embedded into the Go image in prod) — [README](vibescan-ui/README.md) |
 
-[`vibescan_v2/`](vibescan_v2/) contains the legacy Python implementation retained for migration
-reference. New development belongs in the Go collector and React UI.
+The earlier Python prototype is not included in the public repository. Its wire-format
+fixtures are preserved as Go golden tests so compatibility claims remain executable and
+inspectable without depending on the archived implementation.
 
 ## Local development
 
@@ -129,7 +131,7 @@ backfills, and full v2 API reference.
 cd vibescan-go && go vet ./... && go test -short ./...
 
 # Frontend
-cd vibescan-ui && npm run lint && npm run build
+cd vibescan-ui && npm run lint && npm test && npm run build
 ```
 
 **CI:** [`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs the above plus
@@ -156,17 +158,17 @@ runbook: [`vibescan-go/deploy/DEPLOY.md`](vibescan-go/deploy/DEPLOY.md).
 
 Source code is **open source under the [MIT license](LICENSE)**. Original Observatory metadata,
 annotations, and applicable database rights are licensed under **Creative Commons Attribution
-4.0 (CC-BY-4.0)**. Captured screenshots/page content, provider-supplied data, trademarks, and
+4.0 (CC-BY-4.0)** under [`LICENSE-DATA`](LICENSE-DATA); [`LICENSING.md`](LICENSING.md)
+explains the split. Captured screenshots/page content, provider-supplied data, trademarks, and
 other third-party material remain subject to their respective owners' rights and terms.
 
 ---
 
 <!-- Maintainer checklist (GitHub UI — not versioned):
-  • Set repo Description: "A distributed internet-observation platform built with Go and React:
-    authenticated scanner agents, HTTP capture, threat-intelligence enrichment, search, telemetry
-    and ethical opt-out controls."
-  • Add Topics: golang, react, cybersecurity, internet-scanner, threat-intelligence, mongodb, aws,
-    data-visualization
+  • Set repo Description: "An open internet-measurement study using random IPv4 sampling to
+    observe reachable web services, exposure patterns, and attributed security signals."
+  • Add Topics: internet-measurement, ipv4, security-research, open-data, golang, react,
+    network-measurement, data-visualization
   • Add docs/screenshot.png and uncomment the hero image above.
   • The 1200×630 social preview lives at vibescan-ui/public/og.png and is referenced
     by the Open Graph / Twitter tags in index.html and src/lib/meta.ts.

@@ -519,7 +519,7 @@ func (s *Server) handleStats(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, stats)
 }
 
-// handleTrends returns the daily census snapshots (longitudinal exposure series).
+// handleTrends returns the daily aggregate snapshots (longitudinal exposure series).
 func (s *Server) handleTrends(w http.ResponseWriter, r *http.Request) {
 	days := clampInt(queryInt(r, "days", 90), 1, 730)
 	rows, err := s.store.ReadDailyRollups(r.Context(), days)

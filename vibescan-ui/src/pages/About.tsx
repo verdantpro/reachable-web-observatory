@@ -113,7 +113,7 @@ export default function About() {
           <Link className="btn" to="/data">↓ data &amp; access</Link>
           <Link className="btn" to="/methodology">methodology</Link>
           <Link className="btn" to="/ethics">ethics</Link>
-          <a className="btn" href="https://github.com/verdantpro/vibescan_rework" target="_blank" rel="noopener noreferrer">
+          <a className="btn" href="https://github.com/verdantpro/reachable-web-observatory" target="_blank" rel="noopener noreferrer">
             source
           </a>
         </nav>

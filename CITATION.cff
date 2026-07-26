@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+message: "If you use this software or its dataset, cite it and include the data snapshot date."
+title: "Reachable Web Observatory"
+type: software
+authors:
+  - family-names: Walters
+    given-names: Justin
+version: 0.1.0
+date-released: 2026-07-26
+repository-code: "https://github.com/verdantpro/reachable-web-observatory"
+url: "https://observatory.verdantprotocol.com/"
+license: MIT
+preferred-citation:
+  type: dataset
+  title: "Reachable Web Observatory: a continuous random sample of the public-IPv4 web"
+  authors:
+    - family-names: Walters
+      given-names: Justin
+  year: 2026
+  publisher: Verdant Protocol
+  url: "https://observatory.verdantprotocol.com/"
+  license: CC-BY-4.0

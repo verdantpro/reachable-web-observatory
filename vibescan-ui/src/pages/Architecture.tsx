@@ -99,7 +99,10 @@ export default function Architecture() {
         <p>
           The collector is a single statically-linked Go 1.26 binary that serves <em>everything</em> —
           the ingest endpoint, the read APIs, and the embedded UI — from one process on one origin (so
-          the browser needs no CORS in production). Routing uses Go's standard-library
+          the browser makes no cross-origin requests in production). The read API still
+          sends a permissive <code>Access-Control-Allow-Origin: *</code> header for the
+          separate Vite development server and read-only external research clients.
+          Routing uses Go's standard-library
           method-pattern mux; there is no web framework.
         </p>
         <p>Operational properties of the collector:</p>
@@ -195,20 +198,20 @@ export default function Architecture() {
         <h2 className="doc-h">CI/CD &amp; operations</h2>
         <p>
           Continuous integration (GitHub Actions) gates every change on <code>go vet</code>,{" "}
-          <code>go test</code>, <code>govulncheck</code>, the UI lint and build, and a Trivy dependency
-          scan. Deployment is deliberately locked down:
+          race-enabled <code>go test</code>, <code>govulncheck</code>, UI lint/tests/build,
+          CodeQL, and a pinned Trivy dependency/secret scan. Deployment is deliberately locked down:
         </p>
         <ul className="doc-list">
           <li>Build the image, push it to <strong>ECR</strong>, then roll the EC2 host via <strong>AWS SSM</strong> Run Command. Automated deployments do not require SSH; separately allowlisted administrator SSH may be used for initial setup or maintenance.</li>
           <li>GitHub Actions uses <strong>OIDC</strong> to assume a scoped IAM role, so no long-lived AWS <em>deployment</em> key is stored in GitHub. The collector still uses narrowly scoped object-storage credentials from its protected server environment.</li>
-          <li>A fast test job gates the deploy; a failed database migration fails the deploy (rather than being swallowed); and a failed post-deploy health check <strong>automatically rolls back</strong> to the previous image.</li>
+          <li>A fast test job gates the deploy; a failed database migration fails the deploy; and a commit-identity or prerendered-page mismatch <strong>automatically rolls back</strong> to the previous image.</li>
         </ul>
         <p>
           Two background workers keep the data fresh: an <em>enrichment worker</em> that keeps recent
           hosts cross-referenced, and a <em>daily rollup worker</em> that snapshots aggregate sample statistics once a day
           so exposure can be charted over time. Full details are in the{" "}
           <Link className="doc-link" to="/methodology">methodology</Link>; the code is{" "}
-          <a className="doc-link" href="https://github.com/verdantpro/vibescan_rework" target="_blank" rel="noopener noreferrer">open source</a>.
+          <a className="doc-link" href="https://github.com/verdantpro/reachable-web-observatory" target="_blank" rel="noopener noreferrer">open source</a>.
         </p>
       </section>
 
@@ -216,11 +219,11 @@ export default function Architecture() {
         <h2 className="doc-h">Why it's built this way</h2>
         <p>The recurring theme is <em>doing the boring, resilient thing</em> so a small system stays trustworthy:</p>
         <ul className="doc-list">
-          <li><strong>One binary, same origin</strong> — fewer moving parts to deploy, secure, and reason about; no CORS.</li>
+          <li><strong>One binary, same origin</strong> — fewer moving parts to deploy, secure, and reason about; production does not depend on cross-origin browser access.</li>
           <li><strong>Fail soft</strong> — disk buffering, idempotent writes, bounded concurrency, and rate limits mean transient failures degrade gracefully instead of losing data or falling over.</li>
           <li><strong>Make isolation deployable</strong> — the scanner ships independently from the collector so browser rendering and scan traffic can move to a dedicated VPS without changing the public service.</li>
           <li><strong>Keep secrets server-side</strong> — every third-party key stays in the collector; the browser receives provider results and derived summaries, never credentials.</li>
-          <li><strong>Reduce deployment exposure</strong> — automated rollouts use SSM and short-lived OIDC credentials, are test-gated, and roll back after a failed health check.</li>
+          <li><strong>Reduce deployment exposure</strong> — automated rollouts use SSM and short-lived OIDC credentials, are test-gated, and roll back unless the running commit and embedded UI both match the release.</li>
         </ul>
       </section>
 

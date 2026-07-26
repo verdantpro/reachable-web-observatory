@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#15171b" />
+    <title>You've been scanned — Reachable Web Observatory</title>
+    <meta name="description" content="Traffic from this project is part of an academic-style internet measurement study. Who we are, why we scan, how to identify HTTP fetches, and how to opt out." />
+    <link rel="canonical" href="https://observatory.verdantprotocol.com/scan-info" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Reachable Web Observatory" />
+    <meta property="og:title" content="You've been scanned — Reachable Web Observatory" />
+    <meta property="og:description" content="Traffic from this project is part of an academic-style internet measurement study. Who we are, why we scan, how to identify HTTP fetches, and how to opt out." />
+    <meta property="og:url" content="https://observatory.verdantprotocol.com/scan-info" />
+    <meta property="og:image" content="https://observatory.verdantprotocol.com/og.png?v=20260726" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="You've been scanned — Reachable Web Observatory" />
+    <meta name="twitter:description" content="Traffic from this project is part of an academic-style internet measurement study. Who we are, why we scan, how to identify HTTP fetches, and how to opt out." />
+    <meta name="twitter:image" content="https://observatory.verdantprotocol.com/og.png?v=20260726" />
+
+    <!-- Structured data: an open research dataset (discoverable via Google Dataset Search). -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Dataset",
+        "name": "Reachable Web Observatory",
+        "description": "A continuously updated random sample of services on the reachable public-IPv4 web (common web ports), optionally enriched with attributed CVE associations and reputation signals, used to study where those observations concentrate over time.",
+        "url": "https://observatory.verdantprotocol.com/",
+        "keywords": ["internet measurement", "random IPv4 sampling", "cleartext HTTP", "exposure", "CVE associations", "reachable web", "security"],
+        "isAccessibleForFree": true,
+        "usageInfo": "https://observatory.verdantprotocol.com/data#license",
+        "creator": [
+          { "@type": "Person", "name": "Justin Walters" },
+          { "@type": "Organization", "name": "Verdant Protocol", "url": "https://verdantprotocol.com/" }
+        ]
+      }
+    </script>
+    <script type="module" crossorigin src="/assets/index-BT9OIYVw.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-D_KSMNqA.css">
+      <meta name="robots" content="index, follow" />
+  </head>
+  <body>
+    <div id="root"><a class="skip-link" href="#main-content">Skip to main content</a><header class="topbar"><div class="wrap topbar-inner"><a class="brand" href="/" data-discover="true"><span class="brand-mark display">Reachable Web </span><span class="brand-accent display">Observatory</span></a><button class="nav-toggle mono" aria-label="Open menu" aria-expanded="false" aria-controls="primary-navigation">☰</button><nav id="primary-navigation" class="nav"><a class="nav-link mono" href="/" data-discover="true">OVERVIEW</a><a class="nav-link mono" href="/feed" data-discover="true">FEED</a><a class="nav-link mono" href="/map" data-discover="true">MAP</a><a class="nav-link mono" href="/search" data-discover="true">SEARCH</a><a class="nav-link mono" href="/stats" data-discover="true">STATS</a><a class="nav-link mono" href="/data" data-discover="true">DATA</a><a class="nav-link mono" href="/methodology" data-discover="true">METHODS</a></nav><div class="topbar-meta mono"><span class="clock"><span class="live-dot"></span> <!-- -->--:--:--<!-- --> UTC</span></div></div></header><main id="main-content" tabindex="-1"><div class="doc-page"><div class="page wrap doc"><div class="eyebrow">◊ For network operators</div><h1 class="doc-title display">About the traffic from this project</h1><p class="doc-lede">If you found this page in your logs: the probe you saw is part of a random-sample measurement study of the public web. Here&#x27;s who we are, why, and how to opt out.</p><section class="doc-sec" id="what"><h2 class="doc-h">What this is</h2><p>The Reachable Web Observatory is an open, continuously-running random-sample study of the reachable public-IPv4 web. It generates random IP addresses, checks a handful of common web ports (<span class="mono">80, 443, 8000, 8080, 8443</span>), and — for hosts answering HTTP/HTTPS — records what an anonymous visitor would see, to study where observable exposure and third-party security signals concentrate. It <em>does not</em> log in, exploit, fuzz, or probe non-web services. Full details are in the <a class="doc-link" href="/methodology" data-discover="true">methodology</a> and<!-- --> <a class="doc-link" href="/ethics" data-discover="true">ethics</a>.</p></section><section class="doc-sec" id="identify"><h2 class="doc-h">How to identify our traffic</h2><p>Every page fetch we make announces itself in the <span class="mono">User-Agent</span> <!-- -->header, so you can spot (or filter) us directly in your access logs:</p><div class="doc-cite">Mozilla/5.0 (compatible; ReachableWebObservatory/1.0; +https://observatory.verdantprotocol.com/scan-info)</div><p>Scanning currently runs from a single low-rate host on an ordinary connection — not a large distributed fleet. To protect the operator&#x27;s privacy we don&#x27;t publish that host&#x27;s IP address, but you can reliably identify and filter our traffic by the User-Agent above. The most durable way to stop it for good is to opt out below, which works regardless of which address we scan from.</p></section><section class="doc-sec" id="opt-out"><h2 class="doc-h">Opt out — stop future scans</h2><p>Email the IP or CIDR range you control to<!-- --> <a class="doc-link" href="mailto:abuse@verdantprotocol.com?subject=Opt-out%20request%20(IP%20%2F%20CIDR)">abuse@verdantprotocol.com</a>. We add it to the exclusion list and agents stop capturing it within two days, permanently. Because the scanner address is not currently published, the exclusion list is the reliable way to stop future traffic; the User-Agent above can be used to filter HTTP fetches in the meantime.</p><div class="doc-actions"><a class="btn" href="mailto:abuse@verdantprotocol.com?subject=Opt-out%20request%20(IP%20%2F%20CIDR)">✉ request exclusion</a><a class="btn" href="mailto:abuse@verdantprotocol.com?subject=Takedown%20request%20(host%20%2F%20range)">✉ request record removal</a></div></section><section class="doc-sec" id="removal"><h2 class="doc-h">Remove existing records</h2><p>Send the host(s) or range you want removed and we will delete those records. There is no automatic expiry — captures stay until removal is requested. Acknowledgement and completion are targeted within two days. The request should identify the address or CIDR; we may ask for a minimal demonstration of control when needed to prevent fraudulent requests. Specify whether the request concerns the public record, stored screenshot/page text, future observations, or all of them; our confirmation will state the completed scope. Reports of abuse or content that shouldn&#x27;t be public anywhere are prioritized; see the<!-- --> <a class="doc-link" href="/disclosure" data-discover="true">disclosure policy</a>.</p></section></div></div></main><footer class="footer"><div class="wrap footer-inner"><div class="footer-top"><div class="footer-brand"><div class="footer-brand-name display">Reachable Web <span class="footer-brand-accent">Observatory</span></div><p class="footer-brand-tag">A continuous, ethically conducted random sample of the reachable public-IPv4 web.</p><p class="footer-brand-by mono">by Justin Walters · Verdant Protocol</p><a class="footer-garden mono" href="https://verdantprotocol.com/" target="_blank" rel="noopener noreferrer">verdantprotocol.com — the digital garden ↗</a></div><nav class="footer-col" aria-label="The study"><div class="footer-col-h mono">The study</div><ul><li><a href="/about" data-discover="true">About</a></li><li><a href="/methodology" data-discover="true">Methodology</a></li><li><a href="/architecture" data-discover="true">Architecture</a></li><li><a href="/ethics" data-discover="true">Ethics</a></li></ul></nav><nav class="footer-col" aria-label="Data and code"><div class="footer-col-h mono">Data &amp; code</div><ul><li><a href="/data" data-discover="true">Open data &amp; API</a></li><li><a href="/stats" data-discover="true">Statistics</a></li><li><a href="https://github.com/verdantpro/reachable-web-observatory" target="_blank" rel="noopener noreferrer">Source ↗</a></li></ul></nav><nav class="footer-col" aria-label="For network operators"><div class="footer-col-h mono">For operators</div><ul><li><a href="/scan-info" data-discover="true">Scanned? Opt out</a></li><li><a href="/disclosure" data-discover="true">Disclosure</a></li><li><a href="mailto:abuse@verdantprotocol.com">Abuse / removal</a></li><li><a href="mailto:research@verdantprotocol.com">Research contact</a></li></ul></nav></div><div class="footer-bottom mono"><span>© 2026 Reachable Web Observatory</span><span class="footer-bottom-links"><a href="https://github.com/verdantpro/reachable-web-observatory/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">Code: MIT</a><span class="footer-dot">·</span><a href="/data#license" data-discover="true">Original metadata: CC-BY-4.0</a></span></div></div></footer></div>
+  </body>
+</html>

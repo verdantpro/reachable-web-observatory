@@ -318,7 +318,7 @@ export default function StatsPage() {
         <p className="page-hint">
           Descriptive service-level results for {windowDescription}. These are sampled observations,
           not estimates of every public host. Every panel below follows this window except the explicitly
-          labeled 90-day census trend —{" "}
+          labeled 90-day observation trend —{" "}
           <Link className="hint-link" to="/methodology">what these measure →</Link>
         </p>
       </div>
@@ -524,12 +524,12 @@ export default function StatsPage() {
 
           <section className="panel panel-pad trend">
             <h2 className="eyebrow chart-head">
-              ◊ 90-day census trend{trends.length >= 2 ? ` · ${trends.length} daily snapshots` : ""}
+              ◊ 90-day observation trend{trends.length >= 2 ? ` · ${trends.length} daily snapshots` : ""}
             </h2>
             {trends.length >= 3 ? (
               <>
               <p className="concentration-note mono dim">
-                Daily census rollups are historical context and intentionally independent of the selected window above.
+                Daily aggregate snapshots are historical context and intentionally independent of the selected window above.
               </p>
               <div className="trend-grid">
                 <div className="trend-cell">

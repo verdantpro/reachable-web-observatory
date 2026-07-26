@@ -14,7 +14,7 @@ import (
 
 // RDAP looks up network ownership for IPv4 addresses via the public RDAP
 // bootstrap (rdap.org), with a small in-process cache to stay polite.
-// Format matches vibescan_v2/common/nettools.py:whois → "NAME - ORG".
+// Format preserves the archived prototype's whois convention: "NAME - ORG".
 type RDAP struct {
 	client *http.Client
 
@@ -103,7 +103,7 @@ func (r *RDAP) fetch(ctx context.Context, ip string) string {
 		return ""
 	}
 	req.Header.Set("Accept", "application/rdap+json, application/json")
-	req.Header.Set("User-Agent", "vibescan-agent/1.0 (+https://github.com/verdantpro/vibescan_rework)")
+	req.Header.Set("User-Agent", "vibescan-agent/1.0 (+https://github.com/verdantpro/reachable-web-observatory)")
 
 	resp, err := r.client.Do(req)
 	if err != nil {
@@ -122,8 +122,8 @@ func (r *RDAP) fetch(ctx context.Context, ip string) string {
 
 // rdapResponse is the subset of RDAP IP network JSON we care about.
 type rdapResponse struct {
-	Name     string `json:"name"`
-	Remarks  []struct {
+	Name    string `json:"name"`
+	Remarks []struct {
 		Description []string `json:"description"`
 		Title       string   `json:"title"`
 	} `json:"remarks"`
@@ -131,9 +131,9 @@ type rdapResponse struct {
 }
 
 type rdapEntity struct {
-	Roles      []string          `json:"roles"`
-	VcardArray json.RawMessage   `json:"vcardArray"`
-	Entities   []rdapEntity      `json:"entities"`
+	Roles      []string        `json:"roles"`
+	VcardArray json.RawMessage `json:"vcardArray"`
+	Entities   []rdapEntity    `json:"entities"`
 	Remarks    []struct {
 		Description []string `json:"description"`
 	} `json:"remarks"`

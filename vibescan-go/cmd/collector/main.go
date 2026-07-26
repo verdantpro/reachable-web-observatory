@@ -1,5 +1,4 @@
-// Command collector is the VibeScan ingest server, a Go reimplementation of
-// the FastAPI collector in vibescan_v2/server.py. It accepts signed, compressed
+// Command collector is the Reachable Web Observatory ingest server. It accepts signed, compressed
 // v1 agent submissions, enriches them, and persists per-service documents to
 // MongoDB (buffering to disk when the database is unavailable).
 package main
@@ -97,7 +96,7 @@ func main() {
 		}
 	}
 
-	// Daily census snapshots for the longitudinal trend view.
+	// Daily aggregate snapshots for the longitudinal trend view.
 	if cfg.RollupWorkerEnabled {
 		go mongoStore.RunRollupWorker(ctx, 6*time.Hour, cfg.Debug)
 	}

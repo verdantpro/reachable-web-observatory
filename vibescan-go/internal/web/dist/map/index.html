@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#15171b" />
+    <title>Map explorer — Reachable Web Observatory</title>
+    <meta name="description" content="Explore the geographic distribution of sampled reachable web hosts by observation type, protocol, network, country, and time window." />
+    <link rel="canonical" href="https://observatory.verdantprotocol.com/map" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Reachable Web Observatory" />
+    <meta property="og:title" content="Map explorer — Reachable Web Observatory" />
+    <meta property="og:description" content="Explore the geographic distribution of sampled reachable web hosts by observation type, protocol, network, country, and time window." />
+    <meta property="og:url" content="https://observatory.verdantprotocol.com/map" />
+    <meta property="og:image" content="https://observatory.verdantprotocol.com/og.png?v=20260726" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Map explorer — Reachable Web Observatory" />
+    <meta name="twitter:description" content="Explore the geographic distribution of sampled reachable web hosts by observation type, protocol, network, country, and time window." />
+    <meta name="twitter:image" content="https://observatory.verdantprotocol.com/og.png?v=20260726" />
+
+    <!-- Structured data: an open research dataset (discoverable via Google Dataset Search). -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Dataset",
+        "name": "Reachable Web Observatory",
+        "description": "A continuously updated random sample of services on the reachable public-IPv4 web (common web ports), optionally enriched with attributed CVE associations and reputation signals, used to study where those observations concentrate over time.",
+        "url": "https://observatory.verdantprotocol.com/",
+        "keywords": ["internet measurement", "random IPv4 sampling", "cleartext HTTP", "exposure", "CVE associations", "reachable web", "security"],
+        "isAccessibleForFree": true,
+        "usageInfo": "https://observatory.verdantprotocol.com/data#license",
+        "creator": [
+          { "@type": "Person", "name": "Justin Walters" },
+          { "@type": "Organization", "name": "Verdant Protocol", "url": "https://verdantprotocol.com/" }
+        ]
+      }
+    </script>
+    <script type="module" crossorigin src="/assets/index-BT9OIYVw.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-D_KSMNqA.css">
+      <meta name="robots" content="index, follow" />
+  </head>
+  <body>
+    <div id="root"><a class="skip-link" href="#main-content">Skip to main content</a><header class="topbar"><div class="wrap topbar-inner"><a class="brand" href="/" data-discover="true"><span class="brand-mark display">Reachable Web </span><span class="brand-accent display">Observatory</span></a><button class="nav-toggle mono" aria-label="Open menu" aria-expanded="false" aria-controls="primary-navigation">☰</button><nav id="primary-navigation" class="nav"><a class="nav-link mono" href="/" data-discover="true">OVERVIEW</a><a class="nav-link mono" href="/feed" data-discover="true">FEED</a><a aria-current="page" class="nav-link mono active" href="/map" data-discover="true">MAP</a><a class="nav-link mono" href="/search" data-discover="true">SEARCH</a><a class="nav-link mono" href="/stats" data-discover="true">STATS</a><a class="nav-link mono" href="/data" data-discover="true">DATA</a><a class="nav-link mono" href="/methodology" data-discover="true">METHODS</a></nav><div class="topbar-meta mono"><span class="clock"><span class="live-dot"></span> <!-- -->--:--:--<!-- --> UTC</span></div></div></header><main id="main-content" tabindex="-1"><div class="page wrap map-page"><header class="map-page-head"><div><div class="eyebrow">◊ Geographic explorer</div><h1 class="page-title display">Observation map</h1><p class="map-page-lede">Explore where sampled reachable web hosts appear geographically, then narrow the view by time, transport security, exposure signals, country, or network.</p></div><div class="map-page-actions"><a class="btn" href="/stats" data-discover="true">View findings</a><a class="btn" href="/methodology#limitations" data-discover="true">Map limitations</a></div></header><div class="observation-map full"><div class="omap-toolbar"><div class="omap-control"><span class="omap-label mono">Layer</span><div class="chips"><button type="button" class="chip mono on" aria-pressed="true" title="Newest geolocated service per host">observations</button><button type="button" class="chip mono" aria-pressed="false" title="Hosts observed serving HTTP without TLS">cleartext</button><button type="button" class="chip mono" aria-pressed="false" title="Hosts with CVE associations or reputation flags">at-risk</button></div></div><div class="omap-control"><span class="omap-label mono">Window</span><div class="chips"><button type="button" class="chip mono on" aria-pressed="true">24H</button><button type="button" class="chip mono" aria-pressed="false">7D</button><button type="button" class="chip mono" aria-pressed="false">30D</button><button type="button" class="chip mono" aria-pressed="false">ALL</button></div></div></div><div class="omap-context"><div><strong>Newest geolocated service per host</strong><span> <!-- -->in <!-- -->the last 24 hours<!-- -->. One newest matching service represents each host.</span></div></div><div class="omap-filterbar" aria-label="Visible map layers"><button type="button" class="omap-legend-toggle https on" aria-pressed="true"><i></i> HTTPS <span>0</span></button><button type="button" class="omap-legend-toggle http on" aria-pressed="true"><i></i> HTTP <span>0</span></button><span class="omap-risk-legend mono"><i></i> at-risk ring · <!-- -->0</span></div><div class="omap-grid"><div class="omap-stage" aria-busy="true"><div class="iwm"><p class="sr-only">0 mapped hosts: 0 HTTPS, 0 cleartext HTTP, 0 at-risk. Drag to pan; use the controls or mouse wheel to zoom.</p><div class="iwm-zoom" aria-label="Map zoom controls"><button type="button" aria-label="Zoom in">+</button><button type="button" aria-label="Zoom out">−</button><button type="button" disabled="">reset</button><output class="mono" aria-label="Map zoom 1.0 times">1.0<!-- -->×</output></div><svg viewBox="0 0 960 480" preserveAspectRatio="xMidYMid meet" role="application" aria-label="0 mapped hosts: 0 HTTPS, 0 cleartext HTTP, 0 at-risk. Drag to pan; use the controls or mouse wheel to zoom." tabindex="0"><defs><filter id="iwm-glow" x="-200%" y="-200%" width="400%" height="400%"><feGaussianBlur stdDeviation="2.2" result="blur"></feGaussianBlur><feMerge><feMergeNode in="blur"></feMergeNode><feMergeNode in="SourceGraphic"></feMergeNode></feMerge></filter></defs><g transform="translate(0 0) scale(1)"><g class="iwm-land"></g><g class="iwm-markers"></g></g></svg><div class="iwm-help mono">drag to pan · wheel/double-click to zoom · select a marker for details</div></div><div class="omap-loading mono" role="status">◌ UPDATING MAP…</div></div><aside class="omap-sidebar" aria-label="Map details and rankings"><div class="omap-rank-head"><span class="omap-label mono">Matching hosts by</span><div class="chips"><button type="button" class="chip mono on" aria-pressed="true">country</button><button type="button" class="chip mono" aria-pressed="false">network</button></div></div><ol class="omap-ranks"></ol><p class="omap-rank-note">Rankings count all matching geolocated hosts. Selecting a row focuses the bounded set of markers currently loaded.</p></aside></div><p class="omap-method mono">Coarse IP-based geolocation—an approximate region, never a precise server location. The basemap is bundled locally; viewing it sends no requests to Google, OpenStreetMap, or another tile provider.</p></div></div></main><footer class="footer"><div class="wrap footer-inner"><div class="footer-top"><div class="footer-brand"><div class="footer-brand-name display">Reachable Web <span class="footer-brand-accent">Observatory</span></div><p class="footer-brand-tag">A continuous, ethically conducted random sample of the reachable public-IPv4 web.</p><p class="footer-brand-by mono">by Justin Walters · Verdant Protocol</p><a class="footer-garden mono" href="https://verdantprotocol.com/" target="_blank" rel="noopener noreferrer">verdantprotocol.com — the digital garden ↗</a></div><nav class="footer-col" aria-label="The study"><div class="footer-col-h mono">The study</div><ul><li><a href="/about" data-discover="true">About</a></li><li><a href="/methodology" data-discover="true">Methodology</a></li><li><a href="/architecture" data-discover="true">Architecture</a></li><li><a href="/ethics" data-discover="true">Ethics</a></li></ul></nav><nav class="footer-col" aria-label="Data and code"><div class="footer-col-h mono">Data &amp; code</div><ul><li><a href="/data" data-discover="true">Open data &amp; API</a></li><li><a href="/stats" data-discover="true">Statistics</a></li><li><a href="https://github.com/verdantpro/reachable-web-observatory" target="_blank" rel="noopener noreferrer">Source ↗</a></li></ul></nav><nav class="footer-col" aria-label="For network operators"><div class="footer-col-h mono">For operators</div><ul><li><a href="/scan-info" data-discover="true">Scanned? Opt out</a></li><li><a href="/disclosure" data-discover="true">Disclosure</a></li><li><a href="mailto:abuse@verdantprotocol.com">Abuse / removal</a></li><li><a href="mailto:research@verdantprotocol.com">Research contact</a></li></ul></nav></div><div class="footer-bottom mono"><span>© 2026 Reachable Web Observatory</span><span class="footer-bottom-links"><a href="https://github.com/verdantpro/reachable-web-observatory/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">Code: MIT</a><span class="footer-dot">·</span><a href="/data#license" data-discover="true">Original metadata: CC-BY-4.0</a></span></div></div></footer></div>
+  </body>
+</html>

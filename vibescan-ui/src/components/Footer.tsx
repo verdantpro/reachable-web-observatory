@@ -1,7 +1,7 @@
 import { Link } from "react-router";
 import "./Footer.css";
 
-const REPO = "https://github.com/verdantpro/vibescan_rework";
+const REPO = "https://github.com/verdantpro/reachable-web-observatory";
 const ABUSE = "abuse@verdantprotocol.com";
 const RESEARCH = "research@verdantprotocol.com";
 

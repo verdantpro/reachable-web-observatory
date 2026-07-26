@@ -56,7 +56,7 @@ export default function Data() {
             <strong>Live JSON API.</strong> The read endpoints under{" "}
             <span className="mono">/api/v2/</span> (gallery, search, map, stats, per-service detail,
             enrichment) power this site and are documented in the{" "}
-            <a className="doc-link" href="https://github.com/verdantpro/vibescan_rework" target="_blank" rel="noopener noreferrer">
+            <a className="doc-link" href="https://github.com/verdantpro/reachable-web-observatory" target="_blank" rel="noopener noreferrer">
               repository
             </a>
             .

@@ -16,7 +16,7 @@ type WorkerStore interface {
 }
 
 // Worker keeps recently-captured hosts enriched using InternetDB only (free), so
-// vuln/tag badges, search filters, and stats cover the whole census without
+// vuln/tag badges, search filters, and stats cover the retained collection without
 // spending Shodan query credits. Pacing comes from the Enricher's shared outbound
 // limiter, so the loop is naturally throttled.
 type Worker struct {

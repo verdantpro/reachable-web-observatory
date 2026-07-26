@@ -1,0 +1,110 @@
+[
+  {
+    "path": "/",
+    "title": "Reachable Web Observatory — a random sample of the public-IPv4 web",
+    "description": "An open measurement study of the reachable public-IPv4 web: random discovery, HTTP capture, geolocation, and CVE/reputation enrichment — mapping where exposure concentrates over time.",
+    "heading": "Reachable Web Observatory",
+    "summary": "A continuously updated random sample of reachable public-IPv4 web services on five common ports.",
+    "changefreq": "hourly",
+    "priority": "1.0"
+  },
+  {
+    "path": "/feed",
+    "title": "Feed — Reachable Web Observatory",
+    "description": "Explore stored observations from a random sample of reachable public-IPv4 web services.",
+    "heading": "Observation feed",
+    "summary": "Ranked and recent timestamped observations from the Observatory sample.",
+    "changefreq": "hourly",
+    "priority": "0.8"
+  },
+  {
+    "path": "/search",
+    "title": "Search observations — Reachable Web Observatory",
+    "description": "Search stored web-service observations and host-level provider associations.",
+    "heading": "Search observations",
+    "summary": "Search the retained service observations and host-level provider associations.",
+    "changefreq": "daily",
+    "priority": "0.7"
+  },
+  {
+    "path": "/map",
+    "title": "Map explorer — Reachable Web Observatory",
+    "description": "Explore the geographic distribution of sampled reachable web hosts by observation type, protocol, network, country, and time window.",
+    "heading": "Observation map",
+    "summary": "An interactive host-level map with explicit time windows and coarse IP-based geolocation.",
+    "changefreq": "hourly",
+    "priority": "0.8"
+  },
+  {
+    "path": "/stats",
+    "title": "Study findings — Reachable Web Observatory",
+    "description": "Descriptive statistics for sampled web-service observations and host-level provider associations.",
+    "heading": "Study findings",
+    "summary": "Descriptive service- and host-level statistics with explicit time windows and denominators.",
+    "changefreq": "hourly",
+    "priority": "0.7"
+  },
+  {
+    "path": "/data",
+    "title": "Open data — Reachable Web Observatory",
+    "description": "Download the Reachable Web Observatory dataset (JSON/CSV) and query the API. Documented schema, rights-aware licensing, and citation.",
+    "heading": "Data and access",
+    "summary": "Open exports, API documentation, schema, licensing, and citation guidance.",
+    "changefreq": "daily",
+    "priority": "0.9"
+  },
+  {
+    "path": "/methodology",
+    "title": "Methodology — Reachable Web Observatory",
+    "description": "How the Reachable Web Observatory samples, captures, and enriches the public-IPv4 web — and its limitations and biases.",
+    "heading": "Methodology",
+    "summary": "How the Observatory samples, captures, enriches, and analyzes reachable services.",
+    "changefreq": "monthly",
+    "priority": "0.9"
+  },
+  {
+    "path": "/about",
+    "title": "About — Reachable Web Observatory",
+    "description": "The Reachable Web Observatory is an open measurement study of the public-IPv4 web: its research question, who runs it, and how to cite it.",
+    "heading": "About the Observatory",
+    "summary": "An independent open internet-measurement research project operated by Verdant Protocol.",
+    "changefreq": "monthly",
+    "priority": "0.6"
+  },
+  {
+    "path": "/architecture",
+    "title": "Architecture — Reachable Web Observatory",
+    "description": "A deep look at how the Reachable Web Observatory is built and hosted: a Go collector + scanner agent, React frontend, MongoDB, object storage, concurrent enrichment, and an SSM/OIDC deploy on AWS.",
+    "heading": "Architecture",
+    "summary": "How scanner observations flow through signed ingest, storage, enrichment, APIs, and the public interface.",
+    "changefreq": "monthly",
+    "priority": "0.8"
+  },
+  {
+    "path": "/ethics",
+    "title": "Ethics — Reachable Web Observatory",
+    "description": "The Reachable Web Observatory's ethics posture, grounded in the Menlo Report and the ZMap scanning best practices: minimal harm, transparency, opt-out, and disclosure.",
+    "heading": "Ethics",
+    "summary": "The measurement boundaries, risk controls, transparency commitments, and operator protections.",
+    "changefreq": "monthly",
+    "priority": "0.8"
+  },
+  {
+    "path": "/disclosure",
+    "title": "Coordinated disclosure — Reachable Web Observatory",
+    "description": "How the Reachable Web Observatory handles vulnerable or compromised hosts it observes: best-effort operator notification and responsible, coordinated disclosure.",
+    "heading": "Coordinated disclosure",
+    "summary": "How to report issues with the Observatory or request correction and removal.",
+    "changefreq": "monthly",
+    "priority": "0.6"
+  },
+  {
+    "path": "/scan-info",
+    "title": "You've been scanned — Reachable Web Observatory",
+    "description": "Traffic from this project is part of an academic-style internet measurement study. Who we are, why we scan, how to identify HTTP fetches, and how to opt out.",
+    "heading": "Scanner and opt-out information",
+    "summary": "Information for network operators who observed traffic from this measurement project.",
+    "changefreq": "monthly",
+    "priority": "0.6"
+  }
+]

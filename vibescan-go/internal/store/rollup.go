@@ -11,7 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-// DailyRollup is a once-per-day snapshot of the census state, used to chart how
+// DailyRollup is a once-per-day snapshot of the retained observation collection, used to chart how
 // exposure shifts over time. Keyed by UTC date (_id), so re-computing a day is
 // idempotent.
 type DailyRollup struct {
@@ -28,7 +28,7 @@ type DailyRollup struct {
 }
 
 // ComputeDailySnapshot aggregates the whole results collection into today's
-// rollup (a point-in-time snapshot of the census, not a windowed flow).
+// rollup (a point-in-time snapshot of the retained collection, not a windowed flow).
 func (m *Mongo) ComputeDailySnapshot(ctx context.Context) (DailyRollup, error) {
 	if m == nil || m.results == nil {
 		return DailyRollup{}, errors.New("store unavailable")
@@ -113,7 +113,7 @@ func (m *Mongo) ComputeDailySnapshot(ctx context.Context) (DailyRollup, error) {
 	return r, nil
 }
 
-// RunRollupWorker snapshots the census once shortly after startup and then every
+// RunRollupWorker snapshots the retained collection shortly after startup and then every
 // `interval`, upserting today's rollup. Idempotent — repeated writes for the same
 // day just refresh it, so one point per day accumulates. Blocks until ctx is done.
 func (m *Mongo) RunRollupWorker(ctx context.Context, interval time.Duration, debug bool) {

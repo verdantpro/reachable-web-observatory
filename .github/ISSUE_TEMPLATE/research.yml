@@ -1,0 +1,21 @@
+name: Methodology or data question
+description: Discuss sampling, measurement semantics, data interpretation, or reproducibility.
+title: "Research: "
+body:
+  - type: textarea
+    id: question
+    attributes:
+      label: Question or proposal
+      description: State the methodological question and why it matters.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence or references
+      description: Link relevant literature, aggregate results, or reproducible analysis. Do not post sensitive host-level findings.
+  - type: textarea
+    id: impact
+    attributes:
+      label: Expected impact
+      description: Note any effect on sampling, ethics, retention, disclosure, or published metrics.

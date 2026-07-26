@@ -3,7 +3,7 @@ package media
 import "testing"
 
 // Golden values below are produced by the Python implementations in
-// vibescan_v2/common/shared_utils.py and common/r2_storage.py.
+// the archived Python prototype's hashing and object-storage utilities.
 
 func TestCaptureHashExt(t *testing.T) {
 	tests := []struct {

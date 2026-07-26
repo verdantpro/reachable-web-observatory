@@ -1,4 +1,4 @@
-# VibeScan Deployment Runbook (AWS)
+# Reachable Web Observatory Deployment Runbook (AWS)
 
 Start-to-finish deploy of the current MVP on this stack:
 
@@ -23,7 +23,7 @@ One process serves everything on the web host: **ingest API + v2 read APIs + emb
 ```
 
 > **Repo layout this runbook assumes:** you are working from the monorepo root
-> (`vibescan_rework/`), with `vibescan-go/` and `vibescan-ui/` as siblings. The
+> (`reachable-web-observatory/`), with `vibescan-go/` and `vibescan-ui/` as siblings. The
 > multi-stage app `Dockerfile` builds the UI, embeds it, and produces the
 > runtime image. Paths below are relative to that root unless noted.
 
@@ -305,12 +305,12 @@ Compose files bound-log containers to **3 × 10 MB** (`json-file`) so a small di
 ## 6. Smoke test
 
 ```bash
-curl -sS https://YOUR_DOMAIN/api/healthz     # {"ok":true}
+curl -sS https://YOUR_DOMAIN/api/healthz     # includes ok, commit, and built_at
 curl -sS https://YOUR_DOMAIN/api/health      # {"status":"ok","service":"vibescan-collector"}
 curl -sS https://YOUR_DOMAIN/api/v2/stats    # totals: hosts 0, services 0 until agents submit
 ```
 
-Open `https://YOUR_DOMAIN/` → the vibescan console loads (empty until the scanner runs).
+Open `https://YOUR_DOMAIN/` → the Observatory console loads (empty until the scanner runs).
 
 Useful read endpoints (no auth yet):
 
@@ -387,7 +387,9 @@ Compose grants `NET_RAW` / `NET_ADMIN` for nmap and `shm_size: 1gb` for Chromium
 DNS) is still attempted. Captures, banners, status, cert CN, pHash, and DOM hash
 are produced.
 
-**Legacy Python agent:** `vibescan_v2/client_agent.py` still speaks the same v1 wire protocol and shared key if you need a temporary fallback. Note: the Python collector may still store the real submitter IP even when `no_report` is set; this Go collector redacts it.
+**Older compatible agents:** the signed v1 wire protocol remains supported during
+operator migrations. The archived Python source is not distributed in this repository;
+the Go transport golden tests preserve the compatibility contract.
 
 ### Operating norms
 
@@ -640,7 +642,13 @@ mongodump --uri="$MONGO_URI" --archive --gzip \
    docker compose -f docker-compose.registry.yml up -d
    ```
 
-3. **Rollback** = set `IMAGE=` back to a prior tag and repeat (old tags remain in ECR). Optionally set an ECR lifecycle policy to expire very old tags.
+3. **Rollback** = set `IMAGE=` back to a prior tag and repeat (old tags remain in ECR).
+
+Keep enough prior images for rollback while bounding registry growth. A recommended
+ECR lifecycle policy retains the newest 30 tagged images and expires untagged
+images after seven days. Apply it through the AWS console or an infrastructure
+repository after reviewing the account-wide retention requirements; do not make
+the production repository's only rollback image eligible for deletion.
 
 Indexes are created on startup and via `migrate`; re-running migrate after an upgrade is safe (idempotent).
 
@@ -665,7 +673,7 @@ Add `VIBESCAN_DEBUG=1` to `.env` and recreate the app container for verbose inge
 | **Agent 4xx / submit errors** | `VIBESCAN_SHARED_KEY` mismatch; wrong `VIBESCAN_SERVER_URL` (must be base URL, no `/api/...` path); collector down |
 | **No images on tiles** | `S3_*` wrong (region/keys/endpoint); IAM user lacks `s3:PutObject`; `S3_PUBLIC_URL` or CloudFront OAC/bucket policy broken — open `/api/v2/image/IP/PORT` and follow the 302 |
 | **World map blank** | Missing `GeoLite2-City.mmdb`, or the compose volume mounted an empty dir (comment out the volume if you intentionally skip GeoIP) |
-| **UI loads but APIs 404** | Wrong image / old build without embedded UI; confirm `curl …/api/healthz` on the same host |
+| **UI or metadata is stale** | Compare the full `commit` from `/api/healthz` with the intended Git SHA, then confirm `/methodology` contains its route-specific title and description. The deploy workflow performs both checks automatically. |
 | **OOM / container restarts on t3.micro** | Something is building on the 1 GB box (use registry flow only); or too many agents hammering a tiny host |
 
 ---

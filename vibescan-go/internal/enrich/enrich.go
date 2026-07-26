@@ -55,7 +55,7 @@ var errInvalidIP = errors.New("enrich: invalid ip")
 const (
 	memMaxSize     = 20000
 	requestTimeout = 8 * time.Second
-	userAgent      = "vibescan/1.0 (+https://github.com/verdantpro/vibescan_rework)"
+	userAgent      = "vibescan/1.0 (+https://github.com/verdantpro/reachable-web-observatory)"
 )
 
 // Options configures the Enricher. All keys are optional; a missing key skips

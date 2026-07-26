@@ -1,11 +1,14 @@
-// Typed client for the VibeScan v2 read API.
+// Typed client for the Reachable Web Observatory v2 read API.
 
 // In production the UI is served same-origin by the Go binary, so an unset base
 // means relative /api URLs. Only local dev falls back to the collector's port —
 // this way a prod build without .env.production can never point at localhost.
+const viteEnv = (import.meta as ImportMeta & {
+  env?: { VITE_API_BASE?: string; DEV?: boolean };
+}).env;
 export const API_BASE =
-  (import.meta.env.VITE_API_BASE as string | undefined) ??
-  (import.meta.env.DEV ? "http://127.0.0.1:8000" : "");
+  viteEnv?.VITE_API_BASE ??
+  (viteEnv?.DEV ? "http://127.0.0.1:8000" : "");
 
 /** Resolve an API path against the configured API host.
  * This is also used by ordinary links, which do not pass through apiFetch. */
@@ -214,6 +217,24 @@ export interface SearchParams {
   sort?: "newest" | "relevance" | "vulns" | "ip";
 }
 
+export function searchQuery(p: SearchParams): string {
+  const q = new URLSearchParams();
+  if (p.q) q.set("q", p.q);
+  if (p.network) q.set("network", p.network);
+  if (p.timeRange != null) q.set("time_range", String(p.timeRange));
+  if (p.port != null) q.set("port", String(p.port));
+  if (p.status != null) q.set("status", String(p.status));
+  if (p.secured != null) q.set("secured", String(p.secured));
+  if (p.product) q.set("product", p.product);
+  if (p.hasVulns) q.set("has_vulns", "1");
+  if (p.tag) q.set("tag", p.tag);
+  if (p.verdict) q.set("verdict", p.verdict);
+  if (p.sort) q.set("sort", p.sort);
+  q.set("limit", String(p.limit ?? 60));
+  q.set("offset", String(p.offset ?? 0));
+  return q.toString();
+}
+
 /** Resolve a possibly-relative image_url against the API host. */
 export function imageURL(url: string): string {
   if (!url) return "";
@@ -283,21 +304,7 @@ export const api = {
     ),
 
   search: (p: SearchParams) => {
-    const q = new URLSearchParams();
-    if (p.q) q.set("q", p.q);
-    if (p.network) q.set("network", p.network);
-    if (p.timeRange != null) q.set("time_range", String(p.timeRange));
-    if (p.port != null) q.set("port", String(p.port));
-    if (p.status != null) q.set("status", String(p.status));
-    if (p.secured != null) q.set("secured", String(p.secured));
-    if (p.product) q.set("product", p.product);
-    if (p.hasVulns) q.set("has_vulns", "1");
-    if (p.tag) q.set("tag", p.tag);
-    if (p.verdict) q.set("verdict", p.verdict);
-    if (p.sort) q.set("sort", p.sort);
-    q.set("limit", String(p.limit ?? 60));
-    q.set("offset", String(p.offset ?? 0));
-    return get<ListResponse>(`/api/v2/search?${q.toString()}`);
+    return get<ListResponse>(`/api/v2/search?${searchQuery(p)}`);
   },
 
   stats: (timeRange = 24): Promise<Stats> => {

@@ -1,4 +1,4 @@
-// Package scanner implements the VibeScan agent: random target generation, nmap
+// Package scanner implements the Observatory agent: random target generation, nmap
 // discovery, browser capture, and signed submission to the collector.
 package scanner
 
