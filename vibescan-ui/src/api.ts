@@ -146,6 +146,16 @@ export interface Stats {
   top_cves: Record<string, number>;
   services_by_country: Record<string, number>;
   total_by_org: Record<string, number>;
+  hosts_by_network: Record<string, number>;
+  flagged_hosts_by_network: Record<string, number>;
+  hosts_by_organization: Record<string, number>;
+  network_count: number;
+  organization_count: number;
+  coverage: {
+    network_attributed: number;
+    geolocated: number;
+    reputation_assessed: number;
+  };
   flagged_points: { lat: number; lon: number; insecure: boolean }[];
 }
 

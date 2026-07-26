@@ -78,6 +78,61 @@ function countWithMinimumBase(flagged: Record<string, number>, total: Record<str
   return Object.fromEntries(Object.entries(flagged).filter(([key]) => (total[key] ?? 0) >= minSample));
 }
 
+function percent(value: number, total: number) {
+  return total > 0 ? Math.round((value / total) * 100) : 0;
+}
+
+function sumValues(data: Record<string, number>) {
+  return Object.values(data).reduce((sum, value) => sum + value, 0);
+}
+
+function NetworkRateList({
+  flagged,
+  total,
+  minBase,
+  hrefFor,
+}: {
+  flagged: Record<string, number>;
+  total: Record<string, number>;
+  minBase: number;
+  hrefFor: (label: string) => string;
+}) {
+  const rows = Object.entries(total)
+    .filter(([, base]) => base >= minBase)
+    .map(([label, base]) => ({ label, base, flagged: flagged[label] ?? 0, rate: percent(flagged[label] ?? 0, base) }))
+    .sort((a, b) => b.rate - a.rate || b.base - a.base || a.label.localeCompare(b.label))
+    .slice(0, 10);
+  if (!rows.length) return <div className="bar-empty mono dim">not enough attributed hosts in this window</div>;
+  return (
+    <div className="network-rate-list">
+      {rows.map((row) => (
+        <div className="network-rate-row" key={row.label}>
+          <Link className="bar-label mono bar-link" to={hrefFor(row.label)}>{row.label}</Link>
+          <span className="network-rate-meta mono dim">{row.flagged} of {row.base} hosts</span>
+          <span className="bar-track">
+            <span className="bar-fill" style={{ width: `${row.rate}%`, background: "var(--alert)" }} />
+          </span>
+          <strong className="network-rate-value mono">{row.rate}%</strong>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function CoverageItem({ label, value, total, note }: { label: string; value: number; total: number; note: string }) {
+  const pct = percent(value, total);
+  return (
+    <div className="coverage-item">
+      <div className="row spread coverage-head">
+        <span className="mono">{label}</span>
+        <strong className="mono">{pct}%</strong>
+      </div>
+      <span className="coverage-track"><span style={{ width: `${pct}%` }} /></span>
+      <div className="coverage-meta mono dim">{value.toLocaleString()} of {total.toLocaleString()} services · {note}</div>
+    </div>
+  );
+}
+
 function downloadStatsTables(s: Stats) {
   const rows: string[][] = [["table", "label", "value"]];
   const add = (table: string, values: Record<string, number>) => {
@@ -90,6 +145,14 @@ function downloadStatsTables(s: Stats) {
   add("host_associated_cves", s.top_cves);
   add("services_by_country", s.services_by_country);
   add("provider_verdicts", s.verdicts);
+  add("hosts_by_network", s.hosts_by_network ?? {});
+  add("flagged_hosts_by_network", s.flagged_hosts_by_network ?? {});
+  add("hosts_by_organization", s.hosts_by_organization ?? {});
+  add("coverage", {
+    network_attributed: s.coverage?.network_attributed ?? 0,
+    geolocated: s.coverage?.geolocated ?? 0,
+    reputation_assessed: s.coverage?.reputation_assessed ?? 0,
+  });
   const csv = rows.map((row) => row.map((cell) => `"${cell.replaceAll('"', '""')}"`).join(",")).join("\n");
   const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
   const a = document.createElement("a");
@@ -117,9 +180,18 @@ export default function StatsPage() {
     let alive = true;
     setLoading(true);
     setError(false);
+    // Never present a new window label over the previous window's aggregates.
+    setS(null);
     api
       .stats(hours)
-      .then((d) => alive && setS(d))
+      .then((d) => {
+        if (!alive) return;
+        if (d.time_range_hours !== hours) {
+          setError(true);
+          return;
+        }
+        setS(d);
+      })
       .catch(() => alive && setError(true))
       .finally(() => alive && setLoading(false));
     return () => {
@@ -155,6 +227,21 @@ export default function StatsPage() {
   const statusData: Record<string, number> = s
     ? { "200": s.status_code_counts["200"] || 0, "3xx": s.status_code_counts["3xx"] || 0, "4xx": s.status_code_counts["4xx"] || 0, "5xx": s.status_code_counts["5xx"] || 0 }
     : {};
+  const responseTotal = sumValues(statusData);
+  const successPct = percent(statusData["200"] ?? 0, responseTotal);
+  const flaggedPct = percent(s?.flagged_services ?? 0, s?.totals.services ?? 0);
+  const servicesPerHost = s?.totals.hosts ? s.totals.services / s.totals.hosts : 0;
+  const networkHosts = s?.hosts_by_network ?? s?.total_by_org ?? {};
+  const flaggedNetworkHosts = s?.flagged_hosts_by_network ?? s?.flagged_by_org ?? {};
+  const organizationHosts = s?.hosts_by_organization ?? {};
+  const networkCount = s?.network_count || Object.keys(networkHosts).length;
+  const organizationCount = s?.organization_count || Object.keys(organizationHosts).length;
+  const coverage = s?.coverage ?? {
+    network_attributed: sumValues(s?.total_by_org ?? {}),
+    geolocated: sumValues(s?.services_by_country ?? {}),
+    reputation_assessed: sumValues(s?.verdicts ?? {}),
+  };
+  const networkRateMinimum = hours <= 1 ? 2 : hours <= 24 ? 5 : hours <= 168 ? 10 : 20;
 
   // Concentration: raw counts, or % flagged (rate) when the density toggle is on.
   const conc = s
@@ -162,16 +249,14 @@ export default function StatsPage() {
       ? {
           port: rateMap(s.flagged_by_port, s.services_by_port),
           product: rateMap(s.flagged_by_product, s.top_banners),
-          org: rateMap(s.flagged_by_org, s.total_by_org),
           country: rateMap(s.flagged_by_country, s.services_by_country),
         }
       : {
           port: countWithMinimumBase(s.flagged_by_port, s.services_by_port),
           product: countWithMinimumBase(s.flagged_by_product, s.top_banners),
-          org: countWithMinimumBase(s.flagged_by_org, s.total_by_org),
           country: countWithMinimumBase(s.flagged_by_country, s.services_by_country),
         }
-    : { port: {}, product: {}, org: {}, country: {} };
+    : { port: {}, product: {}, country: {} };
   const concSuffix = density ? "%" : "";
 
   const flaggedMapPoints: MapPoint[] = (s?.flagged_points ?? [])
@@ -181,47 +266,55 @@ export default function StatsPage() {
   // Notable findings, computed from the aggregates.
   const stableRank = (data: Record<string, number>) =>
     Object.entries(data).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
-  const topCve = s ? stableRank(s.top_cves)[0] : undefined;
-  const topCveRows = s ? stableRank(s.top_cves) : [];
-  const equalCveCounts = topCveRows.length > 1 && new Set(topCveRows.map(([, count]) => count)).size === 1;
-  const highestShareOrg = s ? stableRank(rateMap(s.flagged_by_org, s.total_by_org))[0] : undefined;
-  const topProduct = s ? stableRank(s.flagged_by_product)[0] : undefined;
+  const topNetwork = stableRank(networkHosts)[0];
+  const topPort = s ? stableRank(s.services_by_port)[0] : undefined;
+  const topProduct = s ? stableRank(s.top_banners)[0] : undefined;
   const cleartextTrend = (() => {
     const pts = Object.entries(cleartextSeries).sort((a, b) => a[0].localeCompare(b[0]));
     return pts.length >= 2 ? pts[pts.length - 1][1] - pts[0][1] : 0;
   })();
 
-  // Deep-links from the bars into a pre-filtered Search (or NVD for CVEs). Product,
-  // org, country, and tag ride the free-text `q` (matched by the $text index);
+  // Deep-links from the bars into a pre-filtered Search. Product, network,
+  // country, and tag ride the free-text `q` (matched by the $text index);
   // port and verdict use dedicated filters.
   const portHref = (p: string) => `/search?port=${encodeURIComponent(p)}`;
   const productHref = (p: string) => `/search?q=${encodeURIComponent(p)}`;
+  const networkHref = (network: string) => `/search?q=${encodeURIComponent(network)}`;
+  const organizationHref = (organization: string) => `/search?q=${encodeURIComponent(organization)}`;
   const countryHref = (c: string) => `/search?q=${encodeURIComponent(c)}`;
   const tagHref = (t: string) => `/search?q=${encodeURIComponent(t)}`;
   const verdictHref = (v: string) => `/search?verdict=${encodeURIComponent(v)}`;
-  const cveHref = (c: string) => `https://nvd.nist.gov/vuln/detail/${encodeURIComponent(c)}`;
 
   return (
     <div className="page wrap">
-      <div className="page-head row spread stats-head">
-        <div>
-          <div className="eyebrow">◊ Analysis</div>
-          <h1 className="page-title display">Study findings</h1>
-          <p className="page-hint">
-            Descriptive service-level results for {windowDescription}. These are sampled observations,
-            not estimates of every public host. Percentages show their numerator and denominator below —{" "}
-            <Link className="hint-link" to="/methodology">what these measure →</Link>
-          </p>
+      <div className="page-head">
+        <div className="stats-head">
+          <div>
+            <div className="eyebrow">◊ Analysis</div>
+            <h1 className="page-title display">Study findings</h1>
+          </div>
+          <div className="chips stats-range" aria-label={`Time window${loading ? ", loading" : ""}`}>
+            <span className="stats-range-label mono">window</span>
+            {RANGES.map(([label, h]) => (
+              <button
+                key={label}
+                className={`chip mono${hours === h ? " on" : ""}`}
+                aria-pressed={hours === h}
+                aria-controls="stats-results"
+                onClick={() => setHours(h)}
+              >
+                {label}
+              </button>
+            ))}
+            {s && <button className="chip mono" onClick={() => downloadStatsTables(s)}>download CSV</button>}
+          </div>
         </div>
-        <div className="chips stats-range" aria-label="Time window">
-          <span className="stats-range-label mono">window</span>
-          {RANGES.map(([label, h]) => (
-            <button key={label} className={`chip mono${hours === h ? " on" : ""}`} aria-pressed={hours === h} onClick={() => setHours(h)}>
-              {label}
-            </button>
-          ))}
-          {s && <button className="chip mono" onClick={() => downloadStatsTables(s)}>download tables CSV</button>}
-        </div>
+        <p className="page-hint">
+          Descriptive service-level results for {windowDescription}. These are sampled observations,
+          not estimates of every public host. Every panel below follows this window except the explicitly
+          labeled 90-day census trend —{" "}
+          <Link className="hint-link" to="/methodology">what these measure →</Link>
+        </p>
       </div>
 
       {loading && !s ? (
@@ -231,37 +324,35 @@ export default function StatsPage() {
       ) : !s ? (
         <div className="empty">TELEMETRY OFFLINE</div>
       ) : (
-        <>
+        <div id="stats-results" data-window-hours={s.time_range_hours} aria-busy={loading}>
           <div className="sr-only" aria-live="polite">
             Statistics loaded for {windowDescription}: {s.totals.hosts.toLocaleString()}{" "}
             {s.totals.hosts === 1 ? "host" : "hosts"} and {s.totals.services.toLocaleString()}{" "}
             {s.totals.services === 1 ? "service" : "services"}.
           </div>
-          {(topCve || highestShareOrg || topProduct) && (
+          {(topNetwork || topPort || topProduct) && (
             <section className="highlights">
-              <h2 className="eyebrow highlights-h">◊ Notable findings</h2>
+              <h2 className="eyebrow highlights-h">◊ Window snapshot</h2>
               <div className="highlights-grid">
-                {topCve && (
-                  <a className="highlight" href={cveHref(topCve[0])} target="_blank" rel="noopener noreferrer">
-                    <div className="highlight-k mono">Most prevalent host-associated CVE</div>
-                    <div className="highlight-v">{topCve[0]}</div>
-                    <div className="highlight-s mono dim">{topCve[1].toLocaleString()} provider-associated hosts</div>
-                  </a>
+                {topNetwork && (
+                  <Link className="highlight" to={networkHref(topNetwork[0])}>
+                    <div className="highlight-k mono">Largest observed network</div>
+                    <div className="highlight-v" title={topNetwork[0]}>{topNetwork[0]}</div>
+                    <div className="highlight-s mono dim">{topNetwork[1].toLocaleString()} distinct hosts</div>
+                  </Link>
                 )}
-                {highestShareOrg && (
-                  <div className="highlight">
-                    <div className="highlight-k mono">Highest observed flagged share</div>
-                    <div className="highlight-v" title={highestShareOrg[0]}>{highestShareOrg[0]}</div>
-                    <div className="highlight-s mono dim">
-                      {highestShareOrg[1]}% · n={s.total_by_org[highestShareOrg[0]].toLocaleString()}
-                    </div>
-                  </div>
+                {topPort && (
+                  <Link className="highlight" to={portHref(topPort[0])}>
+                    <div className="highlight-k mono">Most observed port</div>
+                    <div className="highlight-v">{topPort[0]}</div>
+                    <div className="highlight-s mono dim">{topPort[1].toLocaleString()} services</div>
+                  </Link>
                 )}
                 {topProduct && (
                   <Link className="highlight" to={productHref(topProduct[0])}>
-                    <div className="highlight-k mono">Most provider-flagged software label</div>
+                    <div className="highlight-k mono">Most observed software</div>
                     <div className="highlight-v" title={topProduct[0]}>{topProduct[0]}</div>
-                    <div className="highlight-s mono dim">{topProduct[1].toLocaleString()} flagged services</div>
+                    <div className="highlight-s mono dim">{topProduct[1].toLocaleString()} services</div>
                   </Link>
                 )}
                 <div className="highlight">
@@ -281,38 +372,103 @@ export default function StatsPage() {
             <div className="tile panel hud">
               <div className="tile-label eyebrow">{s.totals.hosts === 1 ? "Host" : "Hosts"}</div>
               <div className="tile-num display">{s.totals.hosts.toLocaleString()}</div>
+              <div className="tile-sub mono dim">distinct IPv4 hosts</div>
             </div>
             <div className="tile panel hud">
               <div className="tile-label eyebrow">{s.totals.services === 1 ? "Service" : "Services"}</div>
               <div className="tile-num display">{s.totals.services.toLocaleString()}</div>
+              <div className="tile-sub mono dim">retained ip:port records</div>
             </div>
-            <div className="tile panel hud tile-insecure">
-              <div className="tile-label eyebrow">Cleartext HTTP</div>
-              <div className="tile-num display insecure">{insecurePct}%</div>
-              <div className="tile-bar">
-                <span className="tile-bar-fill" style={{ width: `${insecurePct}%` }} />
-              </div>
-              <div className="tile-sub mono dim">
-                    {insecure.toLocaleString()} of {total.toLocaleString()} services · {secure.toLocaleString()} HTTPS
-              </div>
+            <div className="tile panel hud">
+              <div className="tile-label eyebrow">Networks</div>
+              <div className="tile-num display">{networkCount.toLocaleString()}</div>
+              <div className="tile-sub mono dim">{organizationCount.toLocaleString()} owning organizations attributed by RDAP</div>
             </div>
-            <div
-              className="tile panel hud"
-              title="Services whose host is associated with at least one CVE by Shodan InternetDB. This is a third-party association, not a confirmed or verified vulnerability."
-            >
-              <div className="tile-label eyebrow">CVE-associated</div>
-              <div className="tile-num display insecure">{s.exposed_services.toLocaleString()}</div>
-              <div className="tile-sub mono dim">
-                {s.exposed_services.toLocaleString()} of {s.totals.services.toLocaleString()} service records have a host with ≥1 provider-associated CVE
-              </div>
+            <div className="tile panel hud">
+              <div className="tile-label eyebrow">Services / host</div>
+              <div className="tile-num display">{servicesPerHost.toFixed(1)}</div>
+              <div className="tile-sub mono dim">mean observed web services</div>
+            </div>
+            <div className="tile panel hud">
+              <div className="tile-label eyebrow">HTTP 200</div>
+              <div className="tile-num display secure">{successPct}%</div>
+              <div className="tile-sub mono dim">{(statusData["200"] ?? 0).toLocaleString()} of {responseTotal.toLocaleString()} classified responses</div>
+            </div>
+            <div className="tile panel hud">
+              <div className="tile-label eyebrow">Provider signals</div>
+              <div className="tile-num display insecure">{flaggedPct}%</div>
+              <div className="tile-sub mono dim">{s.flagged_services.toLocaleString()} services with a CVE association or adverse reputation label</div>
             </div>
           </div>
           <div className="doc-callout">
             <strong>Exploratory sample:</strong> this window contains {s.totals.hosts.toLocaleString()}{" "}
             distinct {s.totals.hosts === 1 ? "host" : "hosts"}. Results describe retained observations,
-            not the entire public internet. Group charts suppress categories with fewer than 20 service
-            observations; small absolute differences should not be interpreted as stable concentration.
+            not the entire public internet. Rate rankings apply a window-sensitive minimum base and always
+            show their denominator; small absolute differences should not be interpreted as stable concentration.
           </div>
+
+          <section className="panel panel-pad window-activity">
+            <div className="section-heading">
+              <div>
+                <h2 className="eyebrow chart-head">◊ Observation activity</h2>
+                <p className="concentration-note mono dim">Records updated inside the selected {hours === 0 ? "all-time" : RANGES.find(([, h]) => h === hours)?.[0]} window.</p>
+              </div>
+              <span className="window-badge mono">{hours === 0 ? "ALL" : RANGES.find(([, h]) => h === hours)?.[0]}</span>
+            </div>
+            <TimeSeries key={hours} data={s.submissions_over_time} unit="observations" />
+          </section>
+
+          <section className="panel panel-pad network-landscape">
+            <div className="section-heading">
+              <div>
+                <h2 className="eyebrow chart-head">◊ Network landscape</h2>
+                <p className="concentration-note mono dim">
+                  RDAP ownership grouped at host level, so a host exposing several ports is counted once.
+                  Labels link to matching observations.
+                </p>
+              </div>
+              <span className="window-badge mono">
+                {networkCount.toLocaleString()} networks · {organizationCount.toLocaleString()} orgs
+              </span>
+            </div>
+            <div className="network-grid">
+              <div>
+                <h3 className="concentration-h mono">Most observed networks</h3>
+                <BarList data={networkHosts} color="var(--amber)" limit={10} suffix=" hosts" hrefFor={networkHref} />
+              </div>
+              <div>
+                <h3 className="concentration-h mono">Most observed organizations</h3>
+                <BarList data={organizationHosts} color="var(--violet)" limit={10} suffix=" hosts" hrefFor={organizationHref} />
+              </div>
+              <div>
+                <h3 className="concentration-h mono">Provider-signal share by network</h3>
+                <p className="network-note mono dim">Minimum {networkRateMinimum} attributed hosts in this window.</p>
+                <NetworkRateList
+                  flagged={flaggedNetworkHosts}
+                  total={networkHosts}
+                  minBase={networkRateMinimum}
+                  hrefFor={networkHref}
+                />
+              </div>
+            </div>
+          </section>
+
+          <section className="panel panel-pad coverage">
+            <div className="section-heading">
+              <div>
+                <h2 className="eyebrow chart-head">◊ Data coverage</h2>
+                <p className="concentration-note mono dim">
+                  Analysis coverage within this window. Missing enrichment is unknown, not clean.
+                </p>
+              </div>
+            </div>
+            <div className="coverage-grid">
+              <CoverageItem label="Network attribution" value={coverage.network_attributed} total={s.totals.services} note="RDAP / WHOIS label" />
+              <CoverageItem label="Geolocation" value={coverage.geolocated} total={s.totals.services} note="country available" />
+              <CoverageItem label="Reputation assessment" value={coverage.reputation_assessed} total={s.totals.services} note="provider verdict available" />
+              <CoverageItem label="CVE association" value={s.exposed_services} total={s.totals.services} note="third-party host association" />
+            </div>
+          </section>
 
           <section className="panel panel-pad concentration">
             <div className="row spread concentration-head">
@@ -337,39 +493,10 @@ export default function StatsPage() {
                 <BarList data={conc.product} color="var(--alert)" limit={8} suffix={concSuffix} hrefFor={productHref} />
               </div>
               <div className="concentration-cell">
-                <h3 className="concentration-h mono">By organization / network</h3>
-                <BarList data={conc.org} color="var(--amber)" limit={8} suffix={concSuffix} hrefFor={countryHref} />
-              </div>
-              <div className="concentration-cell">
                 <h3 className="concentration-h mono">By country</h3>
                 <BarList data={conc.country} color="var(--amber)" limit={8} suffix={concSuffix} hrefFor={countryHref} />
               </div>
             </div>
-          </section>
-
-          <section className="panel panel-pad">
-            <h2 className="eyebrow chart-head">◊ Most prevalent host-associated CVEs</h2>
-            <p className="concentration-note mono dim">
-              The specific vulnerabilities most often associated with hosts in this window — third-party,
-              provider-reported associations, not confirmed exploitability.
-            </p>
-            {equalCveCounts ? (
-              <div className="cve-summary">
-                <strong>{topCveRows.length} host-associated CVE identifiers share the same count.</strong>
-                <p>
-                  Each appears on {topCveRows[0][1].toLocaleString()} retained service records. Identical
-                  counts commonly reflect one repeated host/software fingerprint, so these identifiers
-                  are presented as a set rather than a misleading ranking.
-                </p>
-                <div className="fr-chips">
-                  {topCveRows.map(([cve]) => (
-                    <a key={cve} className="fr-chip vuln" href={cveHref(cve)} target="_blank" rel="noopener noreferrer">{cve}</a>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <BarList data={s.top_cves} color="var(--alert)" limit={12} hrefFor={cveHref} />
-            )}
           </section>
 
           <section className="panel panel-pad geo">
@@ -391,12 +518,12 @@ export default function StatsPage() {
 
           <section className="panel panel-pad trend">
             <h2 className="eyebrow chart-head">
-              ◊ Exposure over time{trends.length >= 2 ? ` · last ${trends.length} days` : ""}
+              ◊ 90-day census trend{trends.length >= 2 ? ` · ${trends.length} daily snapshots` : ""}
             </h2>
             {trends.length >= 3 ? (
               <>
               <p className="concentration-note mono dim">
-                Daily rollups are independent of the selected snapshot window above.
+                Daily census rollups are historical context and intentionally independent of the selected window above.
               </p>
               <div className="trend-grid">
                 <div className="trend-cell">
@@ -466,13 +593,8 @@ export default function StatsPage() {
                 <div className="bar-empty mono dim">no reputation data yet</div>
               )}
             </section>
-
-            <section className="panel panel-pad stats-time">
-              <h2 className="eyebrow chart-head">◊ Observations over time</h2>
-              <TimeSeries data={s.submissions_over_time} />
-            </section>
           </div>
-        </>
+        </div>
       )}
     </div>
   );

@@ -1,5 +1,13 @@
 .page { padding: 30px 24px 64px; }
 .page-head { margin-bottom: 22px; }
+.feed-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.feed-head > :first-child { min-width: 0; }
+.feed-head .chips { flex: 0 0 auto; flex-wrap: nowrap; }
 .page-title { font-size: clamp(24px, 3.4vw, 36px); color: var(--ink); margin: 8px 0 4px; }
 .page-sub { color: var(--muted); font-size: 13px; }
 /* One-line contextual hint under a page title (cross-links, window notes). */
@@ -30,3 +38,10 @@
   text-align: center;
 }
 .error-msg { color: var(--ink-dim); letter-spacing: 0.08em; font-size: 13px; }
+
+@media (max-width: 680px) {
+  .feed-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

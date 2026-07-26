@@ -36,10 +36,25 @@ type Stats struct {
 	FlaggedByCountry map[string]int `json:"flagged_by_country"`
 	// Findings: most-prevalent CVEs, per-dimension totals (density denominators),
 	// and flagged-host coordinates for the risk map.
-	TopCVEs           map[string]int `json:"top_cves"`
-	ServicesByCountry map[string]int `json:"services_by_country"`
-	TotalByOrg        map[string]int `json:"total_by_org"`
-	FlaggedPoints     []GeoPoint     `json:"flagged_points"`
+	TopCVEs               map[string]int `json:"top_cves"`
+	ServicesByCountry     map[string]int `json:"services_by_country"`
+	TotalByOrg            map[string]int `json:"total_by_org"`
+	HostsByNetwork        map[string]int `json:"hosts_by_network"`
+	FlaggedHostsByNetwork map[string]int `json:"flagged_hosts_by_network"`
+	HostsByOrganization   map[string]int `json:"hosts_by_organization"`
+	NetworkCount          int            `json:"network_count"`
+	OrganizationCount     int            `json:"organization_count"`
+	Coverage              StatsCoverage  `json:"coverage"`
+	FlaggedPoints         []GeoPoint     `json:"flagged_points"`
+}
+
+// StatsCoverage reports how many service records have enough metadata to
+// support each analysis. Keeping these denominators explicit prevents sparse
+// enrichment data from looking representative of the whole selected window.
+type StatsCoverage struct {
+	NetworkAttributed  int `json:"network_attributed"`
+	Geolocated         int `json:"geolocated"`
+	ReputationAssessed int `json:"reputation_assessed"`
 }
 
 // GeoPoint is one flagged host's location for the Stats risk map.
@@ -69,15 +84,23 @@ type facetResult struct {
 	Tags     []kv         `bson:"tags"`
 	Verdicts []kv         `bson:"verdicts"`
 	// Concentration of at-risk services.
-	FlaggedTotal     []countOnly `bson:"flagged_total"`
-	FlaggedPorts     []kv        `bson:"flagged_ports"`
-	FlaggedProducts  []kv        `bson:"flagged_products"`
-	FlaggedOrgs      []kvStr     `bson:"flagged_orgs"`
-	FlaggedCountries []kvStr     `bson:"flagged_countries"`
-	TopCVEs          []kv        `bson:"top_cves"`
-	ServicesCountry  []kvStr     `bson:"services_by_country"`
-	TotalOrg         []kvStr     `bson:"total_by_org"`
-	FlaggedPoints    []GeoPoint  `bson:"flagged_points"`
+	FlaggedTotal        []countOnly `bson:"flagged_total"`
+	FlaggedPorts        []kv        `bson:"flagged_ports"`
+	FlaggedProducts     []kv        `bson:"flagged_products"`
+	FlaggedOrgs         []kvStr     `bson:"flagged_orgs"`
+	FlaggedCountries    []kvStr     `bson:"flagged_countries"`
+	TopCVEs             []kv        `bson:"top_cves"`
+	ServicesCountry     []kvStr     `bson:"services_by_country"`
+	TotalOrg            []kvStr     `bson:"total_by_org"`
+	HostsNetwork        []kvStr     `bson:"hosts_by_network"`
+	FlaggedHostsNetwork []kvStr     `bson:"flagged_hosts_by_network"`
+	HostsOrganization   []kvStr     `bson:"hosts_by_organization"`
+	Networks            []countOnly `bson:"network_count"`
+	Organizations       []countOnly `bson:"organization_count"`
+	NetworkCoverage     []countOnly `bson:"network_coverage"`
+	GeoCoverage         []countOnly `bson:"geo_coverage"`
+	ReputationCoverage  []countOnly `bson:"reputation_coverage"`
+	FlaggedPoints       []GeoPoint  `bson:"flagged_points"`
 }
 
 type kv struct {
@@ -192,6 +215,26 @@ func (m *Mongo) StatsAggregate(ctx context.Context, timeRangeHours, maxTimeMS in
 	}}}
 	// Reuse the banner-cleaning sub-pipeline, but only over at-risk services.
 	flaggedProducts := append(bson.A{bson.D{{Key: "$match", Value: flaggedMatch}}}, bannerClean...)
+	networkExpr := bson.D{
+		{Key: "$trim", Value: bson.D{
+			{Key: "input", Value: bson.D{
+				{Key: "$arrayElemAt", Value: bson.A{
+					bson.D{{Key: "$split", Value: bson.A{"$whois", " - "}}},
+					0,
+				}},
+			}},
+		}},
+	}
+	organizationExpr := bson.D{
+		{Key: "$trim", Value: bson.D{
+			{Key: "input", Value: bson.D{
+				{Key: "$arrayElemAt", Value: bson.A{
+					bson.D{{Key: "$split", Value: bson.A{"$whois", " - "}}},
+					1,
+				}},
+			}},
+		}},
+	}
 
 	facet := bson.D{
 		{Key: "ports", Value: bson.A{
@@ -309,6 +352,71 @@ func (m *Mongo) StatsAggregate(ctx context.Context, timeRangeHours, maxTimeMS in
 			bson.D{{Key: "$sort", Value: bson.D{{Key: "count", Value: -1}, {Key: "_id", Value: 1}}}},
 			bson.D{{Key: "$limit", Value: 150}},
 		}},
+		// Network ownership is reported at host granularity. The first WHOIS
+		// segment is the RDAP network name used throughout the UI.
+		{Key: "hosts_by_network", Value: bson.A{
+			bson.D{{Key: "$match", Value: bson.D{{Key: "whois", Value: bson.D{{Key: "$type", Value: "string"}, {Key: "$nin", Value: bson.A{"", "unknown"}}}}}}},
+			bson.D{{Key: "$project", Value: bson.D{
+				{Key: "network", Value: networkExpr},
+				{Key: "ip", Value: 1},
+			}}},
+			bson.D{{Key: "$match", Value: bson.D{{Key: "network", Value: bson.D{{Key: "$ne", Value: ""}}}}}},
+			bson.D{{Key: "$group", Value: bson.D{{Key: "_id", Value: bson.D{{Key: "network", Value: "$network"}, {Key: "ip", Value: "$ip"}}}}}},
+			bson.D{{Key: "$group", Value: bson.D{{Key: "_id", Value: "$_id.network"}, {Key: "count", Value: bson.D{{Key: "$sum", Value: 1}}}}}},
+			bson.D{{Key: "$sort", Value: bson.D{{Key: "count", Value: -1}, {Key: "_id", Value: 1}}}},
+			bson.D{{Key: "$limit", Value: 50}},
+		}},
+		{Key: "flagged_hosts_by_network", Value: bson.A{
+			bson.D{{Key: "$match", Value: flaggedMatch}},
+			bson.D{{Key: "$match", Value: bson.D{{Key: "whois", Value: bson.D{{Key: "$type", Value: "string"}, {Key: "$nin", Value: bson.A{"", "unknown"}}}}}}},
+			bson.D{{Key: "$project", Value: bson.D{
+				{Key: "network", Value: networkExpr},
+				{Key: "ip", Value: 1},
+			}}},
+			bson.D{{Key: "$match", Value: bson.D{{Key: "network", Value: bson.D{{Key: "$ne", Value: ""}}}}}},
+			bson.D{{Key: "$group", Value: bson.D{{Key: "_id", Value: bson.D{{Key: "network", Value: "$network"}, {Key: "ip", Value: "$ip"}}}}}},
+			bson.D{{Key: "$group", Value: bson.D{{Key: "_id", Value: "$_id.network"}, {Key: "count", Value: bson.D{{Key: "$sum", Value: 1}}}}}},
+			bson.D{{Key: "$sort", Value: bson.D{{Key: "count", Value: -1}, {Key: "_id", Value: 1}}}},
+			bson.D{{Key: "$limit", Value: 50}},
+		}},
+		{Key: "hosts_by_organization", Value: bson.A{
+			bson.D{{Key: "$match", Value: bson.D{{Key: "whois", Value: bson.D{{Key: "$type", Value: "string"}, {Key: "$regex", Value: " - "}}}}}},
+			bson.D{{Key: "$project", Value: bson.D{
+				{Key: "organization", Value: organizationExpr},
+				{Key: "ip", Value: 1},
+			}}},
+			bson.D{{Key: "$match", Value: bson.D{{Key: "organization", Value: bson.D{{Key: "$ne", Value: ""}}}}}},
+			bson.D{{Key: "$group", Value: bson.D{{Key: "_id", Value: bson.D{{Key: "organization", Value: "$organization"}, {Key: "ip", Value: "$ip"}}}}}},
+			bson.D{{Key: "$group", Value: bson.D{{Key: "_id", Value: "$_id.organization"}, {Key: "count", Value: bson.D{{Key: "$sum", Value: 1}}}}}},
+			bson.D{{Key: "$sort", Value: bson.D{{Key: "count", Value: -1}, {Key: "_id", Value: 1}}}},
+			bson.D{{Key: "$limit", Value: 50}},
+		}},
+		{Key: "network_count", Value: bson.A{
+			bson.D{{Key: "$match", Value: bson.D{{Key: "whois", Value: bson.D{{Key: "$type", Value: "string"}, {Key: "$nin", Value: bson.A{"", "unknown"}}}}}}},
+			bson.D{{Key: "$project", Value: bson.D{{Key: "network", Value: networkExpr}}}},
+			bson.D{{Key: "$match", Value: bson.D{{Key: "network", Value: bson.D{{Key: "$ne", Value: ""}}}}}},
+			bson.D{{Key: "$group", Value: bson.D{{Key: "_id", Value: "$network"}}}},
+			bson.D{{Key: "$count", Value: "count"}},
+		}},
+		{Key: "organization_count", Value: bson.A{
+			bson.D{{Key: "$match", Value: bson.D{{Key: "whois", Value: bson.D{{Key: "$type", Value: "string"}, {Key: "$regex", Value: " - "}}}}}},
+			bson.D{{Key: "$project", Value: bson.D{{Key: "organization", Value: organizationExpr}}}},
+			bson.D{{Key: "$match", Value: bson.D{{Key: "organization", Value: bson.D{{Key: "$ne", Value: ""}}}}}},
+			bson.D{{Key: "$group", Value: bson.D{{Key: "_id", Value: "$organization"}}}},
+			bson.D{{Key: "$count", Value: "count"}},
+		}},
+		{Key: "network_coverage", Value: bson.A{
+			bson.D{{Key: "$match", Value: bson.D{{Key: "whois", Value: bson.D{{Key: "$type", Value: "string"}, {Key: "$nin", Value: bson.A{"", "unknown"}}}}}}},
+			bson.D{{Key: "$count", Value: "count"}},
+		}},
+		{Key: "geo_coverage", Value: bson.A{
+			bson.D{{Key: "$match", Value: bson.D{{Key: "geoip.country_iso", Value: bson.D{{Key: "$type", Value: "string"}, {Key: "$ne", Value: ""}}}}}},
+			bson.D{{Key: "$count", Value: "count"}},
+		}},
+		{Key: "reputation_coverage", Value: bson.A{
+			bson.D{{Key: "$match", Value: bson.D{{Key: "verdict", Value: bson.D{{Key: "$in", Value: bson.A{"clean", "suspicious", "malicious"}}}}}}},
+			bson.D{{Key: "$count", Value: "count"}},
+		}},
 		{Key: "flagged_points", Value: bson.A{
 			bson.D{{Key: "$match", Value: flaggedMatch}},
 			bson.D{{Key: "$match", Value: bson.D{{Key: "geoip.lat", Value: bson.D{{Key: "$type", Value: "number"}}}}}},
@@ -344,23 +452,26 @@ func (m *Mongo) StatsAggregate(ctx context.Context, timeRangeHours, maxTimeMS in
 	}
 
 	out := Stats{
-		TimeRangeHours:      timeRangeHours,
-		ServicesByPort:      map[string]int{},
-		StatusCodeCounts:    map[string]int{"200": 0, "3xx": 0, "4xx": 0, "5xx": 0},
-		SecureCaptureCounts: map[string]int{"secured": 0, "insecure": 0},
-		TopBanners:          map[string]int{},
-		SubmissionsByClient: map[string]int{},
-		SubmissionsOverTime: map[string]int{},
-		TopTags:             map[string]int{},
-		Verdicts:            map[string]int{},
-		FlaggedByPort:       map[string]int{},
-		FlaggedByProduct:    map[string]int{},
-		FlaggedByOrg:        map[string]int{},
-		FlaggedByCountry:    map[string]int{},
-		TopCVEs:             map[string]int{},
-		ServicesByCountry:   map[string]int{},
-		TotalByOrg:          map[string]int{},
-		FlaggedPoints:       []GeoPoint{},
+		TimeRangeHours:        timeRangeHours,
+		ServicesByPort:        map[string]int{},
+		StatusCodeCounts:      map[string]int{"200": 0, "3xx": 0, "4xx": 0, "5xx": 0},
+		SecureCaptureCounts:   map[string]int{"secured": 0, "insecure": 0},
+		TopBanners:            map[string]int{},
+		SubmissionsByClient:   map[string]int{},
+		SubmissionsOverTime:   map[string]int{},
+		TopTags:               map[string]int{},
+		Verdicts:              map[string]int{},
+		FlaggedByPort:         map[string]int{},
+		FlaggedByProduct:      map[string]int{},
+		FlaggedByOrg:          map[string]int{},
+		FlaggedByCountry:      map[string]int{},
+		TopCVEs:               map[string]int{},
+		ServicesByCountry:     map[string]int{},
+		TotalByOrg:            map[string]int{},
+		HostsByNetwork:        map[string]int{},
+		FlaggedHostsByNetwork: map[string]int{},
+		HostsByOrganization:   map[string]int{},
+		FlaggedPoints:         []GeoPoint{},
 	}
 	if len(rows) == 1 {
 		f := rows[0]
@@ -434,6 +545,36 @@ func (m *Mongo) StatsAggregate(ctx context.Context, timeRangeHours, maxTimeMS in
 			if o.ID != "" {
 				out.TotalByOrg[o.ID] = o.Count
 			}
+		}
+		for _, network := range f.HostsNetwork {
+			if network.ID != "" {
+				out.HostsByNetwork[network.ID] = network.Count
+			}
+		}
+		for _, network := range f.FlaggedHostsNetwork {
+			if network.ID != "" {
+				out.FlaggedHostsByNetwork[network.ID] = network.Count
+			}
+		}
+		for _, organization := range f.HostsOrganization {
+			if organization.ID != "" {
+				out.HostsByOrganization[organization.ID] = organization.Count
+			}
+		}
+		if len(f.Networks) == 1 {
+			out.NetworkCount = f.Networks[0].Count
+		}
+		if len(f.Organizations) == 1 {
+			out.OrganizationCount = f.Organizations[0].Count
+		}
+		if len(f.NetworkCoverage) == 1 {
+			out.Coverage.NetworkAttributed = f.NetworkCoverage[0].Count
+		}
+		if len(f.GeoCoverage) == 1 {
+			out.Coverage.Geolocated = f.GeoCoverage[0].Count
+		}
+		if len(f.ReputationCoverage) == 1 {
+			out.Coverage.ReputationAssessed = f.ReputationCoverage[0].Count
 		}
 		if len(f.FlaggedPoints) > 0 {
 			out.FlaggedPoints = f.FlaggedPoints
