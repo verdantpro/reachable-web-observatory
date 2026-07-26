@@ -71,7 +71,6 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     timeout-minutes: 45
-    environment: production
 
     steps:
       - name: Checkout
