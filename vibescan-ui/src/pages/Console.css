@@ -89,6 +89,13 @@
 .console-more:hover { text-decoration: underline; }
 
 .console-map { padding-bottom: 26px; }
+.observation-map.embedded .iwm,
+.observation-map.embedded .iwm svg { min-height: 460px; }
+
+@media (max-width: 680px) {
+  .observation-map.embedded .iwm,
+  .observation-map.embedded .iwm svg { min-height: 330px; }
+}
 
 .console-strip {
   display: grid;

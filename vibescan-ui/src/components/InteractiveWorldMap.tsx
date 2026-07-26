@@ -26,8 +26,18 @@ const pointKey = (p: MapEntry) => `${p.ip}:${p.port}`;
 const isRisk = (p: MapEntry) =>
   (p.vuln_count ?? 0) > 0 || p.verdict === "suspicious" || p.verdict === "malicious";
 
+function pointPlace(p: MapEntry) {
+  return [p.geo.city, p.geo.country_iso].filter(Boolean).join(", ")
+    || p.geo.country
+    || "unknown location";
+}
+
+function clusterPlaces(cluster: Cluster) {
+  return [...new Set(cluster.points.map(({ point }) => pointPlace(point)))];
+}
+
 function markerLabel(p: MapEntry) {
-  const place = [p.geo.city, p.geo.country_iso].filter(Boolean).join(", ") || "unknown location";
+  const place = pointPlace(p);
   const protocol = p.secured ? "HTTPS" : "HTTP";
   const risk = isRisk(p) ? `, ${p.vuln_count || 0} host-associated CVEs, ${p.verdict || "flagged"}` : "";
   return `${p.ip}:${p.port}, ${protocol}, ${place}${risk}`;
@@ -103,6 +113,7 @@ export default function InteractiveWorldMap({
   }, [projected, view.scale]);
 
   const hovered = clusters.find((cluster) => cluster.id === hoveredID) ?? null;
+  const hoveredPlaces = hovered ? clusterPlaces(hovered) : [];
 
   const setZoom = (nextScale: number, anchorX = W / 2, anchorY = H / 2) => {
     setView((current) => {
@@ -232,12 +243,16 @@ export default function InteractiveWorldMap({
             {clusters.map((cluster) => {
               const count = cluster.points.length;
               const point = cluster.points[0].point;
+              const places = clusterPlaces(cluster);
+              const placeSummary = places.length <= 3
+                ? places.join("; ")
+                : `${places.slice(0, 3).join("; ")}; and ${places.length - 3} more`;
               const selected = count === 1 && selectedKey === cluster.points[0].key;
               const risky = cluster.points.some(({ point: item }) => isRisk(item));
               const color = count > 1 ? "var(--violet)" : point.secured ? "var(--cyan)" : "var(--red)";
               const radius = (count > 1 ? Math.min(16, 8 + Math.log2(count) * 2) : selected ? 7 : 5) / view.scale;
               const label = count > 1
-                ? `${count} nearby mapped hosts. Activate to ${view.scale >= MAX_ZOOM - 0.01 ? "inspect the host list" : "zoom in"}.`
+                ? `${count} nearby mapped hosts near ${placeSummary}. Activate to ${view.scale >= MAX_ZOOM - 0.01 ? "inspect the host list" : "zoom in"}.`
                 : markerLabel(point);
               return (
                 <g
@@ -287,15 +302,16 @@ export default function InteractiveWorldMap({
           {hovered.points.length > 1 ? (
             <>
               <strong>{hovered.points.length} nearby hosts</strong>
+              <span>{hoveredPlaces.slice(0, 4).join(" · ")}</span>
+              {hoveredPlaces.length > 4 && (
+                <span>+{hoveredPlaces.length - 4} more locations</span>
+              )}
               <span>activate to separate markers</span>
             </>
           ) : (
             <>
               <strong>{hovered.points[0].point.ip}:{hovered.points[0].point.port}</strong>
-              <span>
-                {[hovered.points[0].point.geo.city, hovered.points[0].point.geo.country_iso]
-                  .filter(Boolean).join(" · ") || "unknown location"}
-              </span>
+              <span>{pointPlace(hovered.points[0].point)}</span>
               <span>
                 {hovered.points[0].point.secured ? "HTTPS" : "HTTP"}
                 {hovered.points[0].point.product ? ` · ${hovered.points[0].point.product}` : ""}

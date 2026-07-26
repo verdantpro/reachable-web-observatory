@@ -6,6 +6,7 @@ import "./TopBar.css";
 const NAV = [
   { to: "/", label: "OVERVIEW", end: true },
   { to: "/feed", label: "FEED" },
+  { to: "/map", label: "MAP" },
   { to: "/search", label: "SEARCH" },
   { to: "/stats", label: "STATS" },
   { to: "/data", label: "DATA" },
