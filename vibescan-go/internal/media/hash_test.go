@@ -2,8 +2,9 @@ package media
 
 import "testing"
 
-// Golden values below are produced by the Python implementations in
-// the archived Python prototype's hashing and object-storage utilities.
+// Golden values below are representative outputs from the private Python
+// system behind What’s on HTTP, created by elixx. The original source is not
+// included; see the repository PROVENANCE.md.
 
 func TestCaptureHashExt(t *testing.T) {
 	tests := []struct {

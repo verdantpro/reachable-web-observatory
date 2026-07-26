@@ -1,8 +1,13 @@
 # vibescan-go
 
-The Go backend for the **Reachable Web Observatory**. It replaced an earlier
-Python prototype while preserving the signed v1 ingest envelope and stored-data
-compatibility; executable golden tests retain that migration provenance.
+The Go backend for the **Reachable Web Observatory**. It reimplements and
+extends the private Python system behind
+[What’s on HTTP](https://whatsonhttp.com/), created by
+[elixx](https://github.com/elixx), while preserving the signed v1 ingest
+envelope and stored-data compatibility. Executable golden tests retain that
+migration provenance. See the repository’s
+[provenance record](../PROVENANCE.md) and
+[current licensing status](../LICENSING.md) before reusing source code.
 
 The production binary serves **ingest + v2 read APIs + the embedded React UI**
 from one process (same origin in prod — no CORS required).
@@ -80,8 +85,9 @@ VIBESCAN_BACKFILL_ENRICH=1 go run ./cmd/migrate   # re-denormalize cached CVE/en
 VIBESCAN_BACKFILL_PRODUCTS=1 go run ./cmd/migrate # parse legacy banners into product fields
 ```
 
-The completed **strangler migration** preserved the legacy v1 wire protocol, so
-older agents can continue submitting while the Go agent is now primary.
+The completed **strangler migration** from the original What’s on HTTP Python
+system preserved the legacy v1 wire protocol, so older agents could continue
+submitting while the Go agent became primary.
 
 ## Collector
 
@@ -98,7 +104,8 @@ older agents can continue submitting while the Go agent is now primary.
 
 ### Wire & data compatibility
 
-Verified byte-for-byte against the Python implementation via golden tests
+Verified byte-for-byte against representative outputs from the private What’s
+on HTTP Python implementation created by elixx via golden tests
 (`internal/transport`, `internal/media`):
 
 - HMAC-SHA256 signing, gzip, base64 envelope (`common/transport.py`)
@@ -293,6 +300,6 @@ deploy/              compose (build / registry / agent), Caddyfile,
 |------|------|
 | `../vibescan-ui` | React/Vite frontend (embedded into the Go image in production) |
 
-The archived Python prototype is not published in this repository. Compatibility
-with its v1 transport and hashing behavior is captured by golden fixtures in
-`internal/transport` and `internal/media`.
+The private What’s on HTTP Python source is not published in this repository.
+Compatibility with its v1 transport and hashing behavior is captured by golden
+fixtures in `internal/transport` and `internal/media`.

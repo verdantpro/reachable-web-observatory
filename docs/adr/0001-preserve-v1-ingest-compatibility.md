@@ -5,9 +5,12 @@ Date: 2026-07-26
 
 ## Context
 
-The Go implementation replaced an earlier Python prototype while scanner agents
-and stored records already existed. A flag-day protocol migration would have
-coupled collector rollout to every agent.
+The Go implementation reimplemented the private Python system behind
+[What’s on HTTP](https://whatsonhttp.com/), created by
+[elixx](https://github.com/elixx), while scanner agents and stored records
+already existed. A flag-day protocol migration would have coupled collector
+rollout to every agent. The broader contribution history and source-rights
+status are recorded in [`../../PROVENANCE.md`](../../PROVENANCE.md).
 
 ## Decision
 

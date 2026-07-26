@@ -48,8 +48,8 @@ export default function About() {
         <section className="about-sec">
           <h2 className="about-h">Who runs it</h2>
           <p>
-            The observatory is built and maintained by <strong>Justin Walters</strong>, an
-            independent security researcher, under{" "}
+            The Observatory extension is developed and maintained by <strong>Justin Walters</strong>,
+            an independent security researcher, under{" "}
             <a className="about-mail" href="https://verdantprotocol.com/" target="_blank" rel="noopener noreferrer">
               Verdant Protocol
             </a>
@@ -65,6 +65,29 @@ export default function About() {
             external funder. Material collaborators or funding relationships will be disclosed here.
             Technical implementation belongs on the{" "}
             <Link className="about-mail" to="/architecture">architecture</Link> page.
+          </p>
+          <p>
+            The Go scanner and collector reimplement and extend the private Python system behind{" "}
+            <a className="about-mail" href="https://whatsonhttp.com/" target="_blank" rel="noopener noreferrer">
+              What&apos;s on HTTP
+            </a>
+            , created by{" "}
+            <a className="about-mail" href="https://github.com/elixx" target="_blank" rel="noopener noreferrer">
+              elixx
+            </a>
+            . Justin performed the Go rewrite with AI coding assistance and later developed the
+            Observatory interface, research framing, analytics, infrastructure, and independently
+            collected dataset. The private Python source is not published here, and the Observatory is
+            not presented as an official successor to What&apos;s on HTTP. Read the complete{" "}
+            <a
+              className="about-mail"
+              href="https://github.com/verdantpro/reachable-web-observatory/blob/main/PROVENANCE.md"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              provenance record
+            </a>
+            .
           </p>
         </section>
 

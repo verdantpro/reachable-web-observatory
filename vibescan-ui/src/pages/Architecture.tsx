@@ -87,7 +87,7 @@ export default function Architecture() {
         <ul className="doc-list">
           <li><strong>Discover.</strong> The agent generates uniform-random public IPv4 addresses and checks five common web ports with nmap, skipping anything on the exclusion list.</li>
           <li><strong>Capture.</strong> For hosts answering HTTP/HTTPS it drives a headless Chromium (via chromedp) to screenshot the page and record the banner, status, TLS certificate name, and structural hashes.</li>
-          <li><strong>Submit.</strong> Results are packed into an HMAC-SHA256-signed, gzip-compressed envelope and POSTed to the collector — the same wire format the earlier Python agents used.</li>
+          <li><strong>Submit.</strong> Results are packed into an HMAC-SHA256-signed, gzip-compressed envelope and POSTed to the collector — the same wire format used by the private Python agents behind <a className="doc-link" href="https://whatsonhttp.com/" target="_blank" rel="noopener noreferrer">What&apos;s on HTTP</a>, created by <a className="doc-link" href="https://github.com/elixx" target="_blank" rel="noopener noreferrer">elixx</a>.</li>
           <li><strong>Ingest.</strong> The collector verifies the signature, decodes, computes a deterministic ID per <code>ip:port</code>, uploads the screenshot to object storage, and upserts the record into MongoDB (buffering to disk if the database is momentarily unavailable).</li>
           <li><strong>Enrich.</strong> A background worker cross-references each host against public CVE and reputation feeds, denormalizing the summary back onto the record.</li>
           <li><strong>Serve.</strong> Clean JSON APIs power the embedded React UI, which renders the Overview, observation feed, search, statistics, and record pages.</li>
@@ -110,7 +110,7 @@ export default function Architecture() {
           <li><strong>Designed for failure.</strong> If MongoDB is unreachable, accepted submissions are spooled to disk as BSON and flushed when it recovers — ingest never drops data because the database blinked.</li>
           <li><strong>Idempotent by construction.</strong> Each service's <code>_id</code> is derived deterministically from <code>ip:port</code>, so re-observing a host updates one document instead of duplicating it — essential for a continuously updated sample.</li>
           <li><strong>Bounded concurrency &amp; rate limits.</strong> Object-storage uploads run with a bounded worker pool; the public read APIs are throttled per client IP with an in-process token bucket.</li>
-          <li><strong>Strangler migration.</strong> The Go collector speaks the exact legacy v1 wire protocol (HMAC + gzip + base64) of an earlier Python prototype, verified byte-for-byte with golden tests, so old and new agents could run side-by-side during the rewrite rather than a risky flag-day cutover.</li>
+          <li><strong>Strangler migration.</strong> The Go collector reimplements the exact legacy v1 wire protocol (HMAC + gzip + base64) of the private What&apos;s on HTTP Python system created by elixx. Representative outputs are verified byte-for-byte with golden tests, so old and new agents could run side-by-side during the rewrite rather than a risky flag-day cutover. The complete contribution history and current source-rights status are recorded in <a className="doc-link" href="https://github.com/verdantpro/reachable-web-observatory/blob/main/PROVENANCE.md" target="_blank" rel="noopener noreferrer">PROVENANCE.md</a>.</li>
         </ul>
         <p>
           Supporting packages handle the media work — perceptual (dHash) and DOM-structure hashing,
@@ -211,7 +211,8 @@ export default function Architecture() {
           hosts cross-referenced, and a <em>daily rollup worker</em> that snapshots aggregate sample statistics once a day
           so exposure can be charted over time. Full details are in the{" "}
           <Link className="doc-link" to="/methodology">methodology</Link>; the code is{" "}
-          <a className="doc-link" href="https://github.com/verdantpro/reachable-web-observatory" target="_blank" rel="noopener noreferrer">open source</a>.
+          <a className="doc-link" href="https://github.com/verdantpro/reachable-web-observatory" target="_blank" rel="noopener noreferrer">publicly viewable</a>,
+          with its current rights status documented in the repository.
         </p>
       </section>
 

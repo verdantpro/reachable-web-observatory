@@ -1,5 +1,6 @@
-// Package config loads collector configuration from the environment,
-// preserving the environment variables used by the archived Python prototype.
+// Package config loads collector configuration from the environment, preserving
+// variables used by the private Python system behind What’s on HTTP, created by
+// elixx. See the repository PROVENANCE.md.
 package config
 
 import (

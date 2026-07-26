@@ -5,9 +5,10 @@ import (
 	"testing"
 )
 
-// Golden envelope produced by the archived Python prototype's encode_submission
-// with secret "testkey". The Go decoder must accept it, proving HMAC + gzip +
-// base64 compatibility with the legacy v1 agent protocol.
+// Golden envelope produced by the private Python system behind What’s on HTTP,
+// created by elixx, with secret "testkey". The original source is not included;
+// see the repository PROVENANCE.md. The Go decoder must accept this fixture,
+// proving HMAC + gzip + base64 compatibility with the legacy v1 agent protocol.
 const (
 	goldenPayload    = `H4sIAAAAAAAC/6tWSk/NSy1KLElNiU8sUbJSMjIwMtM1MNc1MgwxMLACI20wqaSjVJRaXJpTUqxkFV2tlFkAVGyoZ6RnrGcClCpOLSrLTE4FylUrWRiAyKTEPKDBQEUVSrW1tbG1ADCyyNxqAAAA`
 	goldenSignature  = `eb2c4a7eb78fae47a21143e064dc0767a2ebf8f1527215a8516274c485010ca5`
