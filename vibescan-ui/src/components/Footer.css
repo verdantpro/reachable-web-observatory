@@ -18,6 +18,7 @@
 .footer-brand-accent { color: var(--accent); }
 .footer-brand-tag { margin: 10px 0 0; font-size: 13px; line-height: 1.5; color: var(--muted); }
 .footer-brand-by { margin: 12px 0 0; font-size: 12px; color: var(--ink-dim); letter-spacing: 0.02em; }
+.footer-brand-by.footer-origin { margin-top: 4px; }
 .footer-brand-by .footer-peer-link { color: inherit; }
 .footer-brand-by .footer-peer-link:hover { color: var(--accent); text-decoration: underline; }
 .footer-garden {

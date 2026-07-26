@@ -17,8 +17,9 @@ export default function Footer() {
             <p className="footer-brand-tag">
               A continuous, ethically conducted random sample of the reachable public-IPv4 web.
             </p>
-            <p className="footer-brand-by mono">
-              Observatory: Justin Walters · original Python system:{" "}
+            <p className="footer-brand-by mono">Observatory: Justin Walters · Verdant Protocol</p>
+            <p className="footer-brand-by footer-origin mono">
+              Original Python system:{" "}
               <a className="footer-peer-link" href="https://github.com/elixx" target="_blank" rel="noopener noreferrer">
                 elixx
               </a>
