@@ -70,38 +70,40 @@ export default function Feed() {
 
   return (
     <div className="page wrap">
-      <div className="page-head row spread">
-        <div>
-          <div className="eyebrow">◊ Feed</div>
-          <h1 className="page-title display">Observation feed</h1>
-          <div className="page-sub mono">
-            {mode === "latest"
-              ? "Newest stored observations first — any response status."
-              : "Algorithmically ranked for viewability — HTTP 200 responses and clear screenshots first. This order is not representative of the sample."}
+      <div className="page-head">
+        <div className="feed-head">
+          <div>
+            <div className="eyebrow">◊ Feed</div>
+            <h1 className="page-title display">Observation feed</h1>
           </div>
-          <p className="page-hint">
-            Cards may carry host-level CVE associations and provider reputation labels, not verified service findings —{" "}
-            <Link className="hint-link" to="/methodology">how to read them →</Link>
+          <div className="chips">
+            <button className={`chip mono${mode === "ranked" ? " on" : ""}`} aria-pressed={mode === "ranked"} onClick={() => setMode("ranked")}>
+              ranked
+            </button>
+            <button className={`chip mono${mode === "latest" ? " on" : ""}`} aria-pressed={mode === "latest"} onClick={() => setMode("latest")}>
+              latest
+            </button>
+            <button className={`chip mono${groupHosts ? " on" : ""}`} aria-pressed={groupHosts} onClick={() => setGroupHosts((value) => !value)}>
+              group by host
+            </button>
+          </div>
+        </div>
+        <div className="page-sub mono">
+          {mode === "latest"
+            ? "Newest stored observations first — any response status."
+            : "Algorithmically ranked for viewability — HTTP 200 responses and clear screenshots first. This order is not representative of the sample."}
+        </div>
+        <p className="page-hint">
+          Cards may carry host-level CVE associations and provider reputation labels, not verified service findings —{" "}
+          <Link className="hint-link" to="/methodology">how to read them →</Link>
+        </p>
+        {collapsedCount > 0 && (
+          <p className="page-hint mono">
+            {collapsedCount} same-host {collapsedCount === 1 ? "service is" : "services are"} grouped
+            into port chips below{groupHosts ? "" : " because the stored captures are visually equivalent"};
+            every service remains available in search.
           </p>
-          {collapsedCount > 0 && (
-            <p className="page-hint mono">
-              {collapsedCount} same-host {collapsedCount === 1 ? "service is" : "services are"} grouped
-              into port chips below{groupHosts ? "" : " because the stored captures are visually equivalent"};
-              every service remains available in search.
-            </p>
-          )}
-        </div>
-        <div className="chips">
-          <button className={`chip mono${mode === "ranked" ? " on" : ""}`} aria-pressed={mode === "ranked"} onClick={() => setMode("ranked")}>
-            ranked
-          </button>
-          <button className={`chip mono${mode === "latest" ? " on" : ""}`} aria-pressed={mode === "latest"} onClick={() => setMode("latest")}>
-            latest
-          </button>
-          <button className={`chip mono${groupHosts ? " on" : ""}`} aria-pressed={groupHosts} onClick={() => setGroupHosts((value) => !value)}>
-            group by host
-          </button>
-        </div>
+        )}
       </div>
 
       {error && tiles.length === 0 ? (
