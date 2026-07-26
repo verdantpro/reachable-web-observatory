@@ -33,9 +33,23 @@ function observationAge(value: string) {
   return `${Math.floor(hours / 24)}d ago`;
 }
 
-export default function ObservationMap() {
-  const [mode, setMode] = useState<MapMode>("observations");
-  const [hours, setHours] = useState(24);
+export default function ObservationMap({
+  variant = "embedded",
+  mode: controlledMode,
+  hours: controlledHours,
+  onModeChange,
+  onHoursChange,
+}: {
+  variant?: "embedded" | "full";
+  mode?: MapMode;
+  hours?: number;
+  onModeChange?: (mode: MapMode) => void;
+  onHoursChange?: (hours: number) => void;
+}) {
+  const [localMode, setLocalMode] = useState<MapMode>("observations");
+  const [localHours, setLocalHours] = useState(24);
+  const mode = controlledMode ?? localMode;
+  const hours = controlledHours ?? localHours;
   const [data, setData] = useState<MapResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -56,7 +70,7 @@ export default function ObservationMap() {
     setSelectedCluster([]);
     setFocusCountry("");
     setFocusNetwork("");
-    api.observationMap(mode, hours, 500)
+    api.observationMap(mode, hours, variant === "full" ? 1000 : 500)
       .then((result) => {
         if (!alive) return;
         setData(result);
@@ -69,7 +83,16 @@ export default function ObservationMap() {
     return () => {
       alive = false;
     };
-  }, [mode, hours, reloadKey]);
+  }, [mode, hours, variant, reloadKey]);
+
+  const chooseMode = (nextMode: MapMode) => {
+    if (controlledMode === undefined) setLocalMode(nextMode);
+    onModeChange?.(nextMode);
+  };
+  const chooseHours = (nextHours: number) => {
+    if (controlledHours === undefined) setLocalHours(nextHours);
+    onHoursChange?.(nextHours);
+  };
 
   const focusedPoints = useMemo(
     () =>
@@ -113,7 +136,7 @@ export default function ObservationMap() {
     : sortedCounts(data?.networks ?? {});
 
   return (
-    <div className="observation-map">
+    <div className={`observation-map ${variant}`}>
       <div className="omap-toolbar">
         <div className="omap-control">
           <span className="omap-label mono">Layer</span>
@@ -125,7 +148,7 @@ export default function ObservationMap() {
                 className={`chip mono${mode === item.value ? " on" : ""}`}
                 aria-pressed={mode === item.value}
                 title={item.description}
-                onClick={() => setMode(item.value)}
+                onClick={() => chooseMode(item.value)}
               >
                 {item.label}
               </button>
@@ -141,7 +164,7 @@ export default function ObservationMap() {
                 key={label}
                 className={`chip mono${hours === value ? " on" : ""}`}
                 aria-pressed={hours === value}
-                onClick={() => setHours(value)}
+                onClick={() => chooseHours(value)}
               >
                 {label}
               </button>

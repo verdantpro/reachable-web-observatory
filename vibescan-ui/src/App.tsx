@@ -5,6 +5,7 @@ import Footer from "./components/Footer";
 import Console from "./pages/Console";
 import Feed from "./pages/Feed";
 import Search from "./pages/Search";
+import MapExplorer from "./pages/MapExplorer";
 import Stats from "./pages/Stats";
 import Signal from "./pages/Signal";
 import About from "./pages/About";
@@ -39,6 +40,7 @@ export default function App() {
           <Route path="/" element={<Console />} />
           <Route path="/feed" element={<Feed />} />
           <Route path="/search" element={<Search />} />
+          <Route path="/map" element={<MapExplorer />} />
           <Route path="/stats" element={<Stats />} />
           <Route path="/signal/:ip/:port" element={<Signal />} />
           <Route path="/external/:ip/:port" element={<ExternalHost />} />

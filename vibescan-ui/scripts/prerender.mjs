@@ -7,6 +7,7 @@ const ROUTES = [
   "/",
   "/feed",
   "/search",
+  "/map",
   "/stats",
   "/data",
   "/methodology",

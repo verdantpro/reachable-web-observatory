@@ -194,9 +194,9 @@ export default function Console() {
       <section className="panel panel-pad console-map">
         <div className="row spread console-section-head">
           <h2 className="eyebrow">◊ Explore observation origins</h2>
-          <span className="mono dim">host-level · coarse IP geolocation</span>
+          <Link className="mono console-more" to="/map">open full map →</Link>
         </div>
-        <ObservationMap />
+        <ObservationMap variant="embedded" />
       </section>
 
       <section className="console-recent">
