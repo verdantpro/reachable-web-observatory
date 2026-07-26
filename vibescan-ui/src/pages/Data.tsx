@@ -127,8 +127,38 @@ export default function Data() {
           — free to use, share, and build on with attribution. That license does not grant rights the
           Observatory does not hold. Captured screenshots and page content, provider-supplied data,
           trademarks, privacy or publicity rights, and other third-party material remain subject to
-          their respective owners' rights and provider terms. The source code is separately open-source
-          under the <span className="mono">MIT</span> license.
+          their respective owners&apos; rights and provider terms.
+        </p>
+        <p>
+          The source code has a separate rights status. Publication of the Go reimplementation was
+          authorized by{" "}
+          <a className="doc-link" href="https://github.com/elixx" target="_blank" rel="noopener noreferrer">
+            elixx
+          </a>
+          , creator of the private Python system behind{" "}
+          <a className="doc-link" href="https://whatsonhttp.com/" target="_blank" rel="noopener noreferrer">
+            What&apos;s on HTTP
+          </a>
+          , but an open-source license for portions based on that system has not yet been documented.
+          No new source-code license is currently offered. See the repository&apos;s{" "}
+          <a
+            className="doc-link"
+            href="https://github.com/verdantpro/reachable-web-observatory/blob/main/LICENSING.md"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            licensing
+          </a>{" "}
+          and{" "}
+          <a
+            className="doc-link"
+            href="https://github.com/verdantpro/reachable-web-observatory/blob/main/PROVENANCE.md"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            provenance
+          </a>{" "}
+          records before reusing source code.
         </p>
       </section>
 

@@ -32,11 +32,15 @@ pages and will update them when scanning moves to dedicated infrastructure. Orig
 metadata and applicable database rights are open under CC-BY-4.0; third-party material is excluded.
 
 **Independent project** — not affiliated with a university and not IRB-reviewed; collaboration
-welcome. Maintained by an independent researcher under **Verdant Protocol**.
+welcome. The Observatory extension is maintained by Justin Walters under **Verdant Protocol**.
 
-The backend is a **Go reimplementation** of an earlier Python prototype, migrated via a
-**strangler** strategy — the Go collector speaks the exact legacy v1 wire protocol, so existing
-agents keep submitting unchanged while components cut over one at a time.
+The backend is a **Go reimplementation and extension** of the private Python
+system behind [What’s on HTTP](https://whatsonhttp.com/), created by
+[elixx](https://github.com/elixx). It was migrated via a **strangler** strategy:
+the Go collector speaks the exact legacy v1 wire protocol, so existing agents
+could keep submitting unchanged while components cut over one at a time. See
+[Provenance](PROVENANCE.md) for the contribution history and current
+source-rights status.
 
 ## Architecture
 
@@ -100,9 +104,10 @@ correspondence goes to `research@verdantprotocol.com`. Full policy:
 | [`vibescan-go/`](vibescan-go/) | Collector, v2 APIs, scanner agent, migrate, Docker/Caddy deploy — [README](vibescan-go/README.md) |
 | [`vibescan-ui/`](vibescan-ui/) | React/Vite console (embedded into the Go image in prod) — [README](vibescan-ui/README.md) |
 
-The earlier Python prototype is not included in the public repository. Its wire-format
-fixtures are preserved as Go golden tests so compatibility claims remain executable and
-inspectable without depending on the archived implementation.
+The private Python system behind What’s on HTTP is not included in the public
+repository. Representative wire-format and media-hash outputs are preserved as
+Go golden tests so compatibility claims remain executable and inspectable
+without publishing the original implementation.
 
 ## Local development
 
@@ -154,13 +159,23 @@ runbook: [`vibescan-go/deploy/DEPLOY.md`](vibescan-go/deploy/DEPLOY.md).
 - The scanner has not yet moved to its planned dedicated VPS, and no scanner IP is published.
 - Interactions (votes, tags, favorites, auth) and live SSE streaming are not yet in this layer.
 
-## License
+## Provenance and licensing
 
-Source code is **open source under the [MIT license](LICENSE)**. Original Observatory metadata,
-annotations, and applicable database rights are licensed under **Creative Commons Attribution
-4.0 (CC-BY-4.0)** under [`LICENSE-DATA`](LICENSE-DATA); [`LICENSING.md`](LICENSING.md)
-explains the split. Captured screenshots/page content, provider-supplied data, trademarks, and
-other third-party material remain subject to their respective owners' rights and terms.
+Reachable Web Observatory originated as a Go reimplementation and extension of
+the private Python system behind What’s on HTTP, created by elixx. Justin
+Walters performed the Go rewrite with AI coding assistance and subsequently
+developed the Observatory research framing, interface, analytics,
+infrastructure, and independently collected dataset. The complete account is in
+[`PROVENANCE.md`](PROVENANCE.md).
+
+No new source-code license is currently offered while downstream licensing for
+portions based on the original system is clarified; see [`LICENSE`](LICENSE) and
+[`LICENSING.md`](LICENSING.md). Original Observatory metadata, annotations, and
+applicable database rights remain licensed under **Creative Commons Attribution
+4.0 (CC-BY-4.0)** under [`LICENSE-DATA`](LICENSE-DATA). Captured
+screenshots/page content, provider-supplied data, trademarks, and other
+third-party material remain subject to their respective owners' rights and
+terms.
 
 ---
 

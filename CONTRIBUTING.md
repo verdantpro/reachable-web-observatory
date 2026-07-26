@@ -1,8 +1,15 @@
 # Contributing
 
 Thank you for helping improve the Reachable Web Observatory. Contributions are
-welcome across the Go collector and scanner, React interface, documentation,
-methodology, tests, and accessibility.
+normally welcome across the Go collector and scanner, React interface,
+documentation, methodology, tests, and accessibility.
+
+> **Source-code contributions are temporarily paused.** Publication of the Go
+> reimplementation was authorized, but downstream source licensing is being
+> clarified with elixx, creator of the original Python system behind
+> [What’s on HTTP](https://whatsonhttp.com/). Issue reports and factual
+> documentation corrections remain welcome. See [PROVENANCE.md](PROVENANCE.md)
+> and [LICENSING.md](LICENSING.md).
 
 ## Before opening a change
 
@@ -38,6 +45,7 @@ the tests run, and any changes to methodology, security posture, deployment, or
 data semantics. Screenshots are helpful for material UI changes.
 
 Use either Conventional Commits or the repository's existing
-`Area: imperative summary` style consistently. By contributing, you agree that
-your code is licensed under MIT and original metadata or documentation you
-contribute may be distributed under CC-BY-4.0 as described in `LICENSING.md`.
+`Area: imperative summary` style consistently. Do not submit source-code changes
+until the licensing notice above is removed. Any accepted original Observatory
+metadata must be accompanied by explicit agreement that it may be distributed
+under CC-BY-4.0 as described in `LICENSING.md`.

@@ -187,11 +187,12 @@ export default function Methodology() {
       <section className="doc-sec" id="reproducibility">
         <h2 className="doc-h">Reproducibility</h2>
         <p>
-          The collection and analysis code is{" "}
+          The collection and analysis code is publicly viewable in the{" "}
           <a className="doc-link" href="https://github.com/verdantpro/reachable-web-observatory" target="_blank" rel="noopener noreferrer">
-            open source
+            repository
           </a>
-          , and the live record schema and export interface are documented on the{" "}
+          ; consult its provenance and licensing notices before reuse. The live record schema and
+          export interface are documented on the{" "}
           <Link className="doc-link" to="/data">data</Link> page. Dated archival snapshots are planned
           but are not yet published. The scanning conduct follows established
           norms for internet measurement — see <Link className="doc-link" to="/ethics">ethics</Link>.

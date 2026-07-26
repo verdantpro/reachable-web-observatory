@@ -17,7 +17,12 @@ export default function Footer() {
             <p className="footer-brand-tag">
               A continuous, ethically conducted random sample of the reachable public-IPv4 web.
             </p>
-            <p className="footer-brand-by mono">by Justin Walters · Verdant Protocol</p>
+            <p className="footer-brand-by mono">
+              Observatory: Justin Walters · original Python system:{" "}
+              <a className="footer-peer-link" href="https://github.com/elixx" target="_blank" rel="noopener noreferrer">
+                elixx
+              </a>
+            </p>
             <a className="footer-garden mono" href="https://verdantprotocol.com/" target="_blank" rel="noopener noreferrer">
               verdantprotocol.com — the digital garden ↗
             </a>
@@ -56,8 +61,8 @@ export default function Footer() {
         <div className="footer-bottom mono">
           <span>© 2026 Reachable Web Observatory</span>
           <span className="footer-bottom-links">
-            <a href={`${REPO}/blob/main/LICENSE`} target="_blank" rel="noopener noreferrer">
-              Code: MIT
+            <a href={`${REPO}/blob/main/LICENSING.md`} target="_blank" rel="noopener noreferrer">
+              Source: rights notice
             </a>
             <span className="footer-dot">·</span>
             <Link to="/data#license">Original metadata: CC-BY-4.0</Link>

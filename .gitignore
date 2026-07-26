@@ -42,3 +42,4 @@ yarn-error.log*
 # Legacy Python stack has its own Git remote — keep it out of this monorepo.
 # Clone vibescan_v2 separately if you need dual-run / reference.
 vibescan_v2/
+docs/ELIXX_PROVENANCE_PLAN.md

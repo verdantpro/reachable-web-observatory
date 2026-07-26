@@ -1,7 +1,8 @@
 cff-version: 1.2.0
-message: "If you use this software or its dataset, cite it and include the data snapshot date."
+message: "If you use the dataset, cite it and include the snapshot date. See PROVENANCE.md and LICENSING.md before reusing source code."
 title: "Reachable Web Observatory"
 type: software
+abstract: "The Go scanner and collector reimplement and extend the private Python system behind What's on HTTP, created by elixx. The Observatory dataset was collected independently."
 authors:
   - family-names: Walters
     given-names: Justin
@@ -9,7 +10,6 @@ version: 0.1.0
 date-released: 2026-07-26
 repository-code: "https://github.com/verdantpro/reachable-web-observatory"
 url: "https://observatory.verdantprotocol.com/"
-license: MIT
 preferred-citation:
   type: dataset
   title: "Reachable Web Observatory: a continuous random sample of the public-IPv4 web"
