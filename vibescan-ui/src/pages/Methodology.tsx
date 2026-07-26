@@ -188,7 +188,7 @@ export default function Methodology() {
         <h2 className="doc-h">Reproducibility</h2>
         <p>
           The collection and analysis code is{" "}
-          <a className="doc-link" href="https://github.com/verdantpro/vibescan_rework" target="_blank" rel="noopener noreferrer">
+          <a className="doc-link" href="https://github.com/verdantpro/reachable-web-observatory" target="_blank" rel="noopener noreferrer">
             open source
           </a>
           , and the live record schema and export interface are documented on the{" "}

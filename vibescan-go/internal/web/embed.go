@@ -5,6 +5,7 @@ package web
 
 import (
 	"embed"
+	"encoding/json"
 	"html"
 	"io/fs"
 	"net/http"
@@ -21,6 +22,9 @@ var robotsTXT []byte
 
 //go:embed security.txt
 var securityTXT []byte
+
+//go:embed routes.json
+var routesJSON []byte
 
 // Handler serves the embedded SPA. Real asset requests are served from dist/;
 // any other path falls back to index.html so client routes (/feed, /signal/…)
@@ -109,20 +113,18 @@ func Handler() http.Handler {
 }
 
 func isPrerenderedRoute(p string) bool {
-	switch strings.TrimSuffix(p, "/") {
-	case "", "/", "/feed", "/search", "/stats", "/about", "/methodology",
-		"/architecture", "/ethics", "/data", "/disclosure", "/scan-info":
-		return true
+	cleanPath := strings.TrimSuffix(p, "/")
+	if cleanPath == "" {
+		cleanPath = "/"
 	}
-	return false
+	_, ok := routeMetadata[cleanPath]
+	return ok
 }
 
 // isClientRoute mirrors the public React routes. Unknown paths still receive
 // the SPA shell so the branded not-found screen renders, but with HTTP 404.
 func isClientRoute(p string) bool {
-	switch strings.TrimSuffix(p, "/") {
-	case "", "/", "/feed", "/search", "/stats", "/about", "/methodology",
-		"/architecture", "/ethics", "/data", "/disclosure", "/scan-info":
+	if isPrerenderedRoute(p) {
 		return true
 	}
 	parts := strings.Split(strings.Trim(p, "/"), "/")
@@ -150,19 +152,38 @@ type pageMetadata struct {
 	summary     string
 }
 
-var routeMetadata = map[string]pageMetadata{
-	"/":             {"Reachable Web Observatory — a random sample of the public-IPv4 web", "An open measurement study using random IPv4 sampling to observe reachable web services.", "Reachable Web Observatory", "A continuously updated random sample of reachable public-IPv4 web services on five common ports."},
-	"/feed":         {"Observation feed — Reachable Web Observatory", "Explore ranked and recent stored web-service observations.", "Observation feed", "Ranked and recent timestamped observations from the Observatory sample."},
-	"/search":       {"Search observations — Reachable Web Observatory", "Search stored observations by service, network, location, and attributed provider evidence.", "Search observations", "Search the retained service observations and host-level provider associations."},
-	"/map":          {"Map explorer — Reachable Web Observatory", "Explore sampled reachable web hosts by geography, protocol, network, exposure signals, and time window.", "Observation map", "An interactive host-level map with explicit time windows and coarse IP-based geolocation."},
-	"/stats":        {"Study findings — Reachable Web Observatory", "Descriptive statistics for sampled reachable web-service observations.", "Study findings", "Descriptive service- and host-level statistics with explicit time windows and denominators."},
-	"/data":         {"Open data — Reachable Web Observatory", "Download JSON or CSV exports and read the public API and schema documentation.", "Data and access", "Open exports, API documentation, schema, licensing, and citation guidance."},
-	"/methodology":  {"Methodology — Reachable Web Observatory", "Sampling, capture, enrichment, analysis, reproducibility, and limitations.", "Methodology", "How the Observatory samples, captures, enriches, and analyzes reachable services."},
-	"/about":        {"About — Reachable Web Observatory", "Purpose, governance, contact information, and citation for the Observatory.", "About the Observatory", "An independent open internet-measurement research project operated by Verdant Protocol."},
-	"/architecture": {"Architecture — Reachable Web Observatory", "System data flow, operational boundaries, storage, and deployment architecture.", "Architecture", "How scanner observations flow through signed ingest, storage, enrichment, APIs, and the public interface."},
-	"/ethics":       {"Ethics — Reachable Web Observatory", "Ethical principles, risk controls, operator identification, and opt-out commitments.", "Ethics", "The measurement boundaries, risk controls, transparency commitments, and operator protections."},
-	"/disclosure":   {"Coordinated disclosure — Reachable Web Observatory", "Reporting, correction, removal, and coordinated-disclosure procedures.", "Coordinated disclosure", "How to report issues with the Observatory or request correction and removal."},
-	"/scan-info":    {"Scanner information — Reachable Web Observatory", "Identify Observatory traffic and request exclusion or record removal.", "Scanner and opt-out information", "Information for network operators who observed traffic from this measurement project."},
+type routeDefinition struct {
+	Path        string `json:"path"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	Heading     string `json:"heading"`
+	Summary     string `json:"summary"`
+}
+
+var routeMetadata = loadRouteMetadata()
+
+func loadRouteMetadata() map[string]pageMetadata {
+	var definitions []routeDefinition
+	if err := json.Unmarshal(routesJSON, &definitions); err != nil {
+		panic("web: invalid routes.json: " + err.Error())
+	}
+	metadata := make(map[string]pageMetadata, len(definitions))
+	for _, route := range definitions {
+		if route.Path == "" || route.Title == "" || route.Description == "" ||
+			route.Heading == "" || route.Summary == "" {
+			panic("web: incomplete route definition for " + route.Path)
+		}
+		if _, exists := metadata[route.Path]; exists {
+			panic("web: duplicate route definition for " + route.Path)
+		}
+		metadata[route.Path] = pageMetadata{
+			title:       route.Title,
+			description: route.Description,
+			heading:     route.Heading,
+			summary:     route.Summary,
+		}
+	}
+	return metadata
 }
 
 var (

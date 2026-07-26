@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/vibescan/vibescan-go/internal/buildinfo"
 	"github.com/vibescan/vibescan-go/internal/collector"
 	"github.com/vibescan/vibescan-go/internal/config"
 	"github.com/vibescan/vibescan-go/internal/enrich"
@@ -106,7 +107,11 @@ func withCORS(next http.Handler) http.Handler {
 }
 
 func (s *Server) handleHealthz(w http.ResponseWriter, _ *http.Request) {
-	writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
+	writeJSON(w, http.StatusOK, map[string]any{
+		"ok":       true,
+		"commit":   buildinfo.Commit,
+		"built_at": buildinfo.BuiltAt,
+	})
 }
 
 func (s *Server) handleHealth(w http.ResponseWriter, _ *http.Request) {

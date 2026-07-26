@@ -1,5 +1,5 @@
 // Package config loads collector configuration from the environment,
-// mirroring the environment variables used by the Python VibeScan server.
+// preserving the environment variables used by the archived Python prototype.
 package config
 
 import (
@@ -62,7 +62,7 @@ type Config struct {
 	EnrichEnabled       bool
 	ShodanAPIKey        string
 	EnrichTTLHours      int     // durable cache freshness window
-	RollupWorkerEnabled bool    // background worker snapshots daily census stats for trends
+	RollupWorkerEnabled bool    // background worker snapshots daily aggregate stats for trends
 	EnrichWorkerEnabled bool    // background worker enriches recent hosts (InternetDB only)
 	EnrichWorkerRPS     float64 // shared outbound rate to Shodan/InternetDB
 	EnrichWorkerBatch   int     // hosts enriched per worker tick

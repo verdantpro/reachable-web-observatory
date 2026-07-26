@@ -1,5 +1,5 @@
 {
-  "name": "Reachable Web Observatory — a census of the public-IPv4 web",
+  "name": "Reachable Web Observatory — a random sample of the public-IPv4 web",
   "short_name": "RWO",
   "description": "An open measurement study of the reachable public-IPv4 web: random discovery, HTTP capture, geolocation, and CVE/reputation enrichment.",
   "start_url": "/",

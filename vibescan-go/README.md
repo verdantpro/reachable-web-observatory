@@ -1,9 +1,8 @@
 # vibescan-go
 
-The Go backend for the **Reachable Web Observatory** (codename *VibeScan*), ported
-incrementally from the Python app in `../vibescan_v2`. It reuses the existing MongoDB /
-object-storage data so Go and Python services can run side-by-side against the same
-store during migration.
+The Go backend for the **Reachable Web Observatory**. It replaced an earlier
+Python prototype while preserving the signed v1 ingest envelope and stored-data
+compatibility; executable golden tests retain that migration provenance.
 
 The production binary serves **ingest + v2 read APIs + the embedded React UI**
 from one process (same origin in prod — no CORS required).
@@ -81,13 +80,12 @@ VIBESCAN_BACKFILL_ENRICH=1 go run ./cmd/migrate   # re-denormalize cached CVE/en
 VIBESCAN_BACKFILL_PRODUCTS=1 go run ./cmd/migrate # parse legacy banners into product fields
 ```
 
-The plan is a **strangler** migration: the Go collector speaks the exact legacy
-v1 wire protocol, so agents keep submitting unchanged while components cut over
-one at a time.
+The completed **strangler migration** preserved the legacy v1 wire protocol, so
+older agents can continue submitting while the Go agent is now primary.
 
 ## Collector
 
-`cmd/collector` is a drop-in replacement for `vibescan_v2/server.py`. It serves:
+`cmd/collector` is the production ingest and read server. It serves:
 
 | Route | Purpose |
 |-------|---------|
@@ -127,10 +125,10 @@ Verified byte-for-byte against the Python implementation via golden tests
 ### Run locally
 
 ```bash
-# Config via environment or a .env file (same variables as vibescan_v2 / deploy/.env.example).
+# Config via environment or a .env file (see deploy/.env.example).
 export MONGO_URI="mongodb://localhost:27017"
 export VIBESCAN_SHARED_KEY="dev-key"
-export GEOLITE2_CITY_MMDB=../vibescan_v2/GeoLite2-City.mmdb   # optional
+export GEOLITE2_CITY_MMDB=./GeoLite2-City.mmdb   # optional
 go run ./cmd/collector    # listens on :8000 (override with PORT)
 ```
 
@@ -148,9 +146,11 @@ go build ./...
 govulncheck ./...      # optional: same check CI runs
 ```
 
-CI (`.github/workflows/ci.yml`) runs `go vet` / `go test -short` / `govulncheck`,
-the UI lint + build, and a Trivy dependency/secret scan on every PR and push to
-`main`; the Deploy workflow gates on a fast test job before it builds and ships.
+CI (`.github/workflows/ci.yml`) runs formatting checks, `go vet`, race-enabled
+`go test -short`, pinned `govulncheck`, UI lint/tests/build, CodeQL, and a
+full-SHA-pinned Trivy dependency/secret scan. The Deploy workflow gates on a
+fast test job, then verifies both the running commit and prerendered UI before
+it declares a rollout successful.
 
 ## v2 read APIs
 
@@ -164,7 +164,7 @@ the collector). Keyed by `ip/port` rather than Mongo `_id`.
 | `GET /api/v2/services/{ip}/{port}?brief=` | Single service detail (incl. `fulltext`); `brief=1` omits `fulltext` |
 | `GET /api/v2/enrich/{ip}` | Shodan / InternetDB cross-reference (ports, CVEs, tags, org); cached |
 | `GET /api/v2/stats?time_range=<hours>` | Aggregate snapshot (`0` = all retained services; positive values = records updated within that many hours; one `$facet` pass, 60s cached): includes **concentration** by port/product/org/country, host-deduplicated **top CVEs**, geography (`services_by_country`, flagged-host points), and per-dimension totals for density views |
-| `GET /api/v2/trends?days=<n>` | Daily census snapshots (longitudinal exposure series) from the rollup worker |
+| `GET /api/v2/trends?days=<n>` | Daily aggregate snapshots (longitudinal exposure series) from the rollup worker |
 | `GET /api/v2/export?format=json\|csv&…` | Open dataset export (same filters as search); rate-limited, paginated |
 | `GET /api/v2/random-capture` | One random landing-page tile (`$sample`) |
 | `GET /api/v2/image/{ip}/{port}` | Serves base64 captures; 302-redirects to object storage for `r2:` refs |
@@ -182,8 +182,8 @@ disabled, so the UI falls back to the full image).
 
 - **Stats are computed live** over the requested window (bounded `$facet` +
   `maxTimeMS` + 60s cache, per-range), not from Redis/hourly rollups. A separate
-  **daily rollup worker** (`VIBESCAN_ROLLUP_WORKER`, default on) snapshots the whole
-  census once per day into `stats_daily` for the longitudinal `/api/v2/trends` series.
+  **daily rollup worker** (`VIBESCAN_ROLLUP_WORKER`, default on) snapshots the retained
+  collection once per day into `stats_daily` for the longitudinal `/api/v2/trends` series.
 - **Search uses a MongoDB `$text` index** (weighted over banner, geo
   city/country/region, cert_cn, whois, rdns, fulltext) for free text — so
   location queries like `shanghai` match the GeoIP subdocument. IP-like queries
@@ -211,7 +211,7 @@ disabled, so the UI falls back to the full image).
   enriched via InternetDB (free), denormalizing `vuln_count`/`shodan_tags`/
   `enrich_sources`/`enriched_at` onto results so tiles, `search?has_vulns=1&tag=`,
   the Stats CVE-associated facet, and the card provenance line ("source · when ·
-  unverified") work census-wide. The API key never reaches the browser.
+  unverified") work across the retained collection. The API key never reaches the browser.
 - **Threat intelligence** (`internal/enrich/threat.go`, ported from
   [scope-recon](https://github.com/nethoundsh/scope-recon)): on the on-demand
   Signal view, configured providers may cross-reference an IP through ip-api, RIPEstat, VirusTotal,
@@ -238,7 +238,7 @@ correction requests go to `abuse@verdantprotocol.com`.
 
 ## Agent
 
-`cmd/agent` is the Go port of `vibescan_v2/client_agent.py`: random IPv4 batches
+`cmd/agent` is the production scanner: random IPv4 batches
 → nmap → optional Chromium capture → signed submit.
 
 ```bash
@@ -287,9 +287,12 @@ deploy/              compose (build / registry / agent), Caddyfile,
                      .env.example, agent.env.example, build-push.sh, DEPLOY.md
 ```
 
-## Related trees
+## Related tree
 
 | Path | Role |
 |------|------|
 | `../vibescan-ui` | React/Vite frontend (embedded into the Go image in production) |
-| `../vibescan_v2` | Legacy Python stack (reference + dual-run) |
+
+The archived Python prototype is not published in this repository. Compatibility
+with its v1 transport and hashing behavior is captured by golden fixtures in
+`internal/transport` and `internal/media`.

@@ -1,4 +1,4 @@
-# VibeScan Go agent: nmap discovery + headless Chromium capture, in one image.
+# Reachable Web Observatory agent: nmap discovery + headless Chromium capture.
 # Build with vibescan-go/ as the context:
 #   docker build -f Dockerfile.agent -t vibescan-agent .
 

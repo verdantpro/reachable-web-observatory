@@ -12,6 +12,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   backend:
     name: Go — vet, test, govulncheck
@@ -27,14 +31,18 @@ jobs:
           cache-dependency-path: vibescan-go/go.sum
       - name: go vet
         run: go vet ./...
-      - name: go test
+      - name: gofmt
+        run: test -z "$(gofmt -l .)"
+      - name: go test (race)
         # -short skips the browser/capture tests, which need a real headless
         # Chromium (present on the scanner host, not on CI runners). Those tests
         # already guard themselves with testing.Short().
-        run: go test -short ./...
+        run: go test -short -race -covermode=atomic -coverprofile=coverage.out ./...
+      - name: Coverage summary
+        run: go tool cover -func=coverage.out
       - name: govulncheck
         run: |
-          go install golang.org/x/vuln/cmd/govulncheck@latest
+          go install golang.org/x/vuln/cmd/govulncheck@v1.6.0
           "$(go env GOPATH)/bin/govulncheck" ./...
 
   frontend:
@@ -53,6 +61,8 @@ jobs:
       - run: npm ci
       - name: Lint
         run: npm run lint
+      - name: Unit tests
+        run: npm test
       - name: Typecheck + build
         run: npm run build
 
@@ -66,8 +76,9 @@ jobs:
       # raw-socket privileges, which trips the "non-root user" check as a false
       # positive. Dependency (gomod/npm) and secret scanning are the security gates.
       - name: Trivy filesystem scan (vulns + secrets)
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
         with:
+          version: v0.69.3
           scan-type: fs
           scanners: vuln,secret
           severity: HIGH,CRITICAL

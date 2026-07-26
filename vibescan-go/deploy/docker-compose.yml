@@ -1,4 +1,4 @@
-# Production stack for the VibeScan MVP: the Go app (UI + APIs + ingest) behind
+# Production stack for the Reachable Web Observatory: the Go app (UI + APIs + ingest) behind
 # Caddy (automatic HTTPS). MongoDB (Atlas) and R2 are external — configured via
 # .env. Run from this directory:  docker compose up -d --build
 #
@@ -15,7 +15,7 @@ x-logging: &logging
 services:
   app:
     build:
-      context: ../..                 # repo root (vibescan_rework/)
+      context: ../..                 # repository root
       dockerfile: vibescan-go/Dockerfile
     env_file: .env
     environment:

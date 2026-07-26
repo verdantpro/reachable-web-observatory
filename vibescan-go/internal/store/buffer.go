@@ -18,9 +18,14 @@ import (
 // (dates, etc.) exactly.
 type Buffer struct {
 	dir      string
-	mongo    *Mongo
+	mongo    bufferStore
 	interval time.Duration
 	debug    bool
+}
+
+type bufferStore interface {
+	Available() bool
+	BulkUpsert(context.Context, []UpsertOp) (map[int]bool, error)
 }
 
 type bufferFile struct {
@@ -28,7 +33,7 @@ type bufferFile struct {
 }
 
 // NewBuffer creates the spool directory and returns a Buffer.
-func NewBuffer(dir string, m *Mongo, interval time.Duration, debug bool) (*Buffer, error) {
+func NewBuffer(dir string, m bufferStore, interval time.Duration, debug bool) (*Buffer, error) {
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return nil, err
 	}

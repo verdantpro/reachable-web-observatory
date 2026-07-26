@@ -1,0 +1,128 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Reachable Web Observatory read API",
+    "version": "2.0.0",
+    "description": "Public, rate-limited read endpoints. List ordering is deterministic within a request but can change as observations are updated."
+  },
+  "servers": [{ "url": "https://observatory.verdantprotocol.com" }],
+  "paths": {
+    "/api/v2/gallery": {
+      "get": {
+        "summary": "List ranked or recent stored observations",
+        "parameters": [
+          { "$ref": "#/components/parameters/limit" },
+          { "$ref": "#/components/parameters/offset" },
+          { "name": "sort", "in": "query", "description": "Omit or use ranked for viewability ranking; recent selects strict recency.", "schema": { "type": "string", "enum": ["ranked", "recent"], "default": "ranked" } }
+        ],
+        "responses": { "200": { "$ref": "#/components/responses/List" }, "429": { "$ref": "#/components/responses/RateLimited" } }
+      }
+    },
+    "/api/v2/map": {
+      "get": {
+        "summary": "Retrieve host-level geolocated observations and matching geographic/network summaries",
+        "parameters": [
+          { "name": "mode", "in": "query", "schema": { "type": "string", "enum": ["observations", "cleartext", "at-risk"], "default": "observations" } },
+          { "name": "time_range", "in": "query", "schema": { "type": "integer", "minimum": 0, "maximum": 8760, "default": 24, "description": "Hours; 0 means all retained observations." } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "minimum": 1, "maximum": 1000, "default": 500 } }
+        ],
+        "responses": {
+          "200": { "description": "One newest matching geolocated service per host, bounded marker data, exact total_hosts, and country/network host counts." },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/api/v2/search": {
+      "get": {
+        "summary": "Search stored service observations",
+        "parameters": [
+          { "name": "q", "in": "query", "schema": { "type": "string", "maxLength": 128 } },
+          { "name": "network", "in": "query", "description": "Exact normalized RDAP/WHOIS network label.", "schema": { "type": "string", "maxLength": 128 } },
+          { "name": "time_range", "in": "query", "schema": { "type": "integer", "minimum": 0, "maximum": 8760, "description": "Hours; 0 means all retained observations." } },
+          { "name": "product", "in": "query", "schema": { "type": "string" } },
+          { "name": "port", "in": "query", "schema": { "type": "integer" } },
+          { "name": "status", "in": "query", "schema": { "type": "integer" } },
+          { "name": "secured", "in": "query", "schema": { "type": "boolean" } },
+          { "name": "has_vulns", "in": "query", "schema": { "type": "boolean" } },
+          { "name": "tag", "in": "query", "schema": { "type": "string" } },
+          { "name": "verdict", "in": "query", "schema": { "type": "string", "enum": ["clean", "suspicious", "malicious"] } },
+          { "name": "sort", "in": "query", "schema": { "type": "string", "enum": ["newest", "relevance", "vulns", "ip"] } },
+          { "$ref": "#/components/parameters/limit" },
+          { "$ref": "#/components/parameters/offset" }
+        ],
+        "responses": { "200": { "$ref": "#/components/responses/List" }, "429": { "$ref": "#/components/responses/RateLimited" } }
+      }
+    },
+    "/api/v2/export": {
+      "get": {
+        "summary": "Download a manually paginated JSON or CSV snapshot",
+        "parameters": [
+          { "name": "format", "in": "query", "required": true, "schema": { "type": "string", "enum": ["json", "csv"] } },
+          { "name": "q", "in": "query", "schema": { "type": "string", "maxLength": 128 } },
+          { "name": "network", "in": "query", "description": "Exact normalized RDAP/WHOIS network label.", "schema": { "type": "string", "maxLength": 128 } },
+          { "name": "time_range", "in": "query", "schema": { "type": "integer", "minimum": 0, "maximum": 8760, "description": "Hours; 0 means all retained observations." } },
+          { "name": "product", "in": "query", "schema": { "type": "string" } },
+          { "name": "port", "in": "query", "schema": { "type": "integer" } },
+          { "name": "status", "in": "query", "schema": { "type": "integer" } },
+          { "name": "secured", "in": "query", "schema": { "type": "boolean" } },
+          { "name": "has_vulns", "in": "query", "schema": { "type": "boolean" } },
+          { "name": "tag", "in": "query", "schema": { "type": "string" } },
+          { "name": "verdict", "in": "query", "schema": { "type": "string", "enum": ["clean", "suspicious", "malicious"] } },
+          { "name": "sort", "in": "query", "schema": { "type": "string", "enum": ["newest", "relevance", "vulns", "ip"] } },
+          { "$ref": "#/components/parameters/exportLimit" },
+          { "$ref": "#/components/parameters/offset" }
+        ],
+        "responses": {
+          "200": { "description": "A raw JSON array or CSV file; no total or next-page metadata is embedded." },
+          "400": { "description": "Unsupported format." },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/api/v2/services/{ip}/{port}": {
+      "get": {
+        "summary": "Retrieve one stored observation, including captured text when retained",
+        "parameters": [
+          { "name": "ip", "in": "path", "required": true, "schema": { "type": "string", "format": "ipv4" } },
+          { "name": "port", "in": "path", "required": true, "schema": { "type": "integer" } },
+          { "name": "brief", "in": "query", "schema": { "type": "boolean" } }
+        ],
+        "responses": { "200": { "description": "Observation detail." }, "404": { "description": "No retained record." } }
+      }
+    },
+    "/api/v2/stats": {
+      "get": {
+        "summary": "Aggregate descriptive statistics",
+        "parameters": [{ "name": "time_range", "in": "query", "schema": { "type": "integer", "description": "Hours; 0 means all retained observations." } }],
+        "responses": { "200": { "description": "Aggregate statistics." } }
+      }
+    }
+  },
+  "components": {
+    "parameters": {
+      "limit": { "name": "limit", "in": "query", "schema": { "type": "integer", "minimum": 1, "maximum": 500, "default": 100 } },
+      "exportLimit": { "name": "limit", "in": "query", "schema": { "type": "integer", "minimum": 1, "maximum": 2000, "default": 1000 } },
+      "offset": { "name": "offset", "in": "query", "schema": { "type": "integer", "minimum": 0, "maximum": 1000000, "default": 0 } }
+    },
+    "responses": {
+      "List": {
+        "description": "Paginated list.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": ["entries", "has_more"],
+              "properties": {
+                "entries": { "type": "array", "items": { "$ref": "https://observatory.verdantprotocol.com/rwo-record.schema.json" } },
+                "has_more": { "type": "boolean" },
+                "total": { "type": "integer" },
+                "total_hosts": { "type": "integer" }
+              }
+            }
+          }
+        }
+      },
+      "RateLimited": { "description": "Per-client token-bucket rate limit exceeded." }
+    }
+  }
+}

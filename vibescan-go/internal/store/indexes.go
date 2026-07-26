@@ -9,7 +9,7 @@ import (
 )
 
 // EnsureIndexes creates the indexes the v2 read paths rely on. It mirrors the
-// relevant subset of vibescan_v2/tools/apply_indexes.py (results collection
+// relevant subset of the archived prototype's result-collection indexes
 // only; votes/users indexes belong to deferred features). Index creation is
 // idempotent, so this is safe to call on every startup.
 func (m *Mongo) EnsureIndexes(ctx context.Context) error {

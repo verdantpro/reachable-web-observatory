@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://observatory.verdantprotocol.com/rwo-record.schema.json",
+  "title": "Reachable Web Observatory summary record",
+  "type": "object",
+  "required": ["ip", "port", "banner", "product", "http_status", "secured", "updated_at"],
+  "properties": {
+    "ip": { "type": "string", "format": "ipv4" },
+    "port": { "type": "integer", "minimum": 1, "maximum": 65535 },
+    "banner": { "type": "string" },
+    "product": { "type": "string" },
+    "product_version": { "type": "string" },
+    "http_status": { "type": ["integer", "null"], "minimum": 100, "maximum": 599 },
+    "secured": { "type": "boolean" },
+    "whois": { "type": "string" },
+    "image_url": { "type": "string" },
+    "thumb_url": { "type": "string" },
+    "has_fulltext": { "type": "boolean" },
+    "cert_cn": { "type": "string" },
+    "updated_at": { "type": "string", "format": "date-time" },
+    "vuln_count": { "type": "integer", "minimum": 0 },
+    "verdict": { "type": "string", "enum": ["", "clean", "suspicious", "malicious"] },
+    "sources": { "type": "array", "items": { "type": "string" } },
+    "enriched_at": { "type": "string", "format": "date-time" },
+    "match_reason": { "type": "string" },
+    "geo": {
+      "type": ["object", "null"],
+      "properties": {
+        "city": { "type": "string" },
+        "region": { "type": "string" },
+        "country": { "type": "string" },
+        "country_iso": { "type": "string" },
+        "lat": { "type": "number" },
+        "lon": { "type": "number" },
+        "accuracy_radius_km": { "type": ["number", "null"] }
+      }
+    }
+  },
+  "additionalProperties": true
+}

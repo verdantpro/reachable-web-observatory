@@ -3,23 +3,15 @@ import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
 import path from "node:path";
 
-const ROUTES = [
-  "/",
-  "/feed",
-  "/search",
-  "/map",
-  "/stats",
-  "/data",
-  "/methodology",
-  "/about",
-  "/architecture",
-  "/ethics",
-  "/scan-info",
-  "/disclosure",
-];
-
 const origin = "https://observatory.verdantprotocol.com";
 const root = process.cwd();
+const routesPath = process.env.RWO_ROUTES_PATH ??
+  path.join(root, "../vibescan-go/internal/web/routes.json");
+const routeDefinitions = JSON.parse(await readFile(routesPath, "utf8"));
+const ROUTES = routeDefinitions.map((route) => route.path);
+if (new Set(ROUTES).size !== ROUTES.length) {
+  throw new Error("Route registry contains a duplicate path");
+}
 const clientDir = path.join(root, "dist");
 const serverDir = path.join(root, "dist-ssr");
 
@@ -68,10 +60,14 @@ function replaceMeta(document, route, meta) {
   return output;
 }
 
-for (const route of ROUTES) {
+for (const definition of routeDefinitions) {
+  const route = definition.path;
   const { html, meta } = render(route);
   if (!html.includes("<h1") || !meta?.title || !meta?.description) {
     throw new Error(`Prerendered route ${route} is missing an H1 or required metadata`);
+  }
+  if (meta.path !== route || meta.title !== definition.title || meta.description !== definition.description) {
+    throw new Error(`Rendered metadata for ${route} differs from the canonical route registry`);
   }
   const output = replaceMeta(template.replace('<div id="root"></div>', `<div id="root">${html}</div>`), route, meta);
   if (output.includes('<div id="root"></div>')) {
@@ -83,4 +79,12 @@ for (const route of ROUTES) {
 }
 
 await writeFile(path.join(clientDir, "prerendered-routes.json"), `${JSON.stringify(ROUTES, null, 2)}\n`);
+const sitemapEntries = routeDefinitions.map((route) => {
+  const loc = `${origin}${route.path === "/" ? "/" : route.path}`;
+  return `  <url>\n    <loc>${loc}</loc>\n    <changefreq>${route.changefreq}</changefreq>\n    <priority>${route.priority}</priority>\n  </url>`;
+}).join("\n");
+await writeFile(
+  path.join(clientDir, "sitemap.xml"),
+  `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${sitemapEntries}\n</urlset>\n`,
+);
 await rm(serverDir, { recursive: true, force: true });

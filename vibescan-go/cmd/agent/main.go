@@ -1,4 +1,4 @@
-// Command agent is the VibeScan scanner: it generates random IPv4 targets,
+// Command agent is the Reachable Web Observatory scanner: it generates random IPv4 targets,
 // discovers HTTP services with nmap, screenshots them with headless Chromium,
 // and submits signed results to the collector. A Go port of client_agent.py.
 package main

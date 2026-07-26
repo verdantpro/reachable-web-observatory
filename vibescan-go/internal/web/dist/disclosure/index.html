@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#15171b" />
+    <title>Coordinated disclosure — Reachable Web Observatory</title>
+    <meta name="description" content="How the Reachable Web Observatory handles vulnerable or compromised hosts it observes: best-effort operator notification and responsible, coordinated disclosure." />
+    <link rel="canonical" href="https://observatory.verdantprotocol.com/disclosure" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Reachable Web Observatory" />
+    <meta property="og:title" content="Coordinated disclosure — Reachable Web Observatory" />
+    <meta property="og:description" content="How the Reachable Web Observatory handles vulnerable or compromised hosts it observes: best-effort operator notification and responsible, coordinated disclosure." />
+    <meta property="og:url" content="https://observatory.verdantprotocol.com/disclosure" />
+    <meta property="og:image" content="https://observatory.verdantprotocol.com/og.png?v=20260726" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Coordinated disclosure — Reachable Web Observatory" />
+    <meta name="twitter:description" content="How the Reachable Web Observatory handles vulnerable or compromised hosts it observes: best-effort operator notification and responsible, coordinated disclosure." />
+    <meta name="twitter:image" content="https://observatory.verdantprotocol.com/og.png?v=20260726" />
+
+    <!-- Structured data: an open research dataset (discoverable via Google Dataset Search). -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Dataset",
+        "name": "Reachable Web Observatory",
+        "description": "A continuously updated random sample of services on the reachable public-IPv4 web (common web ports), optionally enriched with attributed CVE associations and reputation signals, used to study where those observations concentrate over time.",
+        "url": "https://observatory.verdantprotocol.com/",
+        "keywords": ["internet measurement", "random IPv4 sampling", "cleartext HTTP", "exposure", "CVE associations", "reachable web", "security"],
+        "isAccessibleForFree": true,
+        "usageInfo": "https://observatory.verdantprotocol.com/data#license",
+        "creator": [
+          { "@type": "Person", "name": "Justin Walters" },
+          { "@type": "Organization", "name": "Verdant Protocol", "url": "https://verdantprotocol.com/" }
+        ]
+      }
+    </script>
+    <script type="module" crossorigin src="/assets/index-BT9OIYVw.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-D_KSMNqA.css">
+      <meta name="robots" content="index, follow" />
+  </head>
+  <body>
+    <div id="root"><a class="skip-link" href="#main-content">Skip to main content</a><header class="topbar"><div class="wrap topbar-inner"><a class="brand" href="/" data-discover="true"><span class="brand-mark display">Reachable Web </span><span class="brand-accent display">Observatory</span></a><button class="nav-toggle mono" aria-label="Open menu" aria-expanded="false" aria-controls="primary-navigation">☰</button><nav id="primary-navigation" class="nav"><a class="nav-link mono" href="/" data-discover="true">OVERVIEW</a><a class="nav-link mono" href="/feed" data-discover="true">FEED</a><a class="nav-link mono" href="/map" data-discover="true">MAP</a><a class="nav-link mono" href="/search" data-discover="true">SEARCH</a><a class="nav-link mono" href="/stats" data-discover="true">STATS</a><a class="nav-link mono" href="/data" data-discover="true">DATA</a><a class="nav-link mono" href="/methodology" data-discover="true">METHODS</a></nav><div class="topbar-meta mono"><span class="clock"><span class="live-dot"></span> <!-- -->--:--:--<!-- --> UTC</span></div></div></header><main id="main-content" tabindex="-1"><div class="doc-page"><div class="page wrap doc"><div class="eyebrow">◊ Disclosure</div><h1 class="doc-title display">Coordinated disclosure</h1><p class="doc-lede">The study measures exposure — so it regularly sees hosts that look vulnerable or compromised. This is how it handles that responsibly.</p><section class="doc-sec" id="principles"><h2 class="doc-h">Principles</h2><ul class="doc-list"><li>We observe; we do not exploit, confirm, or interact beyond loading a page a browser would.</li><li>Individual observations are published openly, including the address, capture, service metadata, and third-party host associations described on the<!-- --> <a class="doc-link" href="/data" data-discover="true">data page</a>.</li><li>We preserve conflicting, clean, stale, missing, and adverse evidence rather than presenting a third-party association as a verified vulnerability or compromise.</li><li>Record pages are public but marked for exclusion from search-engine indexes. Operators can request correction, removal, or exclusion from future scans.</li></ul></section><section class="doc-sec" id="what-we-do"><h2 class="doc-h">When we observe a vulnerable or compromised host</h2><p>Where third-party evidence suggests a host may be exploitable, serving malware, or acting as attack infrastructure, we make a <em>best-effort</em> attempt to notify the responsible party — typically the network&#x27;s published abuse contact or CERT — with the minimum detail needed to locate and fix it. Because reputation and CVE signals come from<!-- --> <a class="doc-link" href="/methodology#enrichment" data-discover="true">third-party feeds</a> and can be wrong or stale, notifications and public records frame them as leads to verify, not confirmed compromises.</p></section><section class="doc-sec" id="systemic"><h2 class="doc-h">Systemic findings</h2><p>If the study independently confirms a <em>systemic</em> issue — a widespread default credential, an exposed management interface across a product line, or a vulnerable library at scale — we follow coordinated disclosure: notify the vendor or coordinating body first, allow a standard remediation window (typically 90 days), and only then publish analysis of the confirmed issue. Unverified provider associations remain clearly labelled as such.</p></section><section class="doc-sec" id="report-to-us"><h2 class="doc-h">Reporting something to us</h2><p>If a record on this site exposes information that shouldn&#x27;t be public, or you believe a finding is inaccurate, contact<!-- --> <a class="doc-link" href="mailto:abuse@verdantprotocol.com">abuse@verdantprotocol.com</a> — a person monitors it. You can also request removal of records or exclusion from future scans via the<!-- --> <a class="doc-link" href="/scan-info" data-discover="true">scan-info</a> page.</p><div class="doc-callout accent">Good-faith security research and vulnerability reports are welcome. We will not pursue action against anyone who reports an issue with this project responsibly and in good faith.</div><p>For research collaboration, dataset questions, and citation help, contact<!-- --> <a class="doc-link" href="mailto:research@verdantprotocol.com">research@verdantprotocol.com</a>.</p><h3>Response targets</h3><ul class="doc-list"><li><strong>Acknowledgement:</strong> within two days.</li><li><strong>Initial triage:</strong> within seven days when the report concerns the Observatory itself.</li><li><strong>Updates:</strong> when material status changes, or at least every 14 days for an active investigation.</li><li><strong>Record correction/removal:</strong> handled separately through the operator workflow and targeted within two days.</li></ul><p>Please do not send secrets by ordinary email. An encrypted reporting channel and published PGP key are not currently available; this limitation will be updated when one is deployed. Reports about third-party hosts should ordinarily go to that host&#x27;s operator rather than to the Observatory.</p></section></div></div></main><footer class="footer"><div class="wrap footer-inner"><div class="footer-top"><div class="footer-brand"><div class="footer-brand-name display">Reachable Web <span class="footer-brand-accent">Observatory</span></div><p class="footer-brand-tag">A continuous, ethically conducted random sample of the reachable public-IPv4 web.</p><p class="footer-brand-by mono">by Justin Walters · Verdant Protocol</p><a class="footer-garden mono" href="https://verdantprotocol.com/" target="_blank" rel="noopener noreferrer">verdantprotocol.com — the digital garden ↗</a></div><nav class="footer-col" aria-label="The study"><div class="footer-col-h mono">The study</div><ul><li><a href="/about" data-discover="true">About</a></li><li><a href="/methodology" data-discover="true">Methodology</a></li><li><a href="/architecture" data-discover="true">Architecture</a></li><li><a href="/ethics" data-discover="true">Ethics</a></li></ul></nav><nav class="footer-col" aria-label="Data and code"><div class="footer-col-h mono">Data &amp; code</div><ul><li><a href="/data" data-discover="true">Open data &amp; API</a></li><li><a href="/stats" data-discover="true">Statistics</a></li><li><a href="https://github.com/verdantpro/reachable-web-observatory" target="_blank" rel="noopener noreferrer">Source ↗</a></li></ul></nav><nav class="footer-col" aria-label="For network operators"><div class="footer-col-h mono">For operators</div><ul><li><a href="/scan-info" data-discover="true">Scanned? Opt out</a></li><li><a href="/disclosure" data-discover="true">Disclosure</a></li><li><a href="mailto:abuse@verdantprotocol.com">Abuse / removal</a></li><li><a href="mailto:research@verdantprotocol.com">Research contact</a></li></ul></nav></div><div class="footer-bottom mono"><span>© 2026 Reachable Web Observatory</span><span class="footer-bottom-links"><a href="https://github.com/verdantpro/reachable-web-observatory/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">Code: MIT</a><span class="footer-dot">·</span><a href="/data#license" data-discover="true">Original metadata: CC-BY-4.0</a></span></div></div></footer></div>
+  </body>
+</html>

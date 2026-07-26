@@ -1,7 +1,7 @@
 # vibescan-ui
 
-Frontend for the **Reachable Web Observatory** (codename *VibeScan*) — the study
-console plus the research pages (methodology, ethics, data, disclosure, scan-info).
+Frontend for the **Reachable Web Observatory** — the study console plus the
+research pages (methodology, ethics, data, disclosure, scan-info).
 React + TypeScript (Vite), talking to the Go v2 read APIs.
 
 In production the built `dist/` is **embedded** into the `vibescan-go` collector
@@ -33,6 +33,7 @@ Design tokens live on `:root` in `src/theme.css`.
 | `/` | **Live** — acquisition viewport + latest/recent rails + world map + headline |
 | `/feed` | **Feed** — captured services, `ranked` (readable captures first) or `latest` (strict recency) |
 | `/search` | **Search** — query + product/port/status/protocol/CVE/tag/verdict filters |
+| `/map` | **Map** — interactive host-level geography, network, protocol, exposure, and time filters |
 | `/stats` | **Stats** — sample totals, concentration, geography, reputation, CVEs, and trends |
 | `/signal/:ip/:port` | **Signal** — public exact-address record, screenshot, notes, page source, and live-host link |
 | `/data` | **Data** — export/API access, schema, license, and citation |
@@ -83,8 +84,9 @@ npm run dev                     # http://localhost:5173
 npm run build                   # typecheck + browser bundle + prerendered HTML → dist/
 ```
 
-The Go API sends `Access-Control-Allow-Origin: *`, so the Vite dev server on a
-different port works out of the box. `VITE_API_BASE` defaults to
+Production uses same-origin requests and does not depend on CORS. The public API
+also sends `Access-Control-Allow-Origin: *` so the Vite development server—and
+read-only research clients hosted elsewhere—work without a proxy. `VITE_API_BASE` defaults to
 `http://127.0.0.1:8000` in dev and `""` (same-origin) in a production build, so
 the embedded app uses relative URLs even without an env file.
 
@@ -119,7 +121,8 @@ the embedded app uses relative URLs even without an env file.
   in R2) and fall back to the full capture when none exists; full resolution loads
   only on the Signal detail page. All captures carry explicit `width`/`height` and
   lazy/async decoding to keep layout shift at zero.
-- SEO/PWA artifacts ship from `public/`: `sitemap.xml` and `manifest.webmanifest`
+- SEO/PWA artifacts ship from `public/`: the prerender build derives `sitemap.xml`
+  from its declared routes, while `manifest.webmanifest`
   (served with correct content types by the Go embed handler, not the SPA shell).
   `og.png` is the 1200×630 social preview referenced by the baseline and route-level
   Open Graph / Twitter metadata. A repo screenshot is still optional.

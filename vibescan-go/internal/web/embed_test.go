@@ -1,11 +1,14 @@
 package web
 
 import (
+	"encoding/json"
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"sort"
 	"strings"
 	"testing"
+	"time"
 )
 
 func get(t *testing.T, h http.Handler, path string) *http.Response {
@@ -37,6 +40,27 @@ func TestServesSecurityTxt(t *testing.T) {
 	}
 	if ct := res.Header.Get("Content-Type"); !strings.HasPrefix(ct, "text/plain") {
 		t.Errorf("content-type = %q, want text/plain", ct)
+	}
+}
+
+func TestSecurityTxtExpiryHasAdvanceWarning(t *testing.T) {
+	const prefix = "Expires: "
+	var expiry string
+	for line := range strings.SplitSeq(string(securityTXT), "\n") {
+		if strings.HasPrefix(line, prefix) {
+			expiry = strings.TrimSpace(strings.TrimPrefix(line, prefix))
+			break
+		}
+	}
+	if expiry == "" {
+		t.Fatal("security.txt is missing Expires")
+	}
+	expiresAt, err := time.Parse(time.RFC3339, expiry)
+	if err != nil {
+		t.Fatalf("invalid security.txt Expires: %v", err)
+	}
+	if remaining := time.Until(expiresAt); remaining < 60*24*time.Hour {
+		t.Fatalf("security.txt expires too soon (%s); renew it before deployment", remaining.Round(time.Hour))
 	}
 }
 
@@ -85,8 +109,9 @@ func TestKnownClientRouteFallsBackToSPA(t *testing.T) {
 	if !strings.Contains(html, "<title>Methodology — Reachable Web Observatory</title>") {
 		t.Errorf("route-specific title missing")
 	}
-	if !strings.Contains(html, "<noscript><main><h1>Methodology</h1>") {
-		t.Errorf("crawler-readable fallback missing")
+	if !strings.Contains(html, `<main id="main-content"`) ||
+		!strings.Contains(html, `<h1 class="doc-title display">Methodology</h1>`) {
+		t.Errorf("crawler-readable prerendered content missing")
 	}
 }
 
@@ -100,8 +125,47 @@ func TestSignalRouteIsPublicButNoIndex(t *testing.T) {
 	}
 }
 
-func TestPrerenderedRouteClassification(t *testing.T) {
-	for _, route := range []string{"/", "/about", "/architecture/", "/search"} {
+func TestEveryDeclaredRouteReturnsPrerenderedDocument(t *testing.T) {
+	h := Handler()
+	for route, meta := range routeMetadata {
+		t.Run(route, func(t *testing.T) {
+			res := get(t, h, route)
+			if res.StatusCode != http.StatusOK {
+				t.Fatalf("status = %d, want 200", res.StatusCode)
+			}
+			body, err := io.ReadAll(res.Body)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if want := "<title>" + meta.title + "</title>"; !strings.Contains(string(body), want) {
+				t.Errorf("document is missing %q", want)
+			}
+		})
+	}
+}
+
+func TestPrerenderManifestMatchesDeclaredRoutes(t *testing.T) {
+	raw, err := distFS.ReadFile("dist/prerendered-routes.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var manifest []string
+	if err := json.Unmarshal(raw, &manifest); err != nil {
+		t.Fatal(err)
+	}
+	declared := make([]string, 0, len(routeMetadata))
+	for route := range routeMetadata {
+		declared = append(declared, route)
+	}
+	sort.Strings(manifest)
+	sort.Strings(declared)
+	if strings.Join(manifest, "\n") != strings.Join(declared, "\n") {
+		t.Fatalf("prerender manifest and Go route registry differ:\nmanifest=%q\ndeclared=%q", manifest, declared)
+	}
+}
+
+func TestDynamicAndUnknownRouteClassification(t *testing.T) {
+	for _, route := range []string{"/", "/map", "/about", "/architecture/", "/search"} {
 		if !isPrerenderedRoute(route) {
 			t.Errorf("isPrerenderedRoute(%q) = false", route)
 		}
