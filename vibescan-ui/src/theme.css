@@ -82,7 +82,7 @@ main { flex: 1 0 auto; }
 body {
   margin: 0;
   font-family: var(--font-body);
-  font-size: 14px;
+  font-size: 16px;
   line-height: 1.5;
   color: var(--ink);
   background: var(--void);

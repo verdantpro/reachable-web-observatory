@@ -8,9 +8,13 @@ In production the built `dist/` is **embedded** into the `vibescan-go` collector
 binary (see `vibescan-go/Dockerfile` and `vibescan-go/internal/web`) and served
 same-origin with the API.
 
+The production build prerenders public routes to complete HTML, then the browser
+hydrates that markup with the same React application. Dynamic record pages retain
+the SPA shell. Prerendering is build-time only; production runs no Node process.
+
 ## Concept
 
-**"Field Record"** — an OSINT/evidence-board treatment of the census: each host
+**"Field Record"** — an OSINT/evidence-board treatment of the sample: each host
 is presented like a case file. Palette is the Verdant Protocol green (`#2f6f4f`
 family, lifted for the dark ground) on a warm slate, with red reserved as a
 semantic signal for cleartext/no-TLS. Type pairs an editorial serif for
@@ -29,7 +33,7 @@ Design tokens live on `:root` in `src/theme.css`.
 | `/` | **Live** — acquisition viewport + latest/recent rails + world map + headline |
 | `/feed` | **Feed** — captured services, `ranked` (readable captures first) or `latest` (strict recency) |
 | `/search` | **Search** — query + product/port/status/protocol/CVE/tag/verdict filters |
-| `/stats` | **Stats** — census totals, concentration, geography, reputation, CVEs, and trends |
+| `/stats` | **Stats** — sample totals, concentration, geography, reputation, CVEs, and trends |
 | `/signal/:ip/:port` | **Signal** — public exact-address record, screenshot, notes, page source, and live-host link |
 | `/data` | **Data** — export/API access, schema, license, and citation |
 | `/methodology` | **Methodology** — sampling, capture, enrichment, analysis, and limitations |
@@ -76,7 +80,7 @@ go run ./cmd/collector          # :8000
 npm install
 cp .env.example .env            # VITE_API_BASE=http://127.0.0.1:8000 recommended
 npm run dev                     # http://localhost:5173
-npm run build                   # typecheck + production bundle → dist/
+npm run build                   # typecheck + browser bundle + prerendered HTML → dist/
 ```
 
 The Go API sends `Access-Control-Allow-Origin: *`, so the Vite dev server on a

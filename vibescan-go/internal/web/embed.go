@@ -5,9 +5,11 @@ package web
 
 import (
 	"embed"
+	"html"
 	"io/fs"
 	"net/http"
 	"path"
+	"regexp"
 	"strings"
 )
 
@@ -30,6 +32,12 @@ func Handler() http.Handler {
 	}
 	fileServer := http.FileServer(http.FS(sub))
 	index, _ := fs.ReadFile(sub, "index.html")
+	spaShell, shellErr := fs.ReadFile(sub, "spa-shell.html")
+	if shellErr != nil {
+		spaShell = index
+	}
+	_, prerenderErr := fs.Stat(sub, "prerendered-routes.json")
+	hasPrerenderedRoutes := prerenderErr == nil
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Individual observations remain publicly reachable but should not be
@@ -62,6 +70,10 @@ func Handler() http.Handler {
 		}
 
 		name := strings.TrimPrefix(path.Clean(r.URL.Path), "/")
+		if name == "spa-shell.html" {
+			http.NotFound(w, r)
+			return
+		}
 		if name != "" {
 			if info, statErr := fs.Stat(sub, name); statErr == nil && !info.IsDir() {
 				// Hashed Vite assets under assets/ are immutable.
@@ -72,13 +84,37 @@ func Handler() http.Handler {
 				return
 			}
 		}
+		// Static public routes have complete build-time-rendered documents.
+		// A query-bearing Search route uses the empty SPA shell because its
+		// initial UI depends on the query string and must hydrate without a
+		// server/client markup mismatch.
+		if hasPrerenderedRoutes && isPrerenderedRoute(r.URL.Path) &&
+			!(strings.TrimSuffix(r.URL.Path, "/") == "/search" && r.URL.RawQuery != "") {
+			prerendered := "index.html"
+			if name != "" {
+				prerendered = path.Join(name, "index.html")
+			}
+			if page, readErr := fs.ReadFile(sub, prerendered); readErr == nil {
+				serveHTMLStatus(w, page, http.StatusOK)
+				return
+			}
+		}
 		if !isClientRoute(r.URL.Path) {
 			w.Header().Set("X-Robots-Tag", "noindex, follow")
-			serveIndexStatus(w, index, http.StatusNotFound)
+			serveIndexStatus(w, spaShell, r.URL.Path, http.StatusNotFound)
 			return
 		}
-		serveIndexStatus(w, index, http.StatusOK)
+		serveIndexStatus(w, spaShell, r.URL.Path, http.StatusOK)
 	})
+}
+
+func isPrerenderedRoute(p string) bool {
+	switch strings.TrimSuffix(p, "/") {
+	case "", "/", "/feed", "/search", "/stats", "/about", "/methodology",
+		"/architecture", "/ethics", "/data", "/disclosure", "/scan-info":
+		return true
+	}
+	return false
 }
 
 // isClientRoute mirrors the public React routes. Unknown paths still receive
@@ -107,13 +143,74 @@ func serveDistFile(w http.ResponseWriter, sub fs.FS, name, contentType string) {
 	_, _ = w.Write(b)
 }
 
-func serveIndexStatus(w http.ResponseWriter, index []byte, status int) {
+type pageMetadata struct {
+	title       string
+	description string
+	heading     string
+	summary     string
+}
+
+var routeMetadata = map[string]pageMetadata{
+	"/":             {"Reachable Web Observatory — a random sample of the public-IPv4 web", "An open measurement study using random IPv4 sampling to observe reachable web services.", "Reachable Web Observatory", "A continuously updated random sample of reachable public-IPv4 web services on five common ports."},
+	"/feed":         {"Observation feed — Reachable Web Observatory", "Explore ranked and recent stored web-service observations.", "Observation feed", "Ranked and recent timestamped observations from the Observatory sample."},
+	"/search":       {"Search observations — Reachable Web Observatory", "Search stored observations by service, network, location, and attributed provider evidence.", "Search observations", "Search the retained service observations and host-level provider associations."},
+	"/stats":        {"Study findings — Reachable Web Observatory", "Descriptive statistics for sampled reachable web-service observations.", "Study findings", "Descriptive service- and host-level statistics with explicit time windows and denominators."},
+	"/data":         {"Open data — Reachable Web Observatory", "Download JSON or CSV exports and read the public API and schema documentation.", "Data and access", "Open exports, API documentation, schema, licensing, and citation guidance."},
+	"/methodology":  {"Methodology — Reachable Web Observatory", "Sampling, capture, enrichment, analysis, reproducibility, and limitations.", "Methodology", "How the Observatory samples, captures, enriches, and analyzes reachable services."},
+	"/about":        {"About — Reachable Web Observatory", "Purpose, governance, contact information, and citation for the Observatory.", "About the Observatory", "An independent open internet-measurement research project operated by Verdant Protocol."},
+	"/architecture": {"Architecture — Reachable Web Observatory", "System data flow, operational boundaries, storage, and deployment architecture.", "Architecture", "How scanner observations flow through signed ingest, storage, enrichment, APIs, and the public interface."},
+	"/ethics":       {"Ethics — Reachable Web Observatory", "Ethical principles, risk controls, operator identification, and opt-out commitments.", "Ethics", "The measurement boundaries, risk controls, transparency commitments, and operator protections."},
+	"/disclosure":   {"Coordinated disclosure — Reachable Web Observatory", "Reporting, correction, removal, and coordinated-disclosure procedures.", "Coordinated disclosure", "How to report issues with the Observatory or request correction and removal."},
+	"/scan-info":    {"Scanner information — Reachable Web Observatory", "Identify Observatory traffic and request exclusion or record removal.", "Scanner and opt-out information", "Information for network operators who observed traffic from this measurement project."},
+}
+
+var (
+	titlePattern         = regexp.MustCompile(`(?s)<title>.*?</title>`)
+	descriptionPattern   = regexp.MustCompile(`(?s)<meta\s+name="description"\s+content="[^"]*"\s*/?>`)
+	canonicalPattern     = regexp.MustCompile(`<link\s+rel="canonical"\s+href="[^"]*"\s*/?>`)
+	ogTitlePattern       = regexp.MustCompile(`<meta\s+property="og:title"\s+content="[^"]*"\s*/?>`)
+	ogDescriptionPattern = regexp.MustCompile(`(?s)<meta\s+property="og:description"\s+content="[^"]*"\s*/?>`)
+	ogURLPattern         = regexp.MustCompile(`<meta\s+property="og:url"\s+content="[^"]*"\s*/?>`)
+)
+
+func routeIndex(index []byte, requestPath string) []byte {
+	cleanPath := strings.TrimSuffix(requestPath, "/")
+	if cleanPath == "" {
+		cleanPath = "/"
+	}
+	meta, ok := routeMetadata[cleanPath]
+	if !ok {
+		return index
+	}
+	origin := "https://observatory.verdantprotocol.com"
+	url := origin + cleanPath
+	if cleanPath == "/" {
+		url = origin + "/"
+	}
+	body := string(index)
+	body = titlePattern.ReplaceAllString(body, "<title>"+html.EscapeString(meta.title)+"</title>")
+	body = descriptionPattern.ReplaceAllString(body, `<meta name="description" content="`+html.EscapeString(meta.description)+`" />`)
+	body = canonicalPattern.ReplaceAllString(body, `<link rel="canonical" href="`+url+`" />`)
+	body = ogTitlePattern.ReplaceAllString(body, `<meta property="og:title" content="`+html.EscapeString(meta.title)+`" />`)
+	body = ogDescriptionPattern.ReplaceAllString(body, `<meta property="og:description" content="`+html.EscapeString(meta.description)+`" />`)
+	body = ogURLPattern.ReplaceAllString(body, `<meta property="og:url" content="`+url+`" />`)
+	fallback := `<noscript><main><h1>` + html.EscapeString(meta.heading) + `</h1><p>` +
+		html.EscapeString(meta.summary) + `</p><p><a href="/methodology">Read the methodology</a> or <a href="/data">access the open data</a>.</p></main></noscript>`
+	body = strings.Replace(body, `<div id="root"></div>`, `<div id="root"></div>`+fallback, 1)
+	return []byte(body)
+}
+
+func serveIndexStatus(w http.ResponseWriter, index []byte, requestPath string, status int) {
 	if index == nil {
 		http.Error(w, "UI not built", http.StatusNotFound)
 		return
 	}
+	serveHTMLStatus(w, routeIndex(index, requestPath), status)
+}
+
+func serveHTMLStatus(w http.ResponseWriter, document []byte, status int) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Cache-Control", "no-cache")
 	w.WriteHeader(status)
-	_, _ = w.Write(index)
+	_, _ = w.Write(document)
 }

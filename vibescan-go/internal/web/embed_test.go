@@ -1,6 +1,7 @@
 package web
 
 import (
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -22,6 +23,10 @@ func TestServesRobotsTxt(t *testing.T) {
 	}
 	if ct := res.Header.Get("Content-Type"); !strings.HasPrefix(ct, "text/plain") {
 		t.Errorf("content-type = %q, want text/plain", ct)
+	}
+	body, _ := io.ReadAll(res.Body)
+	if !strings.Contains(string(body), "Disallow: /signal/") {
+		t.Errorf("robots.txt does not exclude record routes: %q", body)
 	}
 }
 
@@ -75,6 +80,14 @@ func TestKnownClientRouteFallsBackToSPA(t *testing.T) {
 	if res.StatusCode != http.StatusOK {
 		t.Fatalf("status = %d, want 200", res.StatusCode)
 	}
+	body, _ := io.ReadAll(res.Body)
+	html := string(body)
+	if !strings.Contains(html, "<title>Methodology — Reachable Web Observatory</title>") {
+		t.Errorf("route-specific title missing")
+	}
+	if !strings.Contains(html, "<noscript><main><h1>Methodology</h1>") {
+		t.Errorf("crawler-readable fallback missing")
+	}
 }
 
 func TestSignalRouteIsPublicButNoIndex(t *testing.T) {
@@ -84,5 +97,18 @@ func TestSignalRouteIsPublicButNoIndex(t *testing.T) {
 	}
 	if got := res.Header.Get("X-Robots-Tag"); got != "noindex, nofollow, noarchive" {
 		t.Errorf("X-Robots-Tag = %q", got)
+	}
+}
+
+func TestPrerenderedRouteClassification(t *testing.T) {
+	for _, route := range []string{"/", "/about", "/architecture/", "/search"} {
+		if !isPrerenderedRoute(route) {
+			t.Errorf("isPrerenderedRoute(%q) = false", route)
+		}
+	}
+	for _, route := range []string{"/signal/192.0.2.1/80", "/external/192.0.2.1/80", "/missing"} {
+		if isPrerenderedRoute(route) {
+			t.Errorf("isPrerenderedRoute(%q) = true", route)
+		}
 	}
 }

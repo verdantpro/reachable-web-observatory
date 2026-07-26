@@ -9,6 +9,7 @@ export default function SignalCard({ t, relatedPorts = [] }: { t: Tile; relatedP
   const provenance = flagged || (t.vuln_count ?? 0) > 0;
   const srcLabel = t.sources && t.sources.length ? t.sources.join(", ") : "third-party feeds";
   const enriched = timeAgo(t.enriched_at);
+  const protocolTransition = t.secured && [80, 8000, 8080].includes(t.port);
   return (
     <Link
       className={`card hud${t.verdict === "malicious" ? " card--flagged" : t.verdict === "suspicious" ? " card--suspect" : ""}`}
@@ -27,10 +28,10 @@ export default function SignalCard({ t, relatedPorts = [] }: { t: Tile; relatedP
             height={720}
           />
         ) : (
-          <div className="card-noshot mono">NO SIGNAL</div>
+          <div className="card-noshot mono">NO SCREENSHOT</div>
         )}
         <span className="card-callsign mono">
-          {t.ip}:{t.port}
+          {t.ip}:{t.port}{protocolTransition ? " → HTTPS" : ""}
         </span>
         {(flagged || t.vuln_count) && (
           <div className="card-badges">
@@ -65,7 +66,9 @@ export default function SignalCard({ t, relatedPorts = [] }: { t: Tile; relatedP
           </span>
           <span className="row" style={{ gap: 6 }}>
             {t.secured ? (
-              <span className="lock" title="Captured over TLS (after any redirects)">HTTPS</span>
+              <span className="lock" title="Final captured page used TLS after any redirect or protocol negotiation">
+                {protocolTransition ? "→ HTTPS" : "HTTPS"}
+              </span>
             ) : (
               <span className="insecure" title="Captured over cleartext HTTP (after any redirects)">HTTP</span>
             )}

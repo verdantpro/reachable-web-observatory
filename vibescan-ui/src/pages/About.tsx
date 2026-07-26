@@ -78,8 +78,8 @@ export default function About() {
             enriched with attributed public CVE and reputation data when providers are available;
             coverage is not universal. Scanning runs continuously at a deliberately slow rate and honors
             an operator <Link className="about-mail" to="/scan-info">exclusion list</Link>.
-            The console is a live view of <em>captured records</em> — a point-in-time snapshot, not a
-            real-time scan of the host you are looking at. To be explicit: this is <em>non-invasive
+            The Overview is a live view of <em>stored observations</em> — point-in-time snapshots, not
+            real-time scans of the hosts shown. To be explicit: this is <em>non-invasive
             active measurement of publicly reachable services</em> — never authentication, exploitation,
             or "hacking back." The boundary is spelled out in the{" "}
             <Link className="about-mail" to="/ethics">ethics</Link> and{" "}
@@ -105,7 +105,7 @@ export default function About() {
           <h2 className="about-h">How to cite</h2>
           <p>Please cite the dataset (and note the snapshot date) when using it in published work:</p>
           <div className="about-cite mono">
-            Walters, J. (2026). <em>Reachable Web Observatory: a continuous census of the public-IPv4
+            Walters, J. (2026). <em>Reachable Web Observatory: a continuous random sample of the public-IPv4
             web.</em> Verdant Protocol. https://observatory.verdantprotocol.com/
           </div>
         </section>
