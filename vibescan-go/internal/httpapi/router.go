@@ -52,6 +52,7 @@ func (s *Server) Handler() http.Handler {
 
 	// v2 read APIs (for the new UI).
 	mux.HandleFunc("GET /api/v2/gallery", s.handleGallery)
+	mux.HandleFunc("GET /api/v2/map", s.handleMap)
 	mux.HandleFunc("GET /api/v2/search", s.handleSearch)
 	mux.HandleFunc("GET /api/v2/export", s.handleExport)
 	mux.HandleFunc("GET /api/v2/stats", s.handleStats)

@@ -1,0 +1,122 @@
+.iwm {
+  position: relative;
+  min-height: 360px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background:
+    radial-gradient(circle at 50% 42%, rgba(88, 169, 124, 0.07), transparent 48%),
+    linear-gradient(180deg, rgba(10, 14, 18, 0.72), rgba(7, 10, 13, 0.92));
+}
+
+.iwm svg {
+  display: block;
+  width: 100%;
+  min-height: 360px;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.iwm.dragging svg { cursor: grabbing; }
+.iwm svg:focus-visible { outline: 2px solid var(--accent); outline-offset: -3px; }
+
+.iwm-land path {
+  fill: rgba(44, 48, 55, 0.62);
+  stroke: rgba(88, 169, 124, 0.22);
+  stroke-width: 0.7;
+}
+
+.iwm-marker { cursor: pointer; outline: none; }
+.iwm-hit { fill: transparent; }
+.iwm-dot {
+  stroke: rgba(255, 255, 255, 0.82);
+  stroke-width: 0.7;
+  vector-effect: non-scaling-stroke;
+  filter: url("#iwm-glow");
+}
+.iwm-marker:focus .iwm-dot,
+.iwm-marker:hover .iwm-dot { stroke: white; stroke-width: 1.8; }
+
+.iwm-risk-ring {
+  fill: none;
+  stroke: var(--amber);
+  stroke-width: 1.4;
+  vector-effect: non-scaling-stroke;
+  stroke-dasharray: 2 2;
+}
+.iwm-selected-ring {
+  fill: rgba(88, 169, 124, 0.14);
+  stroke: var(--accent);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+.iwm-cluster-count {
+  fill: #fff;
+  font-family: "JetBrains Mono", monospace;
+  font-weight: 700;
+  pointer-events: none;
+}
+
+.iwm-zoom {
+  position: absolute;
+  z-index: 4;
+  top: 10px;
+  left: 10px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  background: rgba(7, 10, 13, 0.88);
+  border: 1px solid var(--line-strong);
+  backdrop-filter: blur(8px);
+}
+.iwm-zoom button {
+  min-width: 32px;
+  min-height: 30px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--ink);
+  cursor: pointer;
+}
+.iwm-zoom button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.iwm-zoom button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.iwm-zoom button:disabled { opacity: 0.35; cursor: default; }
+.iwm-zoom output { min-width: 44px; padding: 0 5px; color: var(--muted); font-size: 11px; }
+
+.iwm-tooltip {
+  position: absolute;
+  z-index: 5;
+  display: grid;
+  gap: 3px;
+  min-width: 150px;
+  max-width: 250px;
+  padding: 9px 11px;
+  color: var(--ink);
+  background: rgba(7, 10, 13, 0.95);
+  border: 1px solid var(--accent);
+  box-shadow: var(--glow-cyan);
+  pointer-events: none;
+  transform: translate(-50%, calc(-100% - 13px));
+}
+.iwm-tooltip strong { color: var(--accent); font: 600 12px "JetBrains Mono", monospace; }
+.iwm-tooltip span { color: var(--ink-dim); font: 11px "JetBrains Mono", monospace; }
+
+.iwm-help {
+  position: absolute;
+  right: 10px;
+  bottom: 8px;
+  padding: 4px 7px;
+  color: var(--muted-2);
+  background: rgba(7, 10, 13, 0.8);
+  font-size: 10px;
+}
+
+@media (max-width: 680px) {
+  .iwm, .iwm svg { min-height: 300px; }
+  .iwm-help { display: none; }
+  .iwm-tooltip { max-width: 180px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .iwm * { scroll-behavior: auto !important; }
+}

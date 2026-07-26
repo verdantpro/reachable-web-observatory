@@ -66,15 +66,20 @@ type LandingImage struct {
 
 // ListOpts are shared list/search parameters.
 type ListOpts struct {
-	Limit       int
-	Offset      int
-	MaxTimeMS   int
-	Query       string // free-text (regex) filter; empty means no text filter
-	Port        *int
-	Secured     *bool
-	StatusCode  *int // exact HTTP status match
-	Product     string
-	ScreensOnly bool
+	Limit     int
+	Offset    int
+	MaxTimeMS int
+	Query     string // free-text (regex) filter; empty means no text filter
+	Network   string // exact normalized RDAP/WHOIS network name
+	// TimeRangeHours limits updated_at to a rolling window. A non-nil zero
+	// means all retained observations; nil preserves the legacy unbounded
+	// search behavior.
+	TimeRangeHours *int
+	Port           *int
+	Secured        *bool
+	StatusCode     *int // exact HTTP status match
+	Product        string
+	ScreensOnly    bool
 	// Recent selects the pure-recency gallery ("Latest signals"): screenshots
 	// only, newest first, any status, no per-/24 dedup or 200-first ranking.
 	Recent bool
@@ -219,6 +224,23 @@ func (m *Mongo) Gallery(ctx context.Context, o ListOpts) ([]ServiceDoc, error) {
 // the index scan. 128 chars is far more than any real banner/product term.
 const maxQueryLen = 128
 
+// normalizedNetworkExpr returns the network label used by the stats facets:
+// the trimmed first segment of "<network> - <organization>" WHOIS strings.
+// Keeping this expression shared makes network drill-downs use the exact same
+// attribution rule as the aggregate that produced the link.
+func normalizedNetworkExpr() bson.D {
+	return bson.D{
+		{Key: "$trim", Value: bson.D{
+			{Key: "input", Value: bson.D{
+				{Key: "$arrayElemAt", Value: bson.A{
+					bson.D{{Key: "$split", Value: bson.A{"$whois", " - "}}},
+					0,
+				}},
+			}},
+		}},
+	}
+}
+
 // Search returns services matching a free-text query and/or filters.
 //
 // Free-text matching uses a MongoDB $text index (banner/whois/cert_cn/fulltext),
@@ -226,6 +248,10 @@ const maxQueryLen = 128
 // ip_str prefix match — $text tokenizes on "." so it can't match dotted IPs, and
 // an anchored literal regex is both index-friendly and ReDoS-proof.
 func searchMatch(o ListOpts) bson.D {
+	return searchMatchAt(o, time.Now().UTC())
+}
+
+func searchMatchAt(o ListOpts, now time.Time) bson.D {
 	// $text must sit at the top level of the match document (it cannot be nested
 	// in $and/$or), so filters are merged as sibling keys — an implicit AND.
 	match := bson.D{}
@@ -241,6 +267,17 @@ func searchMatch(o ListOpts) bson.D {
 		} else {
 			add("$text", bson.D{{Key: "$search", Value: q}})
 		}
+	}
+	if o.Network != "" {
+		network := strings.TrimSpace(o.Network)
+		if len(network) > maxQueryLen {
+			network = network[:maxQueryLen]
+		}
+		add("$expr", bson.D{{Key: "$eq", Value: bson.A{normalizedNetworkExpr(), network}}})
+	}
+	if o.TimeRangeHours != nil && *o.TimeRangeHours > 0 {
+		cutoff := now.Add(-time.Duration(*o.TimeRangeHours) * time.Hour)
+		add("updated_at", bson.D{{Key: "$gte", Value: cutoff}})
 	}
 	if o.Product != "" {
 		p := o.Product

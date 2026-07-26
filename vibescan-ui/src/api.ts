@@ -84,7 +84,7 @@ export interface ThreatIntel {
   };
   virustotal?: { malicious: number; suspicious: number; harmless: number; undetected: number; last_analysis_date?: string };
   greynoise?: { noise: boolean; riot: boolean; classification?: string; name?: string; last_seen?: string };
-  otx?: { pulse_count: number; pulse_names?: string[] };
+  otx?: { pulse_count: number; unique_pulse_count?: number; pulse_names?: string[] };
   threatfox?: {
     ioc_count: number;
     iocs?: { ioc: string; threat_type?: string; malware?: string; confidence_level: number; first_seen?: string; last_seen?: string }[];
@@ -106,6 +106,33 @@ export interface ListResponse {
   query?: string;
   total?: number;
   total_hosts?: number;
+}
+
+export type MapMode = "observations" | "cleartext" | "at-risk";
+
+export interface MapEntry {
+  ip: string;
+  port: number;
+  product: string;
+  product_version?: string;
+  http_status: number | null;
+  secured: boolean;
+  network?: string;
+  updated_at: string;
+  geo: Geo;
+  vuln_count: number;
+  verdict?: string;
+}
+
+export interface MapResponse {
+  entries: MapEntry[];
+  total_hosts: number;
+  displayed_hosts: number;
+  countries: Record<string, number>;
+  networks: Record<string, number>;
+  mode: MapMode;
+  time_range_hours: number;
+  generated_at: string;
 }
 
 export interface RandomCapture {
@@ -173,6 +200,8 @@ export interface DailyRollup {
 
 export interface SearchParams {
   q?: string;
+  network?: string;
+  timeRange?: number;
   port?: number;
   status?: number;
   secured?: boolean;
@@ -248,9 +277,16 @@ export const api = {
   recent: (limit = 60, offset = 0) =>
     get<ListResponse>(`/api/v2/gallery?sort=recent&limit=${limit}&offset=${offset}`),
 
+  observationMap: (mode: MapMode = "observations", timeRange = 24, limit = 500) =>
+    get<MapResponse>(
+      `/api/v2/map?mode=${encodeURIComponent(mode)}&time_range=${timeRange}&limit=${limit}`
+    ),
+
   search: (p: SearchParams) => {
     const q = new URLSearchParams();
     if (p.q) q.set("q", p.q);
+    if (p.network) q.set("network", p.network);
+    if (p.timeRange != null) q.set("time_range", String(p.timeRange));
     if (p.port != null) q.set("port", String(p.port));
     if (p.status != null) q.set("status", String(p.status));
     if (p.secured != null) q.set("secured", String(p.secured));

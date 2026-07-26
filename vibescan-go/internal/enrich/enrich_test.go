@@ -99,6 +99,28 @@ func TestComputeVerdict(t *testing.T) {
 	}
 }
 
+func TestNormalizeOTXPulseNames(t *testing.T) {
+	raw := []string{
+		"HIVE",
+		" HIVE ",
+		"IOC Records →Provided by @NextRayAI",
+		"IOC Records → Provided by @NextRayAI",
+		"FakeLabs_hexa",
+		"",
+		"IOCs   Industriales",
+	}
+	names, unique := normalizeOTXPulseNames(raw, 3)
+	if unique != 4 {
+		t.Fatalf("unique count = %d, want 4", unique)
+	}
+	if len(names) != 3 {
+		t.Fatalf("stored names = %d, want capped 3: %v", len(names), names)
+	}
+	if names[0] != "HIVE" || names[1] != "IOC Records →Provided by @NextRayAI" || names[2] != "FakeLabs_hexa" {
+		t.Fatalf("unexpected normalized names: %v", names)
+	}
+}
+
 func TestFreshness(t *testing.T) {
 	now := time.Now()
 	rec := Record{Sources: []string{"internetdb"}, FetchedAt: now}

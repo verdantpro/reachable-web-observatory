@@ -274,16 +274,22 @@ export default function StatsPage() {
     return pts.length >= 2 ? pts[pts.length - 1][1] - pts[0][1] : 0;
   })();
 
-  // Deep-links from the bars into a pre-filtered Search. Product, network,
-  // country, and tag ride the free-text `q` (matched by the $text index);
-  // port and verdict use dedicated filters.
-  const portHref = (p: string) => `/search?port=${encodeURIComponent(p)}`;
-  const productHref = (p: string) => `/search?q=${encodeURIComponent(p)}`;
-  const networkHref = (network: string) => `/search?q=${encodeURIComponent(network)}`;
-  const organizationHref = (organization: string) => `/search?q=${encodeURIComponent(organization)}`;
-  const countryHref = (c: string) => `/search?q=${encodeURIComponent(c)}`;
-  const tagHref = (t: string) => `/search?q=${encodeURIComponent(t)}`;
-  const verdictHref = (v: string) => `/search?verdict=${encodeURIComponent(v)}`;
+  // Deep-links preserve the aggregate's time window. Networks use a dedicated
+  // exact filter because a free-text query can match the same provider name in
+  // unrelated banners, certificates, or captured page content.
+  const searchHref = (filters: Record<string, string>, groupHosts = false) => {
+    const params = new URLSearchParams(filters);
+    params.set("time_range", String(s?.time_range_hours ?? hours));
+    if (groupHosts) params.set("group", "hosts");
+    return `/search?${params.toString()}`;
+  };
+  const portHref = (p: string) => searchHref({ port: p });
+  const productHref = (p: string) => searchHref({ q: p });
+  const networkHref = (network: string) => searchHref({ network }, true);
+  const organizationHref = (organization: string) => searchHref({ q: organization });
+  const countryHref = (c: string) => searchHref({ q: c });
+  const tagHref = (t: string) => searchHref({ q: t });
+  const verdictHref = (v: string) => searchHref({ verdict: v });
 
   return (
     <div className="page wrap">

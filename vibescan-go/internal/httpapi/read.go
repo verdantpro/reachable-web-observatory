@@ -48,6 +48,20 @@ type tile struct {
 	MatchReason string   `json:"match_reason,omitempty"`
 }
 
+type mapPoint struct {
+	IP             string     `json:"ip"`
+	Port           int        `json:"port"`
+	Product        string     `json:"product"`
+	ProductVersion string     `json:"product_version,omitempty"`
+	HTTPStatus     *int       `json:"http_status"`
+	Secured        bool       `json:"secured"`
+	Network        string     `json:"network,omitempty"`
+	UpdatedAt      string     `json:"updated_at"`
+	Geo            *geo.GeoIP `json:"geo"`
+	VulnCount      int        `json:"vuln_count"`
+	Verdict        string     `json:"verdict,omitempty"`
+}
+
 // resolveImageURL returns the best image URL for a capture: the R2 public URL
 // for r2: references, otherwise the collector's own image endpoint for base64
 // captures stored in MongoDB.
@@ -172,6 +186,66 @@ func (s *Server) handleGallery(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func mapFilters(r *http.Request) store.MapOpts {
+	mode := strings.ToLower(strings.TrimSpace(r.URL.Query().Get("mode")))
+	if mode != "cleartext" && mode != "at-risk" {
+		mode = "observations"
+	}
+	return store.MapOpts{
+		Limit:          clampInt(queryInt(r, "limit", 500), 1, 1000),
+		TimeRangeHours: clampInt(queryInt(r, "time_range", 24), 0, 24*365),
+		Mode:           mode,
+	}
+}
+
+func mapCounts(rows []store.MapCount) map[string]int {
+	out := make(map[string]int, len(rows))
+	for _, row := range rows {
+		if row.ID != "" {
+			out[row.ID] = row.Count
+		}
+	}
+	return out
+}
+
+func (s *Server) handleMap(w http.ResponseWriter, r *http.Request) {
+	opts := mapFilters(r)
+	opts.MaxTimeMS = s.cfg.AggMaxTimeMS
+	result, err := s.store.MapObservations(r.Context(), opts)
+	if err != nil {
+		s.readError(w, err)
+		return
+	}
+	points := make([]mapPoint, 0, len(result.Points))
+	for _, d := range result.Points {
+		product, version := d.ProductFamily, d.ProductVersion
+		if product == "" {
+			normalized := media.NormalizeProduct(d.Banner)
+			product, version = normalized.Family, normalized.Version
+		}
+		at := d.UpdatedAt
+		if at.IsZero() {
+			at = d.ReceivedAt
+		}
+		points = append(points, mapPoint{
+			IP: d.IPStr, Port: d.Port, Product: product, ProductVersion: version,
+			HTTPStatus: d.HTTPStatus, Secured: d.Secured, Network: firstWhois(d.Whois),
+			UpdatedAt: at.UTC().Format(time.RFC3339), Geo: d.GeoIP,
+			VulnCount: d.VulnCount, Verdict: d.Verdict,
+		})
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"entries":          points,
+		"total_hosts":      result.Total,
+		"displayed_hosts":  len(points),
+		"countries":        mapCounts(result.Countries),
+		"networks":         mapCounts(result.Networks),
+		"mode":             opts.Mode,
+		"time_range_hours": opts.TimeRangeHours,
+		"generated_at":     time.Now().UTC().Format(time.RFC3339),
+	})
+}
+
 func (s *Server) handleSearch(w http.ResponseWriter, r *http.Request) {
 	limit := clampInt(queryInt(r, "limit", 100), 1, s.cfg.MaxGallery)
 	offset := clampInt(queryInt(r, "offset", 0), 0, 1_000_000)
@@ -241,10 +315,17 @@ func matchReason(d store.ServiceDoc, query string) string {
 func searchFilters(r *http.Request) store.ListOpts {
 	opts := store.ListOpts{
 		Query:   strings.TrimSpace(r.URL.Query().Get("q")),
+		Network: strings.TrimSpace(r.URL.Query().Get("network")),
 		Product: strings.TrimSpace(r.URL.Query().Get("product")),
 		Tag:     strings.TrimSpace(r.URL.Query().Get("tag")),
 		Verdict: strings.TrimSpace(r.URL.Query().Get("verdict")),
 		Sort:    strings.ToLower(strings.TrimSpace(r.URL.Query().Get("sort"))),
+	}
+	if v := r.URL.Query().Get("time_range"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil {
+			n = clampInt(n, 0, 24*365)
+			opts.TimeRangeHours = &n
+		}
 	}
 	if v := r.URL.Query().Get("port"); v != "" {
 		if n, err := strconv.Atoi(v); err == nil {

@@ -92,6 +92,28 @@ function CVEGroups({ items }: { items: string[] }) {
 
 const d10 = (s?: string) => (s ? s.slice(0, 10) : "");
 const joind = (...parts: (string | undefined | false)[]) => parts.filter(Boolean).join(" · ");
+const MAX_VISIBLE_OTX_TITLES = 6;
+
+function summarizeOTX(otx?: { pulse_count: number; unique_pulse_count?: number; pulse_names?: string[] }) {
+  if (!otx) return null;
+  const seen = new Set<string>();
+  const uniqueTitles: string[] = [];
+  for (const value of otx.pulse_names ?? []) {
+    const title = value.trim().replace(/\s+/gu, " ");
+    const key = title.replace(/\s/gu, "").toLocaleLowerCase();
+    if (!title || seen.has(key)) continue;
+    seen.add(key);
+    uniqueTitles.push(title);
+  }
+  const uniqueCount = Math.max(otx.unique_pulse_count ?? 0, uniqueTitles.length);
+  const visibleTitles = uniqueTitles.slice(0, MAX_VISIBLE_OTX_TITLES);
+  return {
+    pulseCount: otx.pulse_count,
+    uniqueCount,
+    visibleTitles,
+    remaining: Math.max(0, uniqueCount - visibleTitles.length),
+  };
+}
 
 export default function CrossReference({ ip }: { ip: string }) {
   const [enr, setEnr] = useState<Enrichment | null>(null);
@@ -114,6 +136,7 @@ export default function CrossReference({ ip }: { ip: string }) {
   }, [ip]);
 
   const t = enr?.threat;
+  const otx = summarizeOTX(t?.otx);
 
   const flags: string[] = [];
   if (t?.ipqs?.tor || t?.ipinfo?.is_tor) flags.push("tor");
@@ -279,7 +302,19 @@ export default function CrossReference({ ip }: { ip: string }) {
               <SubHead>◇ Threat feeds</SubHead>
               <dl className="fr-xref-grid">
                 {t?.otx && t.otx.pulse_count > 0 ? (
-                  <Row label={`AlienVault OTX · ${t.otx.pulse_count}`}>{(t.otx.pulse_names ?? []).join(" · ") || "—"}</Row>
+                  <Row label="AlienVault OTX">
+                    <div className="fr-feed-summary">
+                      <strong className="fr-feed-count mono">
+                        {otx?.pulseCount.toLocaleString()} pulse {otx?.pulseCount === 1 ? "match" : "matches"}
+                        {otx?.uniqueCount ? ` · ${otx.uniqueCount.toLocaleString()} unique ${otx.uniqueCount === 1 ? "title" : "titles"}` : ""}
+                      </strong>
+                      {otx?.visibleTitles.length ? <Chips items={otx.visibleTitles} /> : null}
+                      {otx?.remaining ? <span className="fr-feed-more mono">+{otx.remaining.toLocaleString()} more unique titles</span> : null}
+                      <span className="fr-feed-caveat">
+                        Unverified community associations for this host IP; not evidence that this web service is compromised.
+                      </span>
+                    </div>
+                  </Row>
                 ) : null}
                 {t?.threatfox && t.threatfox.ioc_count > 0 ? (
                   <Row label={`ThreatFox · ${t.threatfox.ioc_count}`}>
