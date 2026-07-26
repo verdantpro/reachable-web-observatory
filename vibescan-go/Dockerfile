@@ -5,7 +5,7 @@
 #   docker build -f vibescan-go/Dockerfile -t vibescan .
 
 # --- stage 1: build the UI (relative API base → served same-origin) ---
-FROM node:22-alpine AS ui
+FROM node:26-alpine AS ui
 WORKDIR /ui
 COPY vibescan-ui/package.json vibescan-ui/package-lock.json ./
 RUN npm ci
@@ -31,7 +31,7 @@ RUN BUILD_LDFLAGS="-s -w -X github.com/vibescan/vibescan-go/internal/buildinfo.C
  && CGO_ENABLED=0 go build -trimpath -ldflags "$BUILD_LDFLAGS" -o /out/migrate ./cmd/migrate
 
 # --- stage 3: runtime ---
-FROM alpine:3.20
+FROM alpine:3.24
 RUN apk add --no-cache ca-certificates && adduser -D -u 10001 app
 COPY --from=build /out/vibescan /out/migrate /usr/local/bin/
 USER app
