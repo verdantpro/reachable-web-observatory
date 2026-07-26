@@ -10,6 +10,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"unicode"
 )
 
 // ThreatIntel mirrors scope-recon's per-source model (minus the AI narrative).
@@ -79,8 +80,9 @@ type GreyNoiseData struct {
 }
 
 type OTXData struct {
-	PulseCount int      `json:"pulse_count" bson:"pulse_count"`
-	PulseNames []string `json:"pulse_names,omitempty" bson:"pulse_names,omitempty"`
+	PulseCount       int      `json:"pulse_count" bson:"pulse_count"`
+	UniquePulseCount int      `json:"unique_pulse_count" bson:"unique_pulse_count"`
+	PulseNames       []string `json:"pulse_names,omitempty" bson:"pulse_names,omitempty"`
 }
 
 type ThreatFoxData struct {
@@ -470,13 +472,45 @@ func (e *Enricher) otx(ctx context.Context, ip string) (*OTXData, bool) {
 	if json.Unmarshal(body, &d) != nil {
 		return nil, false
 	}
-	out := &OTXData{PulseCount: d.PulseInfo.Count}
+	rawNames := make([]string, 0, len(d.PulseInfo.Pulses))
 	for _, p := range d.PulseInfo.Pulses {
-		if p.Name != "" {
-			out.PulseNames = append(out.PulseNames, p.Name)
-		}
+		rawNames = append(rawNames, p.Name)
+	}
+	names, uniqueCount := normalizeOTXPulseNames(rawNames, 12)
+	out := &OTXData{
+		PulseCount:       d.PulseInfo.Count,
+		UniquePulseCount: uniqueCount,
+		PulseNames:       names,
 	}
 	return out, true
+}
+
+// normalizeOTXPulseNames keeps OTX's total pulse count separate from a concise
+// list of unique community-authored titles. Some pulses share a title or vary
+// only by whitespace around symbols, so those are one display title.
+func normalizeOTXPulseNames(raw []string, limit int) ([]string, int) {
+	seen := make(map[string]struct{}, len(raw))
+	names := make([]string, 0, len(raw))
+	for _, value := range raw {
+		name := strings.Join(strings.Fields(value), " ")
+		if name == "" {
+			continue
+		}
+		key := strings.Map(func(r rune) rune {
+			if unicode.IsSpace(r) {
+				return -1
+			}
+			return unicode.ToLower(r)
+		}, name)
+		if _, ok := seen[key]; ok {
+			continue
+		}
+		seen[key] = struct{}{}
+		if limit <= 0 || len(names) < limit {
+			names = append(names, name)
+		}
+	}
+	return names, len(seen)
 }
 
 func (e *Enricher) threatFox(ctx context.Context, ip string) (*ThreatFoxData, bool) {

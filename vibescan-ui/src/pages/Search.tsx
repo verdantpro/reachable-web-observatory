@@ -23,6 +23,13 @@ export default function Search() {
   const [params, setParams] = useSearchParams();
   const [q, setQ] = useState(() => params.get("q") ?? "");
   const [debounced, setDebounced] = useState(() => (params.get("q") ?? "").trim());
+  const [network, setNetwork] = useState(() => (params.get("network") ?? "").trim());
+  const [timeRange, setTimeRange] = useState<number | undefined>(() => {
+    const raw = params.get("time_range");
+    if (raw === null) return undefined;
+    const value = Number(raw);
+    return Number.isInteger(value) && value >= 0 ? value : undefined;
+  });
   const [port, setPort] = useState(() => params.get("port") ?? "");
   const [sec, setSec] = useState<SecFilter>(() => {
     const v = params.get("secured");
@@ -43,7 +50,7 @@ export default function Search() {
     const value = params.get("sort");
     return value === "relevance" || value === "vulns" || value === "ip" ? value : "newest";
   });
-  const [groupHosts, setGroupHosts] = useState(false);
+  const [groupHosts, setGroupHosts] = useState(() => params.get("group") === "hosts");
   const [tiles, setTiles] = useState<Tile[]>([]);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(false);
@@ -65,24 +72,27 @@ export default function Search() {
   useEffect(() => {
     const next = new URLSearchParams();
     if (debounced) next.set("q", debounced);
+    if (network) next.set("network", network);
+    if (timeRange !== undefined) next.set("time_range", String(timeRange));
     if (port) next.set("port", port);
     if (sec !== "any") next.set("secured", sec);
     if (status !== null) next.set("status", String(status));
     if (hasVulns) next.set("has_vulns", "1");
     if (verdict) next.set("verdict", verdict);
     if (sort !== "newest") next.set("sort", sort);
+    if (groupHosts) next.set("group", "hosts");
     setParams(next, { replace: true });
-  }, [debounced, port, sec, status, hasVulns, verdict, sort, setParams]);
+  }, [debounced, network, timeRange, port, sec, status, hasVulns, verdict, sort, groupHosts, setParams]);
 
   const active = useMemo(
-    () => debounced !== "" || port !== "" || sec !== "any" || status !== null || hasVulns || verdict !== "",
-    [debounced, port, sec, status, hasVulns, verdict]
+    () => network !== "" || debounced !== "" || port !== "" || sec !== "any" || status !== null || hasVulns || verdict !== "",
+    [network, debounced, port, sec, status, hasVulns, verdict]
   );
 
   // Any query/filter change restarts pagination from the first page.
   useEffect(() => {
     setPage(0);
-  }, [debounced, port, sec, status, hasVulns, verdict, sort]);
+  }, [debounced, network, timeRange, port, sec, status, hasVulns, verdict, sort]);
 
   useEffect(() => {
     if (!active) {
@@ -100,6 +110,8 @@ export default function Search() {
     api
       .search({
         q: debounced || undefined,
+        network: network || undefined,
+        timeRange,
         port: port ? Number(port) : undefined,
         status: status ?? undefined,
         secured: sec === "any" ? undefined : sec === "https",
@@ -127,7 +139,7 @@ export default function Search() {
     return () => {
       alive = false;
     };
-  }, [debounced, port, sec, status, hasVulns, verdict, sort, active, page, reloadKey]);
+  }, [debounced, network, timeRange, port, sec, status, hasVulns, verdict, sort, active, page, reloadKey]);
 
   const statuses: [string, number | null][] = [
     ["any", null],
@@ -140,13 +152,25 @@ export default function Search() {
   const reset = () => {
     setQ("");
     setDebounced("");
+    setNetwork("");
+    setTimeRange(undefined);
     setPort("");
     setSec("any");
     setStatus(null);
     setHasVulns(false);
     setVerdict("");
     setSort("newest");
+    setGroupHosts(false);
   };
+  const windowLabel = timeRange === undefined
+    ? ""
+    : timeRange === 0
+      ? "all retained observations"
+      : timeRange === 1
+        ? "last hour"
+        : timeRange === 24
+          ? "last 24 hours"
+          : `last ${timeRange / 24} days`;
   const groupedTiles = useMemo(() => {
     return groupSearchTiles(tiles, groupHosts);
   }, [tiles, groupHosts]);
@@ -171,6 +195,30 @@ export default function Search() {
       </div>
 
       <div className="filters">
+        {network && (
+          <div className="filter-group">
+            <span className="filter-label mono">Network</span>
+            <button
+              className="chip mono on"
+              aria-label={`Remove exact network filter ${network}`}
+              onClick={() => setNetwork("")}
+            >
+              {network} ×
+            </button>
+          </div>
+        )}
+        {timeRange !== undefined && (
+          <div className="filter-group">
+            <span className="filter-label mono">Window</span>
+            <button
+              className="chip mono on"
+              aria-label={`Remove time window filter ${windowLabel}`}
+              onClick={() => setTimeRange(undefined)}
+            >
+              {windowLabel} ×
+            </button>
+          </div>
+        )}
         <div className="filter-group">
           <span className="filter-label mono">Port</span>
           <input

@@ -12,11 +12,14 @@ import (
 )
 
 func TestSearchFiltersSharedExportParameters(t *testing.T) {
-	r := httptest.NewRequest("GET", "/api/v2/export?q=admin&product=nginx&tag=cloud&verdict=suspicious&port=443&status=200&secured=true&has_vulns=1&sort=vulns", nil)
+	r := httptest.NewRequest("GET", "/api/v2/export?q=admin&network=Akamai&time_range=168&product=nginx&tag=cloud&verdict=suspicious&port=443&status=200&secured=true&has_vulns=1&sort=vulns", nil)
 	opts := searchFilters(r)
 
-	if opts.Query != "admin" || opts.Product != "nginx" || opts.Tag != "cloud" || opts.Verdict != "suspicious" {
+	if opts.Query != "admin" || opts.Network != "Akamai" || opts.Product != "nginx" || opts.Tag != "cloud" || opts.Verdict != "suspicious" {
 		t.Fatalf("string filters were not preserved: %+v", opts)
+	}
+	if opts.TimeRangeHours == nil || *opts.TimeRangeHours != 168 {
+		t.Errorf("time_range = %v, want 168", opts.TimeRangeHours)
 	}
 	if opts.Sort != "vulns" {
 		t.Errorf("sort = %q, want vulns", opts.Sort)
@@ -32,6 +35,20 @@ func TestSearchFiltersSharedExportParameters(t *testing.T) {
 	}
 	if opts.HasVulns == nil || !*opts.HasVulns {
 		t.Errorf("has_vulns = %v, want true", opts.HasVulns)
+	}
+}
+
+func TestMapFilters(t *testing.T) {
+	r := httptest.NewRequest("GET", "/api/v2/map?mode=at-risk&time_range=168&limit=750", nil)
+	opts := mapFilters(r)
+	if opts.Mode != "at-risk" || opts.TimeRangeHours != 168 || opts.Limit != 750 {
+		t.Fatalf("map filters were not preserved: %+v", opts)
+	}
+
+	r = httptest.NewRequest("GET", "/api/v2/map?mode=bogus&time_range=-1&limit=5000", nil)
+	opts = mapFilters(r)
+	if opts.Mode != "observations" || opts.TimeRangeHours != 0 || opts.Limit != 1000 {
+		t.Fatalf("map filters were not safely normalized: %+v", opts)
 	}
 }
 

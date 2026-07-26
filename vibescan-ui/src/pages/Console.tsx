@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
 import { api, type SignalDetail, type Stats, type Tile } from "../api";
 import Viewport from "../components/Viewport";
-import WorldMap, { type MapPoint } from "../components/WorldMap";
+import ObservationMap from "../components/ObservationMap";
 import SignalCard from "../components/SignalCard";
 import { useMeta } from "../lib/meta";
 import "./Console.css";
@@ -79,10 +79,6 @@ export default function Console() {
       if (timer.current) window.clearInterval(timer.current);
     };
   }, [auto, acquire]);
-
-  const points: MapPoint[] = recent
-    .filter((t) => t.geo)
-    .map((t) => ({ ip: t.ip, port: t.port, lat: t.geo!.lat, lon: t.geo!.lon, insecure: !t.secured }));
 
   const insecure = stats?.secure_capture_counts.insecure ?? null;
   const hosts = stats?.totals.hosts ?? null;
@@ -197,10 +193,10 @@ export default function Console() {
 
       <section className="panel panel-pad console-map">
         <div className="row spread console-section-head">
-          <h2 className="eyebrow">◊ Observation origins</h2>
-          <span className="mono dim">geolocated · last {recent.length} captures</span>
+          <h2 className="eyebrow">◊ Explore observation origins</h2>
+          <span className="mono dim">host-level · coarse IP geolocation</span>
         </div>
-        <WorldMap points={points} />
+        <ObservationMap />
       </section>
 
       <section className="console-recent">

@@ -215,16 +215,7 @@ func (m *Mongo) StatsAggregate(ctx context.Context, timeRangeHours, maxTimeMS in
 	}}}
 	// Reuse the banner-cleaning sub-pipeline, but only over at-risk services.
 	flaggedProducts := append(bson.A{bson.D{{Key: "$match", Value: flaggedMatch}}}, bannerClean...)
-	networkExpr := bson.D{
-		{Key: "$trim", Value: bson.D{
-			{Key: "input", Value: bson.D{
-				{Key: "$arrayElemAt", Value: bson.A{
-					bson.D{{Key: "$split", Value: bson.A{"$whois", " - "}}},
-					0,
-				}},
-			}},
-		}},
-	}
+	networkExpr := normalizedNetworkExpr()
 	organizationExpr := bson.D{
 		{Key: "$trim", Value: bson.D{
 			{Key: "input", Value: bson.D{

@@ -43,8 +43,8 @@ export default function Data() {
           <li>
             <strong>Export API.</strong> <span className="mono">GET /api/v2/export?format=json|csv</span>{" "}
             returns records with the same filters as <Link className="doc-link" to="/search">search</Link>{" "}
-            (<span className="mono">q, product, port, status, secured, has_vulns, tag, verdict, limit,
-            offset, sort</span>). Sort values are <span className="mono">newest, relevance, vulns,
+            (<span className="mono">q, network, time_range, product, port, status, secured, has_vulns,
+            tag, verdict, limit, offset, sort</span>). Sort values are <span className="mono">newest, relevance, vulns,
             ip</span>. Requests are rate-limited. Pagination is manual: request 1–2,000 records
             at a time with <span className="mono">limit</span>, then increase{" "}
             <span className="mono">offset</span> until an export contains fewer records than requested.
@@ -54,7 +54,7 @@ export default function Data() {
           </li>
           <li>
             <strong>Live JSON API.</strong> The read endpoints under{" "}
-            <span className="mono">/api/v2/</span> (gallery, search, stats, per-service detail,
+            <span className="mono">/api/v2/</span> (gallery, search, map, stats, per-service detail,
             enrichment) power this site and are documented in the{" "}
             <a className="doc-link" href="https://github.com/verdantpro/vibescan_rework" target="_blank" rel="noopener noreferrer">
               repository
